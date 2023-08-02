@@ -1,0 +1,112 @@
+// breakpoints
+$grid-breakpoints: (
+  xs: 420px,
+  sm: 576px,
+  md: 768px,
+  lg: 992px,
+  xl: 1200px,
+  xxl: 1400px,
+  xxxl: 1800px,
+);
+
+// gap used for spacing
+$gap: 8px;
+@function gap($factor) {
+  @return $gap * $factor;
+}
+
+// Mediaquery mixins
+@mixin xs() {
+  @media only screen and (min-width: map-get($grid-breakpoints, xs)) {
+    @content;
+  }
+}
+
+@mixin s() {
+  @media only screen and (min-width: map-get($grid-breakpoints, sm)) {
+    @content;
+  }
+}
+
+@mixin m() {
+  @media only screen and (min-width: map-get($grid-breakpoints, md)) {
+    @content;
+  }
+}
+
+@mixin l() {
+  @media only screen and (min-width: map-get($grid-breakpoints, lg)) {
+    @content;
+  }
+}
+
+@mixin xl() {
+  @media only screen and (min-width: map-get($grid-breakpoints, xl)) {
+    @content;
+  }
+}
+
+@mixin xxl() {
+  @media only screen and (min-width: map-get($grid-breakpoints, xxl)) {
+    @content;
+  }
+}
+
+@mixin xxxl() {
+  @media only screen and (min-width: map-get($grid-breakpoints, xxxl)) {
+    @content;
+  }
+}
+
+//
+// Typography mixins
+//
+
+@mixin type-xs {
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-xs);
+  letter-spacing: 0em;
+  line-height: 1em;
+}
+
+@mixin type-s {
+  font-size: var(--font-size-s);
+  line-height: 1.5em;
+}
+
+@mixin type-m {
+  font-size: var(--font-size-m);
+  line-height: 1.2em;
+  letter-spacing: -0.02em;
+}
+
+@mixin type-l {
+  font-size: var(--font-size-l);
+  line-height: 1.1em;
+  letter-spacing: -0.02em;
+}
+
+@mixin type-xl {
+  font-size: var(--font-size-xl);
+  line-height: 1em;
+  letter-spacing: -0.02em;
+}
+
+//
+// Simple grid
+//
+
+@mixin grid-col-3 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: gap(2);
+
+  @include m {
+    grid-template-columns: 1fr 1fr;
+    gap: gap(4);
+  }
+
+  @include xxl {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}

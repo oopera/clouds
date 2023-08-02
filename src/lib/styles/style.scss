@@ -1,0 +1,139 @@
+@import './mixins.scss';
+
+@font-face {
+  font-family: 'Air';
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  src: url('../assets/fonts/air/PPAir-RegularMono.woff'); /* IE9 Compat Modes */
+}
+@font-face {
+  font-family: 'Supply';
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  src: url('../assets/fonts/supply/PPSupplyMono-Regular.woff'); /* IE9 Compat Modes */
+}
+
+@font-face {
+  font-family: 'Cirka';
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  src: url('../assets/fonts/cirka/PPCirka-Bold.woff'); /* IE9 Compat Modes */
+}
+
+@font-face {
+  font-family: 'Cirka';
+  font-weight: 500;
+  letter-spacing: 0.4em;
+  src: url('../assets/fonts/cirka/PPCirka-Regular.woff'); /* IE9 Compat Modes */
+}
+body {
+  --color-grey-lightest: #f4f4f4;
+  --color-grey-lighter: #e1e1e1;
+  --color-grey-light: #c7c7c7;
+  --color-grey: #8f8f90;
+  --color-grey-dark: #91969b;
+  --color-grey-darker: #2d2b2b;
+  --color-grey-darkest: #0b0b0b;
+
+  --c-g: rgb(33, 33, 33);
+  --c-secondary: #91969b;
+  --c-tertiary: rgb(196, 215, 255);
+
+  --c-racing-green: rgb(0, 81, 68);
+  --c-mint: #65c6b3;
+  --c-accent: #dbf75f;
+
+  --font-size-xs: 12px;
+  --font-size-xl: 76px;
+
+  --font-family-mono: 'Supply', monospace;
+
+  padding: 0;
+  margin: 0;
+  width: 100vw;
+  height: 100vh;
+  line-height: 1.5;
+  font-weight: 400;
+  color-scheme: light;
+  color: inherit;
+  background-color: var(--color-grey-lightest);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+
+:root {
+  --bg-color: #000;
+  --line-color-1: #242424;
+  --line-color-2: #1f1f1f;
+}
+
+body {
+  background: rgba(8, 8, 8, 1);
+  color: white;
+  user-select: none;
+  width: 100vw;
+  height: 100vh;
+  overflow-x: clip;
+  cursor: none;
+}
+input {
+  cursor: none;
+}
+body::-webkit-scrollbar {
+  display: none;
+}
+main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  height: 100%;
+}
+
+a {
+  cursor: none;
+}
+
+h1,
+h3,
+p {
+  line-height: 1em;
+  padding: 0;
+  margin: 0;
+}
+
+h1 {
+  font-size: 36px;
+  font-family: 'Cirka', Helvetica, sans-serif;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+p {
+  @include type-xs;
+  text-transform: uppercase;
+}
+
+button {
+  position: relative;
+  overflow: visible;
+  background-color: transparent;
+  outline: none;
+  border: none;
+  width: 75px;
+  padding: 3px 8px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 10px;
+  font-family: 'Supply', monospace;
+}
+a:visited {
+  accent-color: var(--c-accent);
+}
+a {
+  font-family: 'Supply', monospace;
+  font-family: var(--font-family-mono);
+  color: var(--c-accent);
+}

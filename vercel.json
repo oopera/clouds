@@ -1,0 +1,10 @@
+{
+  "crons": [
+    {
+      "path": "/api/cloud-texture",
+      "schedule": "0 0 * * *"
+    }
+  ],
+
+  "devCommand": "vite --port $PORT"
+}
