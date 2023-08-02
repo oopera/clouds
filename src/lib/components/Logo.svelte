@@ -229,6 +229,10 @@
     left: 50%;
     height: 100vh;
     transform: translateX(-50%);
+    @media (max-width: 768px) {
+      left: 50%;
+      transform: translateX(calc(-50% + 48px));
+    }
   }
 
   .letter {
@@ -277,5 +281,8 @@
 
   .loaded {
     top: 38px;
+    @media (max-width: 768px) {
+      font-size: 24px;
+    }
   }
 </style>

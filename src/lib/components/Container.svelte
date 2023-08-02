@@ -15,6 +15,7 @@
     max-width: 100vw;
     border-radius: 15px;
     transition: 350ms ease all;
+    backdrop-filter: blur(24px);
     @media (max-width: 768px) {
       display: none;
     }

@@ -1,6 +1,5 @@
 <script lang="ts">
   import Canvas from '$lib/components/GlobeCanvas.svelte';
-  import Checkbox from '$lib/components/Checkbox.svelte';
   import Container from '$lib/components/Container.svelte';
   import RangeInput from '$lib/components/RangeInput.svelte';
   import '$lib/styles/style.scss';
@@ -8,14 +7,12 @@
   import ZoomIndicator from '$lib/components/ZoomIndicator.svelte';
   import Starfield from '$lib/components/Starfield.svelte';
   import Footer from '$lib/components/Footer.svelte';
-  import RadioButton from '$lib/components/RadioButton.svelte';
   import Loading from '$lib/components/Loading.svelte';
   import { theme } from '$lib/stores/stores';
   import Earthfield from '$lib/components/Earthfield.svelte';
   import Tasks from '$lib/components/Tasks.svelte';
   import { onMount } from 'svelte';
   import Logo from '$lib/components/Logo.svelte';
-  import Contextmenu from '$lib/components/Contextmenu.svelte';
   import { dev } from '$app/environment';
   import { inject } from '@vercel/analytics';
 
@@ -87,7 +84,7 @@
     right: 16px;
     top: 50%;
     transform: translateY(-50%);
-    gap: 16px;
+    gap: 32px;
   }
   .flex {
     position: relative;

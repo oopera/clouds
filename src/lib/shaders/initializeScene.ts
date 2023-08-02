@@ -213,9 +213,12 @@ async function InitializeScene() {
   var parsedGribTexture;
   var parsedGribTexture_2;
   var parsedGribTexture_3;
-  var useRemoteTexture = !dev;
 
-  if (useRemoteTexture) {
+  if (dev) {
+    parsedGribTexture = await GetTextureFromGribData(device, mb300);
+    parsedGribTexture_2 = await GetTextureFromGribData(device, mb500);
+    parsedGribTexture_3 = await GetTextureFromGribData(device, mb700);
+  } else {
     const mb300RD = await executeAndUpdate(
       'mb300RD',
       fetch(`/api/cloud-texture?level_mb=300_mb&date=${dateString}`),
@@ -241,10 +244,6 @@ async function InitializeScene() {
     parsedGribTexture = await GetTextureFromGribData(device, mb300R);
     parsedGribTexture_2 = await GetTextureFromGribData(device, mb500R);
     parsedGribTexture_3 = await GetTextureFromGribData(device, mb700R);
-  } else {
-    parsedGribTexture = await GetTextureFromGribData(device, mb300);
-    parsedGribTexture_2 = await GetTextureFromGribData(device, mb500);
-    parsedGribTexture_3 = await GetTextureFromGribData(device, mb700);
   }
 
   const noiseTexture = await Get3DNoiseTexture(device);
@@ -490,8 +489,6 @@ async function InitializeScene() {
   const cloudUniValues_02 = new Float32Array([0.02, 1.0, 0.0, 0.0]);
 
   const cloudUniValues_03 = new Float32Array([0.03, 1.0, 0.0, 0.0]);
-
-  console.log(cloudUniValues_01.byteLength);
 
   async function frame() {
     elapsed += 0.001;

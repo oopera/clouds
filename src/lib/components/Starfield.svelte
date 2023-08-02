@@ -106,7 +106,6 @@
     aspect-ratio: 1/1;
     border-radius: 150px;
     z-index: 1;
-    margin: 40px;
     position: relative;
 
     &::before {
