@@ -134,7 +134,7 @@ export const CreatePipeline = (
 
     primitive: {
       topology: options.topology,
-      cullMode: 'back',
+      cullMode: options.cullmode,
     },
     depthStencil: {
       format: 'depth24plus',

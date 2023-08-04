@@ -95,10 +95,10 @@ fn cloudDensity(p: vec3<f32>, depth: f32) -> f32 {
   let cameraPosition: vec3<f32> = output.cameraPosition.rgb;
   var rayOrigin: vec3<f32> = output.vNormal.xyz;
   
-  let startDepth: f32 = 0.0;
-  let endDepth: f32 = 0.005;
+  let startDepth: f32 = cloudUniforms.radius / 10;
+  let endDepth: f32 = cloudUniforms.radius / 10 + 0.0025;
 
-  let stepSize: f32 = 0.0001;
+  let stepSize: f32 = 0.00005;
 
   var color: vec4<f32> = vec4<f32>(0.0, 0.0, 0.0, 0.0);
 
@@ -109,15 +109,15 @@ fn cloudDensity(p: vec3<f32>, depth: f32) -> f32 {
     let density: f32 = cloudDensity(texturePosition, depth);
     let light: f32 = computeLighting(density, depth, endDepth - startDepth, dot(rayDirection, output.vNormal.xyz));
 
-    let baseColor = vec3<f32>(0.4, 0.3, 0.6);  // Dark blue
-    let highColor = vec3<f32>(0.5, 0.3, 0.7);  // Light blue
+    let baseColor = vec3<f32>(0.4, 0.35, 0.45);  // Dark blue
+    let highColor = vec3<f32>(0.5, 0.45, 0.55);  // Light blue
     let colorDensity = mix(baseColor, highColor, density);
     color = blend(color, vec4<f32>(colorDensity, density) , 1.0);
     
     rayOrigin = texturePosition;
   }
 
-  if(color.a < 0.4) {
+  if(color.a < 0.2) {
     discard;
   }
 
@@ -128,15 +128,12 @@ fn cloudDensity(p: vec3<f32>, depth: f32) -> f32 {
   let dotProduct = dot(lightDir, output.vNormal.xyz);
   let scaledDotProduct: f32 = dotProduct * 10.0;
   var lightness: f32 = 1.0 - (1.0 / (1.0 + exp(-scaledDotProduct)));
-  
-  // return textureSample(texture, textureSampler,output.vUV);
 
-
-  if(lightness < 0.1){
+  if(lightness < 0.2){
     lightness = 0.2;
   }
 
-  return color  * lightness;
+  return color * lightness;
 }
 
 

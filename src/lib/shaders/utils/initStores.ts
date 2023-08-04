@@ -63,7 +63,7 @@ export default function InitStores(
     hasChanged.topology = true;
   });
 
-  window.addEventListener('mousedown', (e) => {
+  canvas.addEventListener('mousedown', (e) => {
     isDragging = true;
     options.coords.lastX = e.clientX;
     options.coords.lastY = e.clientY;
@@ -93,22 +93,20 @@ export default function InitStores(
     //   });
     // }
   });
-  window.addEventListener('mouseup', (e) => {
+  canvas.addEventListener('mouseup', (e) => {
     isDragging = false;
     options.coords.lastX = 0;
     options.coords.lastY = 0;
   });
-  window.addEventListener('mousemove', (e) => {
+  canvas.addEventListener('mousemove', (e) => {
     if (isDragging) {
       var changeX = e.clientX - options.coords.lastX;
       var changeY = e.clientY - options.coords.lastY;
 
-      var newPitch =
-        options.pitch + 0.25 * changeY * ((options.zoom * options.zoom) / 2);
+      var newPitch = options.pitch + 0.1 * changeY * Math.pow(options.zoom, 2);
       newPitch = Math.max(-89, Math.min(89, newPitch));
 
-      var newYaw =
-        options.yaw - 0.25 * changeX * ((options.zoom * options.zoom) / 2);
+      var newYaw = options.yaw - 0.1 * changeX * Math.pow(options.zoom, 2);
 
       if (newYaw > 360) {
         newYaw -= 360;

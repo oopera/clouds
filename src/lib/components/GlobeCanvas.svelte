@@ -12,7 +12,7 @@
 <style>
   .canvas {
     z-index: 1;
-    pointer-events: none;
+
     position: fixed;
     left: 0;
     left: 50%;

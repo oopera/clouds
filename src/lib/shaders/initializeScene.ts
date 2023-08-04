@@ -47,7 +47,7 @@ var hasChanged: HasChanged = {
 };
 
 var options: RenderOptions = {
-  cullmode: 'none',
+  cullmode: 'back',
   useTexture: true,
   numFs: 0,
   rotationSpeed: 0.0025,
@@ -395,6 +395,7 @@ async function InitializeScene() {
     device.createShaderModule({ code: cloudShader }),
     {
       ...options,
+      cullmode: 'none',
     },
     presentationFormat
   );
@@ -413,6 +414,7 @@ async function InitializeScene() {
     device.createShaderModule({ code: cloudShader }),
     {
       ...options,
+      cullmode: 'none',
     },
     presentationFormat
   );
@@ -422,6 +424,7 @@ async function InitializeScene() {
     device.createShaderModule({ code: cloudShader }),
     {
       ...options,
+      cullmode: 'none',
     },
     presentationFormat
   );
@@ -486,9 +489,9 @@ async function InitializeScene() {
 
   const cloudUniValues_01 = new Float32Array([0.01, 1.0, 0.0, 0.0]);
 
-  const cloudUniValues_02 = new Float32Array([0.02, 1.0, 0.0, 0.0]);
+  const cloudUniValues_02 = new Float32Array([0.015, 1.0, 0.0, 0.0]);
 
-  const cloudUniValues_03 = new Float32Array([0.03, 1.0, 0.0, 0.0]);
+  const cloudUniValues_03 = new Float32Array([0.02, 1.0, 0.0, 0.0]);
 
   async function frame() {
     elapsed += 0.001;
