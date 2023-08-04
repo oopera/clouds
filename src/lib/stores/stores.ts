@@ -48,15 +48,12 @@ export const loading: Writable<LoadingStore> = writable({
   },
 });
 
-export const theme = writable(false);
-
 export default {
   amount_of_points,
   displacement,
   loading,
   pitch,
   rotation_speed,
-  theme,
   topology,
   mouse_interaction,
   use_texture,

@@ -1,4 +1,3 @@
-// breakpoints
 $grid-breakpoints: (
   xs: 420px,
   sm: 576px,
@@ -9,7 +8,6 @@ $grid-breakpoints: (
   xxxl: 1800px,
 );
 
-// gap used for spacing
 $gap: 8px;
 @function gap($factor) {
   @return $gap * $factor;
@@ -58,10 +56,6 @@ $gap: 8px;
   }
 }
 
-//
-// Typography mixins
-//
-
 @mixin type-xs {
   font-family: var(--font-family-mono);
   font-size: var(--font-size-xs);
@@ -91,10 +85,6 @@ $gap: 8px;
   line-height: 1em;
   letter-spacing: -0.02em;
 }
-
-//
-// Simple grid
-//
 
 @mixin grid-col-3 {
   display: grid;

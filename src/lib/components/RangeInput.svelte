@@ -56,7 +56,6 @@
     gap: 16px;
     min-width: 144px;
     white-space: nowrap;
-
     box-sizing: border-box;
   }
   .slider {
@@ -84,17 +83,16 @@
     height: 16px;
     width: 16px;
     border-radius: 15px;
-    border: 1pt solid rgb(0, 33, 65);
-
+    border: 1pt solid var(--c-g);
     -webkit-appearance: none;
     margin-top: 8px;
     transition: 100ms ease-in;
     transform-origin: center;
     background: radial-gradient(
       circle,
-      rgb(225, 225, 225) 0%,
-      rgb(0, 34, 76) 30%,
-      rgba(11, 17, 17, 0) 100%
+      rgba(0, 33, 95, 1) 0%,
+      rgba(33, 33, 39, 0.05) 30%,
+      rgba(0, 0, 0, 0) 50%
     );
   }
   .slider:hover::-webkit-slider-thumb,

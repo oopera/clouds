@@ -8,7 +8,6 @@
   import Starfield from '$lib/components/Starfield.svelte';
   import Footer from '$lib/components/Footer.svelte';
   import Loading from '$lib/components/Loading.svelte';
-  import { theme } from '$lib/stores/stores';
   import Earthfield from '$lib/components/Earthfield.svelte';
   import Tasks from '$lib/components/Tasks.svelte';
   import { onMount } from 'svelte';
@@ -31,8 +30,6 @@
 <svelte:head>
   <title>Clouds — WebGPU</title>
 </svelte:head>
-
-<svelte:body class:dark={theme} />
 
 <Canvas />
 <Cursor />
@@ -68,6 +65,7 @@
 </main>
 
 <style lang="scss">
+  @use '$lib/styles/mixins.scss';
   .main {
     overflow: hidden;
     position: relative;

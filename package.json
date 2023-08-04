@@ -27,7 +27,6 @@
     "@vercel/analytics": "^1.0.1",
     "@vercel/edge-config": "^0.2.1",
     "@webgpu/types": "^0.1.34",
-    "grib2-simple": "^1.1.1",
     "sass": "^1.63.6",
     "scss": "^0.2.4"
   }

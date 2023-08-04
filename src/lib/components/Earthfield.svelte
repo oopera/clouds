@@ -10,15 +10,9 @@
       <div style="--z:{$pitch + 'deg'}" class="crosshair__vertical" />
       <div style="--z:{$pitch + 'deg'}" class="crosshair__depth" />
     </div>
-    <div class="circle" style="--z:{$pitch + 'deg'}; --zo:{$zoom}">
-      <p>x</p>
-    </div>
-    <div class="circle" style="--z:{$yaw + 'deg'}; --zo:{$zoom}">
-      <p>y</p>
-    </div>
-    <div class="circle" style="--z:{$yaw + 'deg'}; --zo:{$zoom}">
-      <p>z</p>
-    </div>
+    <div class="circle" style="--z:{$pitch + 'deg'}; --zo:{$zoom}" />
+    <div class="circle" style="--z:{$yaw + 'deg'}; --zo:{$zoom}" />
+    <div class="circle" style="--z:{$yaw + 'deg'}; --zo:{$zoom}" />
   </div>
 </div>
 
@@ -30,24 +24,11 @@
     border-radius: 150px;
     z-index: 1;
     position: relative;
-    &::before {
-      content: '';
-      top: -8px;
-      left: -8px;
-      backdrop-filter: blur(25px);
-      // background-color: rgba(255, 255, 255, 0.25);
-      width: 176px;
-      height: 176px;
-      position: absolute;
-      // border: 1pt solid var(--c-g);
-      border-radius: 16px;
-      rotate: 45deg;
-    }
     background: radial-gradient(
       circle,
-      rgb(0, 33, 95) 0%,
-      rgba(33, 33, 39, 0) 30%,
-      rgba(0, 0, 0, 0) 100%
+      rgba(0, 33, 95, 0.25) 0%,
+      rgba(33, 33, 39, 0.05) 30%,
+      rgba(0, 0, 0, 0) 50%
     );
   }
   .hud {
@@ -130,18 +111,18 @@
   }
 
   .circle:nth-child(2) {
-    border: 0.5pt solid rgba(225, 225, 225, 0.5);
+    border: 1.25pt solid var(--c-g);
     transform: translate(-50%, -50%) rotate3d(1, 1, 1, calc(var(--z)))
       scale(calc(2 - (var(--zo) / 5)));
   }
 
   .circle:nth-child(3) {
-    border: 0.5pt solid rgba(225, 225, 225, 0.5);
+    border: 1.25pt solid var(--c-g);
     transform: translate(-50%, -50%) rotate3d(1, 1, 1, var(--z))
       scale(calc(2 - (var(--zo) / 5)));
   }
   .circle:nth-child(4) {
-    border: 0.5pt solid rgba(225, 225, 225, 0.5);
+    border: 1.25pt solid var(--c-g);
     transform: translate(-50%, -50%) rotate3d(1, 1, 1, calc(var(--z) + 90deg))
       scale(calc(2 - (var(--zo) / 5)));
   }

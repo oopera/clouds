@@ -231,7 +231,7 @@
     transform: translateX(-50%);
     @media (max-width: 768px) {
       left: 50%;
-      transform: translateX(calc(-50% + 48px));
+      transform: translateX(calc(-50% + 36px));
     }
   }
 
@@ -282,6 +282,7 @@
   .loaded {
     top: 38px;
     @media (max-width: 768px) {
+      top: 32px;
       font-size: 24px;
     }
   }

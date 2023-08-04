@@ -107,25 +107,11 @@
     border-radius: 150px;
     z-index: 1;
     position: relative;
-
-    &::before {
-      content: '';
-      top: -8px;
-      left: -8px;
-      backdrop-filter: blur(25px);
-      // background-color: rgba(255, 255, 255, 0.25);
-      width: 176px;
-      height: 176px;
-      position: absolute;
-      // border: 1pt solid var(--c-g);
-      border-radius: 16px;
-      rotate: 45deg;
-    }
     background: radial-gradient(
       circle,
-      rgb(0, 33, 95) 0%,
-      rgba(33, 33, 39, 0) 30%,
-      rgba(0, 0, 0, 0) 100%
+      rgba(0, 33, 95, 0.25) 0%,
+      rgba(33, 33, 39, 0.05) 30%,
+      rgba(0, 0, 0, 0) 50%
     );
   }
   .hud {
@@ -199,10 +185,10 @@
   }
   .circle:nth-child(2) {
     width: calc(100% - (32px * var(--z)));
-    border: 1.25pt solid rgba(225, 225, 225, 0.1);
+    border: 1.25pt solid var(--c-g);
   }
   .circle:nth-child(3) {
     width: calc(100% - (24px * var(--z)));
-    border: 1.5pt solid rgba(225, 225, 225, 0.2);
+    border: 1.25pt solid var(--c-g);
   }
 </style>
