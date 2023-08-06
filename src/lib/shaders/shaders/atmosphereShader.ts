@@ -6,9 +6,18 @@ struct Uniforms {
   cameraPosition : vec4<f32>,
 };
 
+
+struct LightUniforms {
+  lightPosition : vec3<f32>,
+  lightColor : vec3<f32>,
+  lightIntensity : f32,
+};
+
+
 struct Input {
   @location(0) position : vec4<f32>,
   @location(1) normal : vec4<f32>,
+
 };
 
 struct Output {
@@ -16,28 +25,35 @@ struct Output {
   @location(0) vPosition : vec4<f32>,
   @location(1) vNormal : vec4<f32>,
   @location(2) cameraPosition : vec4<f32>,
+  @location(3) lightPosition : vec3<f32>,
+  @location(4) lightColor : vec3<f32>,
+  @location(5) lightIntensity : f32,
 };
 
 @group(0) @binding(0) var<uniform> uni: Uniforms;
+@group(0) @binding(1) var<uniform> lightUni: LightUniforms;
 
 @vertex fn vs(input: Input, @builtin(vertex_index) vertexIndex: u32) -> Output {
   var output: Output;
 
   let mPosition: vec4<f32> = uni.modelMatrix * input.position;
-  let displacement: vec4<f32> = vec4<f32>(normalize(mPosition.xyz) * (0.04), 0.0);
+  let displacement: vec4<f32> = vec4<f32>(normalize(mPosition.xyz) * (0.025), 0.0);
   let worldPosition: vec4<f32> = mPosition + displacement;
   
   output.Position = uni.viewProjectionMatrix * worldPosition;
   output.vPosition = worldPosition;
   output.vNormal = normalize(uni.normalMatrix * input.normal);
   output.cameraPosition = uni.cameraPosition;
+  output.lightPosition = lightUni.lightPosition;
+  output.lightColor = lightUni.lightColor;
+  output.lightIntensity = lightUni.lightIntensity;
 
   return output;
 }
 
 @fragment fn fs(output: Output) -> @location(0) vec4<f32> {
   let viewDirection: vec3<f32> = normalize(output.cameraPosition.xyz - output.vPosition.xyz);
-  let cameraDirection = normalize(vec3<f32>(1, 0, 0) - vec3<f32>(0 ,0 ,0)); 
+  let cameraDirection = normalize(output.lightPosition - vec3<f32>(0 ,0 ,0)); 
   let up = vec3<f32>(0, 1, 0);
   var lightDir = cross(cameraDirection, up);
   lightDir = normalize(lightDir);

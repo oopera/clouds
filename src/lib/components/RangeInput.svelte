@@ -13,7 +13,7 @@
   export let max: number = 100;
   export let disabled: boolean = false;
   export let delay: number = 1;
-
+  let text: string = title;
   let store: any;
 
   onMount(async () => {
@@ -40,10 +40,7 @@
     type="range"
     class="slider"
   />
-  <Text {delay}>
-    {title} :
-    {title === 'amount_of_points' ? $store * $store : $store}</Text
-  >
+  <Text {delay} {text} vertical />
 </div>
 
 <style lang="scss">

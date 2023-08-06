@@ -1,26 +1,49 @@
 <script lang="ts">
   import Text from './Text.svelte';
+
+  let delay = 0;
+  let tasks = [
+    {
+      a: '(improve)',
+      b: 'Volumetric Cloud Rendering',
+    },
+    {
+      a: '(improve)',
+      b: 'Dynamic Light and shimmer',
+    },
+    {
+      a: '',
+      b: 'Cloud Dissapation animation',
+    },
+    {
+      a: '',
+      b: 'User Date Input',
+    },
+    {
+      a: '♡＼(￣▽￣)／♡',
+      b: 'Make it cuter',
+    },
+  ];
 </script>
 
 <div class="viewfinder">
   <div class="flex">
-    <Text delay={10}>Upcoming:</Text>
-    <br />
-    <div class="item">
-      <Text secondary delay={11} type="p">(improve)</Text>
-      <Text delay={12}>Volumetric Cloud Rendering</Text>
-    </div>
-    <div class="item">
-      <Text secondary delay={12} type="p">(improve)</Text>
-      <Text delay={13}>Dynamic Light and shimmer</Text>
-    </div>
-    <Text delay={14}>Cloud Dissapation animation</Text>
-    <Text delay={15}>User Date Input</Text>
-
-    <div class="item">
-      <Text secondary delay={16} type="p">♡＼(￣▽￣)／♡</Text>
-      <Text delay={17}>Make it cuter</Text>
-    </div>
+    {#each tasks as task, i}
+      {#if task.a !== ''}
+        <div class="item">
+          <Text
+            vertical
+            text={task.a}
+            secondary
+            delay={delay + i + 1}
+            type="p"
+          />
+          <Text vertical delay={delay + i} text={task.b} />
+        </div>
+      {:else}
+        <Text vertical delay={delay + i} text={task.b} />
+      {/if}
+    {/each}
   </div>
 </div>
 

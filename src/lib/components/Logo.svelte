@@ -88,7 +88,7 @@
     </div>
     {#if mounted && !loaded}
       <span class="loading">
-        <Text type="p" delay={4} secondary={true}>loading</Text>
+        <Text vertical type="p" delay={4} secondary={true} text={'loading'} />
       </span>
     {/if}
   </span>

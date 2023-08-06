@@ -6,6 +6,13 @@ export const earthShader = /* wgsl */ `
       cameraPosition : vec4<f32>,
       options : vec4<f32>,
     };
+
+    struct LightUniforms {
+      lightPosition : vec3<f32>,
+      lightColor : vec3<f32>,
+      lightIntensity : f32,
+    };
+    
     
     struct Input {
       @location(0) position : vec4<f32>,
@@ -20,6 +27,9 @@ export const earthShader = /* wgsl */ `
       @location(2) vUV : vec2<f32>,
       @location(3) options : vec4<f32>,
       @location(4) cameraPosition : vec4<f32>,
+      @location(5) lightPosition : vec3<f32>,
+      @location(6) lightColor : vec3<f32>,
+      @location(7) lightIntensity : f32,
     };
     
     @group(0) @binding(0) var<uniform> uni: Uniforms;
@@ -29,6 +39,7 @@ export const earthShader = /* wgsl */ `
     @group(0) @binding(4) var texture_01: texture_2d<f32>;
     @group(0) @binding(5) var texture_02: texture_2d<f32>;
     @group(0) @binding(6) var textureSampler: sampler;
+    @group(0) @binding(7) var<uniform> lightUni: LightUniforms;
 
     @vertex fn vs(input: Input, @builtin(vertex_index) vertexIndex: u32) -> Output {
       var output: Output;
@@ -54,6 +65,10 @@ export const earthShader = /* wgsl */ `
       output.vUV = input.uv;
       output.options = uni.options;
       output.cameraPosition = uni.cameraPosition;
+      output.lightPosition = lightUni.lightPosition;
+      output.lightColor = lightUni.lightColor;
+      output.lightIntensity = lightUni.lightIntensity;
+
 
     
       return output;
@@ -96,7 +111,7 @@ export const earthShader = /* wgsl */ `
       var lightColor: vec4<f32>;
       var distance: f32 = length(output.vNormal.xyz - normal);
 
-      let cameraDirection = normalize(vec3<f32>(1, 0, 0) - vec3<f32>(0 ,0 ,0)); 
+      let cameraDirection = normalize(output.lightPosition - vec3<f32>(0 ,0 ,0)); 
       let up = vec3<f32>(0, 1, 0);
       var lightDir = cross(cameraDirection, up);
       lightDir = normalize(lightDir);

@@ -16,8 +16,14 @@
   {#each Object.values(loadedItems) as { id, status, message, progress }}
     <div class="item">
       <div class="flex">
-        <Text delay={id} type="p">{message}</Text>
-        <Text secondary={true} delay={id + 2} type="p">{progress}%</Text>
+        <Text vertical delay={id} type="p" text={message} />
+        <Text
+          vertical
+          text={progress + '%'}
+          secondary={true}
+          delay={id + 2}
+          type="p"
+        />
       </div>
       {#if status}
         <div
@@ -57,6 +63,8 @@
     gap: 16px;
   }
   .indicator {
+    right: -12px;
+    position: absolute;
     width: 4px;
     height: 4px;
     border-radius: 50%;

@@ -2,7 +2,6 @@ import {
   amount_of_points,
   cameraposition,
   displacement,
-  mouse_interaction,
   pitch,
   rotation_speed,
   topology,
@@ -10,9 +9,6 @@ import {
   yaw,
 } from '$lib/stores/stores';
 import type { HasChanged, RenderOptions, UniOptions } from '$lib/types/types';
-import { tweened } from 'svelte/motion';
-import CalculateIntersection from './calculateIntersection';
-import { quadOut } from 'svelte/easing';
 
 export default function InitStores(
   uniOptions: UniOptions,
@@ -108,11 +104,7 @@ export default function InitStores(
 
       var newYaw = options.yaw - 0.1 * changeX * Math.pow(options.zoom, 2);
 
-      if (newYaw > 360) {
-        newYaw -= 360;
-      } else if (newYaw < -360) {
-        newYaw += 360;
-      }
+      newYaw = newYaw % 360;
 
       pitch.set(newPitch);
       yaw.set(newYaw);

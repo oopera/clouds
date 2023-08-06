@@ -1,3 +1,5 @@
+import type { vec3 } from 'gl-matrix';
+
 export interface RenderOptions {
   cullmode: 'none' | 'front' | 'back';
   useTexture: boolean;
@@ -48,4 +50,10 @@ export interface LoadingItem {
 
 export interface LoadingStore {
   [key: string]: LoadingItem;
+}
+
+export interface LightUniforms {
+  lightPosition: vec3;
+  lightColor: vec3;
+  lightIntensity: number;
 }

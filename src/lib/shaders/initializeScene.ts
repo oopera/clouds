@@ -27,6 +27,7 @@ import type {
   RenderOptions,
   HasChanged,
   UniOptions,
+  LightUniforms,
 } from '$lib/types/types.js';
 import { atmosphereShader } from './shaders/atmosphereShader.js';
 import { executeAndUpdate } from './utils/executeAndUpdate.js';
@@ -204,6 +205,12 @@ async function InitializeScene() {
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
 
+  const lightUniBuffer = device.createBuffer({
+    label: 'light uniform buffer',
+    size: 64,
+    usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+  });
+
   const normalMatrix = mat4.create();
   const modelMatrix = mat4.create();
 
@@ -278,6 +285,12 @@ async function InitializeScene() {
     {
       binding: 6,
       resource: textureV[0].sampler,
+    },
+    {
+      binding: 7,
+      resource: {
+        buffer: lightUniBuffer,
+      },
     },
   ];
 
@@ -379,6 +392,12 @@ async function InitializeScene() {
       binding: 0,
       resource: {
         buffer: vertexUniBuffer,
+      },
+    },
+    {
+      binding: 1,
+      resource: {
+        buffer: lightUniBuffer,
       },
     },
   ];
@@ -493,11 +512,23 @@ async function InitializeScene() {
 
   const cloudUniValues_03 = new Float32Array([0.02, 1.0, 0.0, 0.0]);
 
+  var lightPosition = vec3.create();
+  vec3.set(lightPosition, 1.0, 0.0, 0.0);
+
+  var lightColor = vec3.create();
+  vec3.set(lightColor, 1.0, 1.0, 1.0);
+
   async function frame() {
     elapsed += 0.001;
 
-    pitch.set(options.pitch + options.rotationSpeed / -500);
-    yaw.set(options.yaw + options.rotationSpeed / 250);
+    var newPitch = options.pitch + options.rotationSpeed / -500;
+    newPitch = Math.max(-89, Math.min(89, newPitch));
+
+    var newYaw = options.yaw + options.rotationSpeed / 250;
+    newYaw = newYaw % 360;
+
+    pitch.set(newPitch);
+    yaw.set(newYaw);
 
     const cameraPosition = vec3.create();
     vec3.set(
@@ -592,6 +623,9 @@ async function InitializeScene() {
       0,
       cloudUniValues_03 as ArrayBuffer
     );
+    device.queue.writeBuffer(lightUniBuffer, 0, lightPosition as ArrayBuffer);
+    device.queue.writeBuffer(lightUniBuffer, 16, lightColor as ArrayBuffer);
+    // device.queue.writeBuffer(lightUniBuffer, 32, 0.5 as ArrayBuffer);
 
     if (hasChanged.numFs) {
       const newData = await executeAndUpdate(

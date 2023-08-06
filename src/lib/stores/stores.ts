@@ -40,12 +40,6 @@ export const loading: Writable<LoadingStore> = writable({
     progress: 0,
     message: 'Welcome',
   },
-  sphere: {
-    id: 1,
-    status: false,
-    progress: 0,
-    message: 'Vertex Data',
-  },
 });
 
 export default {
