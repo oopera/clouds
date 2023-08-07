@@ -37,7 +37,7 @@ struct Output {
   var output: Output;
 
   let mPosition: vec4<f32> = uni.modelMatrix * input.position;
-  let displacement: vec4<f32> = vec4<f32>(normalize(mPosition.xyz) * (0.025), 0.0);
+  let displacement: vec4<f32> = vec4<f32>(normalize(mPosition.xyz) * (0.02), 0.0);
   let worldPosition: vec4<f32> = mPosition + displacement;
   
   output.Position = uni.viewProjectionMatrix * worldPosition;

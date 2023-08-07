@@ -15,7 +15,7 @@
 
   const tweenedYaw = tweened(1, {
     duration: 2500,
-    easing: quadOut,
+    easing: quintOut,
   });
 
   const tweenedPitch = tweened(1, {
@@ -42,8 +42,8 @@
   $: {
     if (!$loading.welcome.status) {
       tweenedZoom.set(3.0);
-      tweenedYaw.set(360);
-      tweenedPitch.set(76);
+      tweenedYaw.set(720);
+      tweenedPitch.set(45);
     }
   }
 

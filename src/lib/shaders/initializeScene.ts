@@ -498,9 +498,9 @@ async function InitializeScene() {
 
   const cloudUniValues_01 = new Float32Array([0.01, 1.0, 0.0, 0.0]);
 
-  const cloudUniValues_02 = new Float32Array([0.015, 1.0, 0.0, 0.0]);
+  const cloudUniValues_02 = new Float32Array([0.0125, 1.0, 0.0, 0.0]);
 
-  const cloudUniValues_03 = new Float32Array([0.02, 1.0, 0.0, 0.0]);
+  const cloudUniValues_03 = new Float32Array([0.015, 1.0, 0.0, 0.0]);
 
   async function frame() {
     elapsed += 0.0005;
@@ -511,13 +511,9 @@ async function InitializeScene() {
     var lightColor = vec3.create();
     vec3.set(lightColor, 1.0, 1.0, 1.0);
 
-    var newPitch = options.pitch + options.rotationSpeed / -500;
-    newPitch = Math.max(-89, Math.min(89, newPitch));
-
     var newYaw = options.yaw + options.rotationSpeed / 250;
     newYaw = newYaw % 360;
 
-    pitch.set(newPitch);
     yaw.set(newYaw);
 
     const cameraPosition = vec3.create();

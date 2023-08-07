@@ -6,7 +6,7 @@ export const displacement = writable(0.01);
 export const topology = writable<'triangle-list' | 'line-list' | 'point-list'>(
   'triangle-list'
 );
-export const rotation_speed = writable(0.0);
+export const rotation_speed = writable(2.5);
 export const use_texture = writable(true);
 export const wireframe = writable(false);
 export const pitch = writable(1);
