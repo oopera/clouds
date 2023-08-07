@@ -111,11 +111,8 @@ export const earthShader = /* wgsl */ `
       var lightColor: vec4<f32>;
       var distance: f32 = length(output.vNormal.xyz - normal);
 
-      let cameraDirection = normalize(output.lightPosition - vec3<f32>(0 ,0 ,0)); 
-      let up = vec3<f32>(0, 1, 0);
-      var lightDir = cross(cameraDirection, up);
-      lightDir = normalize(lightDir);
-      let dotProduct = dot(lightDir, output.vNormal.xyz);
+
+      let dotProduct = dot(output.lightPosition, output.vNormal.xyz);
       let scaledDotProduct: f32 = dotProduct * 10.0;
       let lightness: f32 = 1.0 - (1.0 / (1.0 + exp(-scaledDotProduct)));
 

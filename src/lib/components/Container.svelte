@@ -16,6 +16,7 @@
     border-radius: 15px;
     transition: 350ms ease all;
     backdrop-filter: blur(24px);
+    border: 1px solid var(--c-g);
     @media (max-width: 768px) {
       display: none;
     }

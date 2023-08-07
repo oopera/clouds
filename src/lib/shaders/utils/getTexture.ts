@@ -111,7 +111,7 @@ export const Get3DNoiseTexture = async (
   addressModeW = 'repeat'
 ) => {
   // Generate 3D noise data
-  const noiseData = generateWorleyNoise(width, height, depth, 512); // Replace this with your 3D noise generation logic
+  const noiseData = generateWorleyNoise(width, height, depth, 128); // Replace this with your 3D noise generation logic
 
   // Create RGBA data from noise data
   const rgbaData = new Uint8Array(noiseData.length * 4);
@@ -122,7 +122,7 @@ export const Get3DNoiseTexture = async (
     rgbaData[index] = color; // R
     rgbaData[index + 1] = color; // G
     rgbaData[index + 2] = color; // B
-    rgbaData[index + 3] = 255; // A
+    rgbaData[index + 3] = color; // A
   }
 
   const sampler = device.createSampler({

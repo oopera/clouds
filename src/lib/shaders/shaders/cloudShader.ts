@@ -13,6 +13,12 @@ struct CloudUniforms {
   noiseStrength : f32,
 }
 
+struct LightUniforms {
+  lightPosition : vec3<f32>,
+  lightColor : vec3<f32>,
+  lightIntensity : f32,
+};
+
 struct Input {
   @location(0) position : vec4<f32>,
   @location(1) normal : vec4<f32>,
@@ -25,14 +31,16 @@ struct Output {
   @location(1) vNormal : vec4<f32>,
   @location(2) vUV : vec2<f32>,
   @location(4) cameraPosition : vec4<f32>,
+  @location(5) lightPosition : vec3<f32>,
+  @location(6) lightColor : vec3<f32>,
+  @location(7) lightIntensity : f32,
 };
 
 @group(0) @binding(0) var<uniform> uni: Uniforms;
 @group(0) @binding(1) var texture: texture_2d<f32>;
 @group(0) @binding(2) var textureSampler: sampler;
-@group(0) @binding(3) var noiseTexture: texture_3d<f32>;
-@group(0) @binding(4) var noiseTextureSampler: sampler;
-@group(0) @binding(5) var<uniform> cloudUniforms: CloudUniforms;
+@group(0) @binding(3) var<uniform> cloudUniforms: CloudUniforms;
+@group(0) @binding(4) var<uniform> lightUni: LightUniforms;
 
 @vertex fn vs(input: Input, @builtin(vertex_index) vertexIndex: u32) -> Output {
   var output: Output;
@@ -46,8 +54,48 @@ struct Output {
   output.vNormal = mNormal;
   output.vUV = input.uv;
   output.cameraPosition = uni.cameraPosition;
+  output.lightPosition = lightUni.lightPosition;
+  output.lightColor = lightUni.lightColor;
+  output.lightIntensity = lightUni.lightIntensity;
 
   return output;
+}
+
+
+const m: mat3x3<f32> = mat3x3<f32>(
+  0.00, 0.80, 0.60,
+ -0.80, 0.36, -0.48,
+ -0.60, -0.48, 0.64
+);
+
+// Conversion of function signatures and return types
+fn hash(n: f32) -> f32 {
+  return fract(sin(n) * 43758.5453);
+}
+
+fn noise(x: vec3<f32>) -> f32 {
+  let p: vec3<f32> = floor(x);
+  var f: vec3<f32> = fract(x);
+
+  f = f * f * (3.0 - 2.0 * f);
+
+  let n: f32 = p.x + p.y * 57.0 + 113.0 * p.z;
+
+  let res: f32 = mix(mix(mix(hash(n + 0.0), hash(n + 1.0), f.x),
+                          mix(hash(n + 57.0), hash(n + 58.0), f.x), f.y),
+                      mix(mix(hash(n + 113.0), hash(n + 114.0), f.x),
+                          mix(hash(n + 170.0), hash(n + 171.0), f.x), f.y), f.z);
+  return res;
+}
+
+fn fbm(p: vec3<f32>) -> f32 {
+  var f: f32 = 0.0;
+  var pp = p;
+  f += 0.5000 * noise(p); pp = m * p * 2.02;
+  f += 0.2500 * noise(p); pp = m * p * 2.03;
+  f += 0.12500 * noise(p); pp = m * p * 2.01;
+  f += 0.06250 * noise(p);
+  return f;
 }
 
 fn computeLighting(density: f32, depth: f32, maxDepth: f32, cosTheta: f32) -> f32 {
@@ -56,9 +104,8 @@ fn computeLighting(density: f32, depth: f32, maxDepth: f32, cosTheta: f32) -> f3
   let scaledDepth: f32 = depth * depthScaleFactor;
 
   let light: f32 = density * (depthScaleFactor - scaledDepth);
-  let scatteredLight = light * schlickPhase(0.0, cosTheta);
   
-  return scatteredLight;
+  return light;
 }
 
 fn blend(baseColor: vec4<f32>, newColor: vec4<f32>, light: f32) -> vec4<f32> {
@@ -73,20 +120,12 @@ fn map3DTo2D(position: vec3<f32>) -> vec2<f32> {
   return vec2<f32>(longitude, latitude);
 }
 
-fn schlickPhase(g: f32, cosTheta: f32) -> f32 {
-  let g2 = g * g;
-  let denom = 1.0 + g2 - 2.0 * g * cosTheta;
-  return (4.0 - g2) / (1.0 * 3.141592653589793238 * denom * sqrt(denom));
-}
-
 fn cloudDensity(p: vec3<f32>, depth: f32) -> f32 {
   let radius: f32 = 1 + cloudUniforms.radius;
-  let pos = normalize(p) * radius;
-
-  let coverage: f32 = textureSample(texture, textureSampler, map3DTo2D(pos)).r /3;
-  let noiseScale = vec3<f32>(2.0, 2.0, 2.0);  // Change this to adjust the detail
-  var noise: f32 = textureSample(noiseTexture, noiseTextureSampler, pos * noiseScale).r / 15;
-  let density: f32  =  noise * coverage ;
+  let pos: vec3<f32> = normalize(p) * radius;
+  let coverage: f32 = textureSample(texture, textureSampler, map3DTo2D(pos)).r / 24;
+  var noise: f32 = fbm(pos);
+  let density: f32 = noise  * coverage * (1.0 - depth);
 
   return density;
 }
@@ -109,23 +148,20 @@ fn cloudDensity(p: vec3<f32>, depth: f32) -> f32 {
     let density: f32 = cloudDensity(texturePosition, depth);
     let light: f32 = computeLighting(density, depth, endDepth - startDepth, dot(rayDirection, output.vNormal.xyz));
 
-    let baseColor = vec3<f32>(0.4, 0.35, 0.45);  // Dark blue
-    let highColor = vec3<f32>(0.5, 0.45, 0.55);  // Light blue
+    let baseColor = vec3<f32>( 164 / 255, 164 / 255, 164 / 255);  // Dark blue
+    let highColor = vec3<f32>(0.84, 0.87, 0.92);  // Light blue
     let colorDensity = mix(baseColor, highColor, density);
     color = blend(color, vec4<f32>(colorDensity, density) , 1.0);
     
     rayOrigin = texturePosition;
   }
 
-  if(color.a < 0.2) {
+  if(color.a < 0.05) {
     discard;
   }
 
-  let cameraDirection = normalize(vec3<f32>(1, 0, 0) - vec3<f32>(0 ,0 ,0)); 
-  let up = vec3<f32>(0, 1, 0);
-  var lightDir = cross(cameraDirection, up);
-  lightDir = normalize(lightDir);
-  let dotProduct = dot(lightDir, output.vNormal.xyz);
+
+  let dotProduct = dot(output.lightPosition, output.vNormal.xyz);
   let scaledDotProduct: f32 = dotProduct * 10.0;
   var lightness: f32 = 1.0 - (1.0 / (1.0 + exp(-scaledDotProduct)));
 
@@ -135,6 +171,4 @@ fn cloudDensity(p: vec3<f32>, depth: f32) -> f32 {
 
   return color * lightness;
 }
-
-
 `;

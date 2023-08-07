@@ -53,12 +53,8 @@ struct Output {
 
 @fragment fn fs(output: Output) -> @location(0) vec4<f32> {
   let viewDirection: vec3<f32> = normalize(output.cameraPosition.xyz - output.vPosition.xyz);
-  let cameraDirection = normalize(output.lightPosition - vec3<f32>(0 ,0 ,0)); 
-  let up = vec3<f32>(0, 1, 0);
-  var lightDir = cross(cameraDirection, up);
-  lightDir = normalize(lightDir);
 
-  let dotProduct = dot(lightDir, output.vNormal.xyz);
+  let dotProduct = dot(output.lightPosition, output.vNormal.xyz);
   let scaledDotProduct: f32 = dotProduct * 10.0;
   let lightness: f32 = 1.0 - (1.0 / (1.0 + exp(-scaledDotProduct)));
   var rim: f32 = 1.0 - dot(viewDirection, output.vNormal.xyz); 
@@ -67,7 +63,7 @@ struct Output {
   let blueColor: vec4<f32> = vec4<f32>(0.6, 0.8, 1.0, rim); 
   let orangeColor: vec4<f32> = vec4<f32>(1.0, 1.0, 1.0, rim); 
 
-  let color: vec4<f32> = mix(blueColor, blueColor, lightness);
+  let color: vec4<f32> = mix(orangeColor, blueColor, lightness);
 
   return color;
 }

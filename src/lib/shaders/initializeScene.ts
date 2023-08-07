@@ -18,7 +18,6 @@ import { cloudShader } from './shaders/cloudShader.js';
 import {
   GetTexture,
   GetTextureFromGribData,
-  Get3DNoiseTexture,
   GetPartitionedTexture,
 } from './utils/getTexture.js';
 
@@ -27,7 +26,6 @@ import type {
   RenderOptions,
   HasChanged,
   UniOptions,
-  LightUniforms,
 } from '$lib/types/types.js';
 import { atmosphereShader } from './shaders/atmosphereShader.js';
 import { executeAndUpdate } from './utils/executeAndUpdate.js';
@@ -253,8 +251,6 @@ async function InitializeScene() {
     parsedGribTexture_3 = await GetTextureFromGribData(device, mb700R);
   }
 
-  const noiseTexture = await Get3DNoiseTexture(device);
-
   const earthBindings = [
     {
       binding: 0,
@@ -311,16 +307,14 @@ async function InitializeScene() {
     },
     {
       binding: 3,
-      resource: noiseTexture.texture.createView({ dimension: '3d' }),
+      resource: {
+        buffer: cloudUniBuffer_01,
+      },
     },
     {
       binding: 4,
-      resource: noiseTexture.sampler,
-    },
-    {
-      binding: 5,
       resource: {
-        buffer: cloudUniBuffer_01,
+        buffer: lightUniBuffer,
       },
     },
   ];
@@ -342,16 +336,14 @@ async function InitializeScene() {
     },
     {
       binding: 3,
-      resource: noiseTexture.texture.createView({ dimension: '3d' }),
+      resource: {
+        buffer: cloudUniBuffer_02,
+      },
     },
     {
       binding: 4,
-      resource: noiseTexture.sampler,
-    },
-    {
-      binding: 5,
       resource: {
-        buffer: cloudUniBuffer_02,
+        buffer: lightUniBuffer,
       },
     },
   ];
@@ -373,16 +365,14 @@ async function InitializeScene() {
     },
     {
       binding: 3,
-      resource: noiseTexture.texture.createView({ dimension: '3d' }),
+      resource: {
+        buffer: cloudUniBuffer_03,
+      },
     },
     {
       binding: 4,
-      resource: noiseTexture.sampler,
-    },
-    {
-      binding: 5,
       resource: {
-        buffer: cloudUniBuffer_03,
+        buffer: lightUniBuffer,
       },
     },
   ];
@@ -512,14 +502,14 @@ async function InitializeScene() {
 
   const cloudUniValues_03 = new Float32Array([0.02, 1.0, 0.0, 0.0]);
 
-  var lightPosition = vec3.create();
-  vec3.set(lightPosition, 1.0, 0.0, 0.0);
-
-  var lightColor = vec3.create();
-  vec3.set(lightColor, 1.0, 1.0, 1.0);
-
   async function frame() {
-    elapsed += 0.001;
+    elapsed += 0.0005;
+
+    var lightPosition = vec3.create();
+    vec3.set(lightPosition, 2 * Math.cos(elapsed), 0.0, 2 * Math.sin(elapsed));
+
+    var lightColor = vec3.create();
+    vec3.set(lightColor, 1.0, 1.0, 1.0);
 
     var newPitch = options.pitch + options.rotationSpeed / -500;
     newPitch = Math.max(-89, Math.min(89, newPitch));
@@ -542,7 +532,6 @@ async function InitializeScene() {
 
     if (hasChanged.resolution) {
       hasChanged.resolution = false;
-
       depthTexture.destroy();
       colorTexture.destroy();
 
