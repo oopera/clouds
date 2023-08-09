@@ -111,18 +111,28 @@ export const Get3DNoiseTexture = async (
   addressModeW = 'repeat'
 ) => {
   // Generate 3D noise data
-  const noiseData = generateWorleyNoise(width, height, depth, 128); // Replace this with your 3D noise generation logic
-
+  const noiseData_01 = generateWorleyNoise(width, height, depth, 32); // Replace this with your 3D noise generation logic
+  const noiseData_02 = generateWorleyNoise(width, height, depth, 64);
+  const noiseData_03 = generateWorleyNoise(width, height, depth, 128);
+  const noiseData_04 = generateWorleyNoise(width, height, depth, 256);
   // Create RGBA data from noise data
-  const rgbaData = new Uint8Array(noiseData.length * 4);
-  for (let i = 0; i < noiseData.length; i++) {
-    const value = noiseData[i];
-    const color = value * 255; // Scale 0-1 to 0-255
+  const rgbaData = new Uint8Array(noiseData_01.length * 4);
+  for (let i = 0; i < noiseData_01.length; i++) {
+    const value_01 = noiseData_01[i];
+    const value_02 = noiseData_02[i];
+    const value_03 = noiseData_03[i];
+    const value_04 = noiseData_04[i];
+
+    const color_01 = value_01 * 255; // Scale 0-1 to 0-255
+    const color_02 = value_02 * 255;
+    const color_03 = value_03 * 255;
+    const color_04 = value_04 * 255;
+
     const index = i * 4;
-    rgbaData[index] = color; // R
-    rgbaData[index + 1] = color; // G
-    rgbaData[index + 2] = color; // B
-    rgbaData[index + 3] = color; // A
+    rgbaData[index] = color_01; // R
+    rgbaData[index + 1] = color_02; // G
+    rgbaData[index + 2] = color_03; // B
+    rgbaData[index + 3] = color_04; // A
   }
 
   const sampler = device.createSampler({
