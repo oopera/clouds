@@ -19,6 +19,7 @@ import {
   GetTexture,
   GetTextureFromGribData,
   GetPartitionedTexture,
+  Get3DNoiseTexture,
 } from './utils/getTexture.js';
 
 import { GetDepthTexture } from './utils/getDepthTexture.js';
@@ -219,6 +220,12 @@ async function InitializeScene() {
   var parsedGribTexture_2;
   var parsedGribTexture_3;
 
+  const worleyNoiseTexture = await executeAndUpdate(
+    'worleyNoiseTexture',
+    await Get3DNoiseTexture(device),
+    '3D Noise Texture'
+  );
+
   if (dev) {
     parsedGribTexture = await GetTextureFromGribData(device, mb300);
     parsedGribTexture_2 = await GetTextureFromGribData(device, mb500);
@@ -317,6 +324,14 @@ async function InitializeScene() {
         buffer: lightUniBuffer,
       },
     },
+    {
+      binding: 5,
+      resource: worleyNoiseTexture.texture.createView({ dimension: '3d' }),
+    },
+    {
+      binding: 6,
+      resource: worleyNoiseTexture.sampler,
+    },
   ];
 
   const cloudBindings_2 = [
@@ -346,6 +361,14 @@ async function InitializeScene() {
         buffer: lightUniBuffer,
       },
     },
+    {
+      binding: 5,
+      resource: worleyNoiseTexture.texture.createView({ dimension: '3d' }),
+    },
+    {
+      binding: 6,
+      resource: worleyNoiseTexture.sampler,
+    },
   ];
 
   const cloudBindings_3 = [
@@ -374,6 +397,14 @@ async function InitializeScene() {
       resource: {
         buffer: lightUniBuffer,
       },
+    },
+    {
+      binding: 5,
+      resource: worleyNoiseTexture.texture.createView({ dimension: '3d' }),
+    },
+    {
+      binding: 6,
+      resource: worleyNoiseTexture.sampler,
     },
   ];
 
