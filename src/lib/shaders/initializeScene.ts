@@ -361,6 +361,14 @@ async function InitializeScene() {
         buffer: lightUniBuffer,
       },
     },
+    {
+      binding: 5,
+      resource: worleyNoiseTexture.texture.createView({ dimension: '3d' }),
+    },
+    {
+      binding: 6,
+      resource: worleyNoiseTexture.sampler,
+    },
   ];
 
   const cloudBindings_3 = [
@@ -389,6 +397,14 @@ async function InitializeScene() {
       resource: {
         buffer: lightUniBuffer,
       },
+    },
+    {
+      binding: 5,
+      resource: worleyNoiseTexture.texture.createView({ dimension: '3d' }),
+    },
+    {
+      binding: 6,
+      resource: worleyNoiseTexture.sampler,
     },
   ];
 
@@ -666,21 +682,21 @@ async function InitializeScene() {
 
     renderPass.draw(options.amountOfVertices);
 
-    // renderPass.setPipeline(pipeline[3]);
-    // renderPass.setVertexBuffer(0, buffers[0][0]);
-    // renderPass.setVertexBuffer(1, buffers[0][1]);
-    // renderPass.setVertexBuffer(2, buffers[0][2]);
-    // renderPass.setBindGroup(0, bindGroup[3]);
+    renderPass.setPipeline(pipeline[3]);
+    renderPass.setVertexBuffer(0, buffers[0][0]);
+    renderPass.setVertexBuffer(1, buffers[0][1]);
+    renderPass.setVertexBuffer(2, buffers[0][2]);
+    renderPass.setBindGroup(0, bindGroup[3]);
 
-    // renderPass.draw(options.amountOfVertices);
+    renderPass.draw(options.amountOfVertices);
 
-    // renderPass.setPipeline(pipeline[4]);
-    // renderPass.setVertexBuffer(0, buffers[0][0]);
-    // renderPass.setVertexBuffer(1, buffers[0][1]);
-    // renderPass.setVertexBuffer(2, buffers[0][2]);
-    // renderPass.setBindGroup(0, bindGroup[4]);
+    renderPass.setPipeline(pipeline[4]);
+    renderPass.setVertexBuffer(0, buffers[0][0]);
+    renderPass.setVertexBuffer(1, buffers[0][1]);
+    renderPass.setVertexBuffer(2, buffers[0][2]);
+    renderPass.setBindGroup(0, bindGroup[4]);
 
-    // renderPass.draw(options.amountOfVertices);
+    renderPass.draw(options.amountOfVertices);
 
     renderPass.setPipeline(pipeline[2]);
     renderPass.setVertexBuffer(0, buffers[0][0]);

@@ -1,3 +1,5 @@
+import worleyFbm from './worleyNoise';
+
 export const GetTexture = async (
   device: GPUDevice,
   imageName: string,
@@ -111,22 +113,17 @@ export const Get3DNoiseTexture = async (
   addressModeW = 'repeat'
 ) => {
   // Generate 3D noise data
-  const noiseData_01 = generateWorleyNoise(width, height, depth, 32); // Replace this with your 3D noise generation logic
-  const noiseData_02 = generateWorleyNoise(width, height, depth, 64);
-  const noiseData_03 = generateWorleyNoise(width, height, depth, 128);
-  const noiseData_04 = generateWorleyNoise(width, height, depth, 256);
+  const noiseData_01 = generateWorleyFbmNoise(width, height, depth, 0.125); // Replace this with your 3D noise generation logic
+  const noiseData_02 = generateWorleyFbmNoise(width, height, depth, 0.25);
+  const noiseData_03 = generateWorleyFbmNoise(width, height, depth, 0.5);
+  const noiseData_04 = generateWorleyFbmNoise(width, height, depth, 0.75);
   // Create RGBA data from noise data
   const rgbaData = new Uint8Array(noiseData_01.length * 4);
   for (let i = 0; i < noiseData_01.length; i++) {
-    const value_01 = noiseData_01[i];
-    const value_02 = noiseData_02[i];
-    const value_03 = noiseData_03[i];
-    const value_04 = noiseData_04[i];
-
-    const color_01 = value_01 * 255; // Scale 0-1 to 0-255
-    const color_02 = value_02 * 255;
-    const color_03 = value_03 * 255;
-    const color_04 = value_04 * 255;
+    const color_01 = noiseData_01[i] * 255; // Scale 0-1 to 0-255
+    const color_02 = noiseData_02[i] * 255;
+    const color_03 = noiseData_03[i] * 255;
+    const color_04 = noiseData_04[i] * 255;
 
     const index = i * 4;
     rgbaData[index] = color_01; // R
@@ -161,47 +158,18 @@ export const Get3DNoiseTexture = async (
   };
 };
 
-function distanceSquared(
-  a: { x: number; y: number; z: number },
-  b: { x: number; y: number; z: number }
-) {
-  const dx = a.x - b.x;
-  const dy = a.y - b.y;
-  const dz = a.z - b.z;
-  return dx * dx + dy * dy + dz * dz;
-}
-
-function generateWorleyNoise(
+function generateWorleyFbmNoise(
   width: number,
   height: number,
   depth: number,
-  numPoints: number
-) {
+  freq: number
+): Float32Array {
   const noiseData = new Float32Array(width * height * depth);
-
-  const points = [];
-  for (let i = 0; i < numPoints; i++) {
-    points.push({
-      x: Math.random() * width,
-      y: Math.random() * height,
-      z: Math.random() * depth,
-    });
-  }
 
   for (let z = 0; z < depth; z++) {
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
-        let minDistSquared = Infinity;
-        for (const point of points) {
-          const distSquared = distanceSquared(point, { x, y, z });
-          if (distSquared < minDistSquared) {
-            minDistSquared = distSquared;
-          }
-        }
-        const noiseValue =
-          1 -
-          Math.sqrt(minDistSquared) /
-            Math.sqrt(width * width + height * height + depth * depth);
+        const noiseValue = worleyFbm({ x, y, z }, freq);
         noiseData[z * width * height + y * width + x] = noiseValue;
       }
     }
