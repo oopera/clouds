@@ -1,78 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { zoom, pitch, yaw, rotation_speed } from '$lib/stores/stores';
+  import { zoom } from '$lib/stores/stores';
 
-  let isHovering = false;
   let zoomValue = 0;
-  let pitchV: number = 0;
-  let yawV: number = 0;
-  let rotationSpeed = 0;
-  let initialRot = 0;
-
-  rotation_speed.subscribe((value) => {
-    rotationSpeed = value;
-  });
-
-  pitch.subscribe((value) => {
-    pitchV = value;
-  });
-
-  yaw.subscribe((value) => {
-    yawV = value;
-  });
-
-  function handleHover(e: MouseEvent) {
-    const elements = document.querySelectorAll('[data-hud]');
-    if (isHovering) {
-      // let interval = setInterval(() => {
-      const container = e.currentTarget as HTMLElement;
-      const containerRect = container.getBoundingClientRect();
-      const containerCenterX = containerRect.left + containerRect.width / 2;
-      const containerCenterY = containerRect.top + containerRect.height / 2;
-      const maxOffset = 75;
-      const xOffset = e.clientX - containerCenterX;
-      const yOffset = e.clientY - containerCenterY;
-
-      pitch.set(pitchV + yOffset / 100);
-      yaw.set(yawV + xOffset / 100);
-      rotation_speed.set(0);
-
-      elements.forEach((el: Element, i) => {
-        const positionX =
-          ((xOffset / containerRect.width) *
-            maxOffset *
-            (elements.length - i)) /
-          10;
-        const positionY =
-          ((yOffset / containerRect.height) *
-            maxOffset *
-            (elements.length - i)) /
-          10;
-
-        (el as HTMLElement).style.top = `calc(50% + ${positionY}px)`;
-        (el as HTMLElement).style.left = `calc(50% + ${positionX}px)`;
-        (el as HTMLElement).style.transition = `0ms all`;
-      });
-      // }, 250);
-      // return () => clearInterval(interval);
-    }
-  }
-
-  const handleMouseEnter = () => {
-    isHovering = true;
-    initialRot = rotationSpeed;
-  };
-
-  const handleMouseLeave = () => {
-    isHovering = false;
-    const elements = document.querySelectorAll('[data-hud]');
-    elements.forEach((el, i) => {
-      (el as HTMLElement).style.top = ``;
-      (el as HTMLElement).style.left = ``;
-      (el as HTMLElement).style.transition = ``;
-    });
-    rotation_speed.set(initialRot);
-  };
 
   onMount(() => {
     zoom.subscribe((value) => {
@@ -81,13 +11,7 @@
   });
 </script>
 
-<div
-  id="hud"
-  class="viewfinder"
-  on:mouseenter={handleMouseEnter}
-  on:mouseleave={handleMouseLeave}
-  on:mousemove={handleHover}
->
+<div id="hud" class="viewfinder">
   <div class="hud">
     <div data-hud class="crosshair">
       <div class="crosshair__horizontal" />

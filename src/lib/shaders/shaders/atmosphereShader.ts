@@ -37,7 +37,7 @@ struct Output {
   var output: Output;
 
   let mPosition: vec4<f32> = uni.modelMatrix * input.position;
-  let displacement: vec4<f32> = vec4<f32>(normalize(mPosition.xyz) * (0.02), 0.0);
+  let displacement: vec4<f32> = vec4<f32>(normalize(mPosition.xyz) * (0.04), 0.0);
   let worldPosition: vec4<f32> = mPosition + displacement;
   
   output.Position = uni.viewProjectionMatrix * worldPosition;
@@ -52,19 +52,20 @@ struct Output {
 }
 
 @fragment fn fs(output: Output) -> @location(0) vec4<f32> {
+
   let viewDirection: vec3<f32> = normalize(output.cameraPosition.xyz - output.vPosition.xyz);
 
   let dotProduct = dot(output.lightPosition, output.vNormal.xyz);
   let scaledDotProduct: f32 = dotProduct * 10.0;
   let lightness: f32 = 1.0 - (1.0 / (1.0 + exp(-scaledDotProduct)));
   var rim: f32 = 1.0 - dot(viewDirection, output.vNormal.xyz); 
-  rim = pow(rim, 2.0 + 20.0 * ( 1 - lightness )); 
+  rim = pow(rim, 5.0 + 20.0 * ( 1 - lightness )); 
 
   let blueColor: vec4<f32> = vec4<f32>(0.6, 0.8, 1.0, rim); 
   let orangeColor: vec4<f32> = vec4<f32>(1.0, 1.0, 1.0, rim); 
 
   let color: vec4<f32> = mix(orangeColor, blueColor, lightness);
-
+  // discard;
   return color;
 }
 `;

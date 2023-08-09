@@ -152,7 +152,7 @@ async function InitializeScene() {
   );
   let texture = await executeAndUpdate(
     'texture',
-    loadImage('/textures/nasa-texture.jpg'),
+    loadImage('/textures/Earth_Diffuse.jpg'),
     'texture map'
   );
   let lightmap = await executeAndUpdate(
@@ -498,9 +498,9 @@ async function InitializeScene() {
 
   const cloudUniValues_01 = new Float32Array([0.01, 1.0, 0.0, 0.0]);
 
-  const cloudUniValues_02 = new Float32Array([0.0125, 1.0, 0.0, 0.0]);
+  const cloudUniValues_02 = new Float32Array([0.02, 1.0, 0.0, 0.0]);
 
-  const cloudUniValues_03 = new Float32Array([0.015, 1.0, 0.0, 0.0]);
+  const cloudUniValues_03 = new Float32Array([0.03, 1.0, 0.0, 0.0]);
 
   async function frame() {
     elapsed += 0.0005;

@@ -99,18 +99,20 @@ fn fbm(p: vec3<f32>) -> f32 {
 }
 
 fn computeLighting(density: f32, depth: f32, maxDepth: f32, cosTheta: f32) -> f32 {
-  let scaledMaxDepth: f32 = 1.0;
-  let depthScaleFactor: f32 = scaledMaxDepth / maxDepth;
-  let scaledDepth: f32 = depth * depthScaleFactor;
+  let diffuse = max(cosTheta, 0.0);
+  let attenuationByDensity = 1.0 - density;
+  let scaledDepth: f32 = depth / maxDepth;
+  let attenuationByDepth = 1.0 - 0.15 * scaledDepth;  
 
-  let light: f32 = density * (depthScaleFactor - scaledDepth);
-  
+  let light = diffuse * attenuationByDensity * attenuationByDepth;
+
   return light;
 }
 
 fn blend(baseColor: vec4<f32>, newColor: vec4<f32>, light: f32) -> vec4<f32> {
-  return baseColor + newColor * light;
+  return baseColor * (1.0 - newColor.a) + newColor * light;
 }
+
 
 fn map3DTo2D(position: vec3<f32>) -> vec2<f32> {
   let radius: f32 = 1 + cloudUniforms.radius;
@@ -123,9 +125,9 @@ fn map3DTo2D(position: vec3<f32>) -> vec2<f32> {
 fn cloudDensity(p: vec3<f32>, depth: f32) -> f32 {
   let radius: f32 = 1 + cloudUniforms.radius;
   let pos: vec3<f32> = normalize(p) * radius;
-  let coverage: f32 = textureSample(texture, textureSampler, map3DTo2D(pos)).r / 24;
+  let coverage: f32 = textureSample(texture, textureSampler, map3DTo2D(pos)).r ;
   var noise: f32 = fbm(pos);
-  let density: f32 = noise  * coverage * (1.0 - depth);
+  let density: f32 = noise * coverage / 2;
 
   return density;
 }
@@ -135,7 +137,7 @@ fn cloudDensity(p: vec3<f32>, depth: f32) -> f32 {
   var rayOrigin: vec3<f32> = output.vNormal.xyz;
   
   let startDepth: f32 = cloudUniforms.radius / 10;
-  let endDepth: f32 = cloudUniforms.radius / 10 + 0.0025;
+  let endDepth: f32 = cloudUniforms.radius / 10 + 0.001;
 
   let stepSize: f32 = 0.00005;
 
@@ -148,25 +150,25 @@ fn cloudDensity(p: vec3<f32>, depth: f32) -> f32 {
     let density: f32 = cloudDensity(texturePosition, depth);
     let light: f32 = computeLighting(density, depth, endDepth - startDepth, dot(rayDirection, output.vNormal.xyz));
 
-    let baseColor = vec3<f32>( 164 / 255, 164 / 255, 164 / 255);  // Dark blue
-    let highColor = vec3<f32>(0.84, 0.87, 0.92);  // Light blue
+    let baseColor = vec3<f32>(0.54, 0.57, 0.62);
+    let highColor = vec3<f32>(0.84, 0.87, 0.92);
     let colorDensity = mix(baseColor, highColor, density);
-    color = blend(color, vec4<f32>(colorDensity, density) , 1.0);
-    
+    color = clamp(blend(color, vec4<f32>(colorDensity, density), clamp(light,0.0,1.0)), vec4<f32>(0.0, 0.0, 0.0, 0.0), vec4<f32>(1.0, 1.0, 1.0, 1.0));
+
     rayOrigin = texturePosition;
   }
 
-  if(color.a < 0.05) {
-    discard;
-  }
+  // if(color.a < 0.05) {
+  //   discard;
+  // }
 
 
   let dotProduct = dot(output.lightPosition, output.vNormal.xyz);
   let scaledDotProduct: f32 = dotProduct * 10.0;
   var lightness: f32 = 1.0 - (1.0 / (1.0 + exp(-scaledDotProduct)));
 
-  if(lightness < 0.2){
-    lightness = 0.2;
+  if(lightness < 0.5){
+    lightness = 0.5;
   }
 
   return color * lightness;

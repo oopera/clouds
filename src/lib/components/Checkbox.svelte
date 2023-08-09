@@ -11,7 +11,9 @@
 
   onMount(async () => {
     mounted = true;
-    store = await import(`./../stores/stores.js`).then((m) => m[title]);
+    store = await import(`./../stores/stores.js`).then(
+      (m) => m[title as keyof typeof m]
+    );
     if (!store) return;
   });
 

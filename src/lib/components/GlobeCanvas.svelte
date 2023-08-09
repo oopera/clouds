@@ -11,7 +11,7 @@
 
 <style>
   .canvas {
-    z-index: 1;
+    z-index: 0;
 
     position: fixed;
     left: 0;
