@@ -33,6 +33,7 @@ import { executeAndUpdate } from './utils/executeAndUpdate.js';
 import { mb300 } from '$lib/assets/mb300.js';
 import { mb500 } from '$lib/assets/mb500.js';
 import { mb700 } from '$lib/assets/mb700.js';
+
 let depthTexture: GPUTexture;
 
 import { dev } from '$app/environment';
@@ -220,17 +221,24 @@ async function InitializeScene() {
   var parsedGribTexture_2;
   var parsedGribTexture_3;
 
-  const worleyNoiseTexture = await executeAndUpdate(
-    'worleyNoiseTexture',
-    await Get3DNoiseTexture(device),
-    '3D Noise Texture'
-  );
+  var worleyNoiseTexture;
 
   if (dev) {
     parsedGribTexture = await GetTextureFromGribData(device, mb300);
     parsedGribTexture_2 = await GetTextureFromGribData(device, mb500);
     parsedGribTexture_3 = await GetTextureFromGribData(device, mb700);
+    worleyNoiseTexture = await executeAndUpdate(
+      'worleyNoiseTexture',
+      await Get3DNoiseTexture(device),
+      '3D Noise Texture'
+    );
   } else {
+    worleyNoiseTexture = await executeAndUpdate(
+      'worleyNoiseTexture',
+      await Get3DNoiseTexture(device),
+      '3D Noise Texture'
+    );
+
     const mb300RD = await executeAndUpdate(
       'mb300RD',
       fetch(`/api/cloud-texture?level_mb=300_mb&date=${dateString}`),
@@ -306,23 +314,23 @@ async function InitializeScene() {
     },
     {
       binding: 1,
-      resource: parsedGribTexture.texture.createView(),
-    },
-    {
-      binding: 2,
-      resource: parsedGribTexture.sampler,
-    },
-    {
-      binding: 3,
       resource: {
         buffer: cloudUniBuffer_01,
       },
     },
     {
-      binding: 4,
+      binding: 2,
       resource: {
         buffer: lightUniBuffer,
       },
+    },
+    {
+      binding: 3,
+      resource: parsedGribTexture.texture.createView(),
+    },
+    {
+      binding: 4,
+      resource: parsedGribTexture.sampler,
     },
     {
       binding: 5,

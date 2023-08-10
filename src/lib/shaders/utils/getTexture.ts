@@ -105,6 +105,14 @@ export const GetTextureFromGribData = async (
   };
 };
 
+function remap(x: number, a: number, b: number, c: number, d: number): number {
+  return ((x - a) / (b - a)) * (d - c) + c;
+}
+
+function mix(a: number, b: number, t: number): number {
+  return a * (1 - t) + b * t;
+}
+
 export const Get3DNoiseTexture = async (
   device: GPUDevice,
   width: number = 128,
@@ -114,7 +122,6 @@ export const Get3DNoiseTexture = async (
   addressModeV = 'repeat',
   addressModeW = 'repeat'
 ) => {
-  // Generate 3D noise data
   const perlinNoiseData_01 = generatePerlinFbmNoise(
     width,
     height,
@@ -123,17 +130,20 @@ export const Get3DNoiseTexture = async (
     25
   );
   const noiseData_01 = generateWorleyFbmNoise(width, height, depth, 6);
-  const noiseData_02 = generateWorleyFbmNoise(width, height, depth, 8);
-  const noiseData_03 = generateWorleyFbmNoise(width, height, depth, 10);
-  const noiseData_04 = generateWorleyFbmNoise(width, height, depth, 12);
-  // Create RGBA data from noise data
-  const rgbaData = new Uint8Array(noiseData_04.length * 4);
-  for (let i = 0; i < noiseData_04.length; i++) {
+  const noiseData_02 = generateWorleyFbmNoise(width, height, depth, 12);
+  const rgbaData = new Uint8Array(noiseData_01.length * 4);
+
+  for (let i = 0; i < noiseData_01.length; i++) {
     const index = i * 4;
+    let pfbm = mix(noiseData_01[i], perlinNoiseData_01[i], 0.25);
+    const billowyPerlinData = Math.abs(pfbm * 2.0 - 1.0);
+
+    let pfbm2 = mix(noiseData_02[i], perlinNoiseData_01[i], 0.25);
+    const billowyPerlinData2 = Math.abs(pfbm2 * 2.0 - 1.0);
     rgbaData[index] = perlinNoiseData_01[i] * 255; // R
-    rgbaData[index + 1] = noiseData_02[i] * 255; // G
-    rgbaData[index + 2] = noiseData_03[i] * 255; // B
-    rgbaData[index + 3] = noiseData_04[i] * 255; // A
+    rgbaData[index + 1] = noiseData_01[i] * 255; // G
+    rgbaData[index + 2] = billowyPerlinData2 * 255; // B
+    rgbaData[index + 3] = billowyPerlinData * 255; // A
   }
 
   console.log(rgbaData);
