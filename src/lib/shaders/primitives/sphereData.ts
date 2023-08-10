@@ -55,9 +55,7 @@ const SphereData = (
       vec3.subtract(a, p2, p0);
       vec3.subtract(b, p1, p3);
 
-      // vertex data
       vertex.push([
-        //first triangle
         p0[0],
         p0[1],
         p0[2],
@@ -68,7 +66,6 @@ const SphereData = (
         p3[1],
         p3[2],
 
-        //second triangle
         p1[0],
         p1[1],
         p1[2],
@@ -80,9 +77,7 @@ const SphereData = (
         p3[2],
       ]);
 
-      //normal data
       normal.push([
-        //first triangle
         p0[0] / radius,
         p0[1] / radius,
         p0[2] / radius,
@@ -93,7 +88,6 @@ const SphereData = (
         p3[1] / radius,
         p3[2] / radius,
 
-        //second triangle
         p1[0] / radius,
         p1[1] / radius,
         p1[2] / radius,
@@ -105,17 +99,13 @@ const SphereData = (
         p3[2] / radius,
       ]);
 
-      // uv data
       uv.push([
-        // first triangle
         j / (v - 1),
         i / (u - 1),
         j / (v - 1),
         (i + 1) / (u - 1),
         (j + 1) / (v - 1),
         i / (u - 1),
-
-        // second triangle
         j / (v - 1),
         (i + 1) / (u - 1),
         (j + 1) / (v - 1),

@@ -423,12 +423,12 @@ async function InitializeScene() {
     },
   ];
 
-  pipeline[0] = CreatePipeline(
-    device,
-    device.createShaderModule({ code: earthShader }),
-    options,
-    presentationFormat
-  );
+  // pipeline[0] = CreatePipeline(
+  //   device,
+  //   device.createShaderModule({ code: earthShader }),
+  //   options,
+  //   presentationFormat
+  // );
 
   pipeline[1] = CreatePipeline(
     device,
@@ -440,44 +440,44 @@ async function InitializeScene() {
     presentationFormat
   );
 
-  pipeline[2] = CreatePipeline(
-    device,
-    device.createShaderModule({ code: atmosphereShader }),
-    {
-      ...options,
-    },
-    presentationFormat
-  );
+  // pipeline[2] = CreatePipeline(
+  //   device,
+  //   device.createShaderModule({ code: atmosphereShader }),
+  //   {
+  //     ...options,
+  //   },
+  //   presentationFormat
+  // );
 
-  pipeline[3] = CreatePipeline(
-    device,
-    device.createShaderModule({ code: cloudShader }),
-    {
-      ...options,
-      cullmode: 'none',
-    },
-    presentationFormat
-  );
+  // pipeline[3] = CreatePipeline(
+  //   device,
+  //   device.createShaderModule({ code: cloudShader }),
+  //   {
+  //     ...options,
+  //     cullmode: 'none',
+  //   },
+  //   presentationFormat
+  // );
 
-  pipeline[4] = CreatePipeline(
-    device,
-    device.createShaderModule({ code: cloudShader }),
-    {
-      ...options,
-      cullmode: 'none',
-    },
-    presentationFormat
-  );
+  // pipeline[4] = CreatePipeline(
+  //   device,
+  //   device.createShaderModule({ code: cloudShader }),
+  //   {
+  //     ...options,
+  //     cullmode: 'none',
+  //   },
+  //   presentationFormat
+  // );
 
-  bindGroup[0] = CreateBindGroup(device, pipeline[0], earthBindings);
+  // bindGroup[0] = CreateBindGroup(device, pipeline[0], earthBindings);
 
   bindGroup[1] = CreateBindGroup(device, pipeline[1], cloudBindings);
 
-  bindGroup[2] = CreateBindGroup(device, pipeline[2], atmosphereBindings);
+  // bindGroup[2] = CreateBindGroup(device, pipeline[2], atmosphereBindings);
 
-  bindGroup[3] = CreateBindGroup(device, pipeline[3], cloudBindings_2);
+  // bindGroup[3] = CreateBindGroup(device, pipeline[3], cloudBindings_2);
 
-  bindGroup[4] = CreateBindGroup(device, pipeline[4], cloudBindings_3);
+  // bindGroup[4] = CreateBindGroup(device, pipeline[4], cloudBindings_3);
 
   const renderPassDescriptor: GPURenderPassDescriptor = {
     colorAttachments: [
@@ -582,11 +582,11 @@ async function InitializeScene() {
       depthTexture = depth.texture;
     }
 
-    bindGroup[0] = CreateBindGroup(device, pipeline[0], earthBindings);
+    // bindGroup[0] = CreateBindGroup(device, pipeline[0], earthBindings);
     bindGroup[1] = CreateBindGroup(device, pipeline[1], cloudBindings);
-    bindGroup[2] = CreateBindGroup(device, pipeline[2], atmosphereBindings);
-    bindGroup[3] = CreateBindGroup(device, pipeline[3], cloudBindings_2);
-    bindGroup[4] = CreateBindGroup(device, pipeline[4], cloudBindings_3);
+    // bindGroup[2] = CreateBindGroup(device, pipeline[2], atmosphereBindings);
+    // bindGroup[3] = CreateBindGroup(device, pipeline[3], cloudBindings_2);
+    // bindGroup[4] = CreateBindGroup(device, pipeline[4], cloudBindings_3);
 
     renderPassDescriptor.depthStencilAttachment.view =
       depthTexture.createView();
@@ -666,13 +666,13 @@ async function InitializeScene() {
       renderPassDescriptor as GPURenderPassDescriptor
     );
 
-    renderPass.setPipeline(pipeline[0]);
-    renderPass.setVertexBuffer(0, buffers[0][0]);
-    renderPass.setVertexBuffer(1, buffers[0][1]);
-    renderPass.setVertexBuffer(2, buffers[0][2]);
-    renderPass.setBindGroup(0, bindGroup[0]);
+    // renderPass.setPipeline(pipeline[0]);
+    // renderPass.setVertexBuffer(0, buffers[0][0]);
+    // renderPass.setVertexBuffer(1, buffers[0][1]);
+    // renderPass.setVertexBuffer(2, buffers[0][2]);
+    // renderPass.setBindGroup(0, bindGroup[0]);
 
-    renderPass.draw(options.amountOfVertices);
+    // renderPass.draw(options.amountOfVertices);
 
     renderPass.setPipeline(pipeline[1]);
     renderPass.setVertexBuffer(0, buffers[0][0]);
@@ -682,29 +682,29 @@ async function InitializeScene() {
 
     renderPass.draw(options.amountOfVertices);
 
-    renderPass.setPipeline(pipeline[3]);
-    renderPass.setVertexBuffer(0, buffers[0][0]);
-    renderPass.setVertexBuffer(1, buffers[0][1]);
-    renderPass.setVertexBuffer(2, buffers[0][2]);
-    renderPass.setBindGroup(0, bindGroup[3]);
+    // renderPass.setPipeline(pipeline[3]);
+    // renderPass.setVertexBuffer(0, buffers[0][0]);
+    // renderPass.setVertexBuffer(1, buffers[0][1]);
+    // renderPass.setVertexBuffer(2, buffers[0][2]);
+    // renderPass.setBindGroup(0, bindGroup[3]);
 
-    renderPass.draw(options.amountOfVertices);
+    // renderPass.draw(options.amountOfVertices);
 
-    renderPass.setPipeline(pipeline[4]);
-    renderPass.setVertexBuffer(0, buffers[0][0]);
-    renderPass.setVertexBuffer(1, buffers[0][1]);
-    renderPass.setVertexBuffer(2, buffers[0][2]);
-    renderPass.setBindGroup(0, bindGroup[4]);
+    // renderPass.setPipeline(pipeline[4]);
+    // renderPass.setVertexBuffer(0, buffers[0][0]);
+    // renderPass.setVertexBuffer(1, buffers[0][1]);
+    // renderPass.setVertexBuffer(2, buffers[0][2]);
+    // renderPass.setBindGroup(0, bindGroup[4]);
 
-    renderPass.draw(options.amountOfVertices);
+    // renderPass.draw(options.amountOfVertices);
 
-    renderPass.setPipeline(pipeline[2]);
-    renderPass.setVertexBuffer(0, buffers[0][0]);
-    renderPass.setVertexBuffer(1, buffers[0][1]);
-    renderPass.setVertexBuffer(2, buffers[0][2]);
-    renderPass.setBindGroup(0, bindGroup[2]);
+    // renderPass.setPipeline(pipeline[2]);
+    // renderPass.setVertexBuffer(0, buffers[0][0]);
+    // renderPass.setVertexBuffer(1, buffers[0][1]);
+    // renderPass.setVertexBuffer(2, buffers[0][2]);
+    // renderPass.setBindGroup(0, bindGroup[2]);
 
-    renderPass.draw(options.amountOfVertices);
+    // renderPass.draw(options.amountOfVertices);
 
     renderPass.end();
     device.queue.submit([commandEncoder.finish()]);

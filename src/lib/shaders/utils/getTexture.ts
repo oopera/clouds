@@ -1,4 +1,6 @@
-import worleyFbm from './worleyNoise';
+import { vec3 } from 'gl-matrix';
+import worleyFbm, { generatePerlinFbmNoise } from './worleyNoise';
+import generateWorleyFbmNoise from './worleyNoise';
 
 export const GetTexture = async (
   device: GPUDevice,
@@ -113,107 +115,28 @@ export const Get3DNoiseTexture = async (
   addressModeW = 'repeat'
 ) => {
   // Generate 3D noise data
-  const noiseData_01 = generateWorleyFbmNoise(width, height, depth, 0.125); // Replace this with your 3D noise generation logic
-  const noiseData_02 = generateWorleyFbmNoise(width, height, depth, 0.25);
-  const noiseData_03 = generateWorleyFbmNoise(width, height, depth, 0.5);
-  const noiseData_04 = generateWorleyFbmNoise(width, height, depth, 0.75);
-  // Create RGBA data from noise data
-  const rgbaData = new Uint8Array(noiseData_01.length * 4);
-  for (let i = 0; i < noiseData_01.length; i++) {
-    const color_01 = noiseData_01[i] * 255; // Scale 0-1 to 0-255
-    const color_02 = noiseData_02[i] * 255;
-    const color_03 = noiseData_03[i] * 255;
-    const color_04 = noiseData_04[i] * 255;
-
-    const index = i * 4;
-    rgbaData[index] = color_01; // R
-    rgbaData[index + 1] = color_02; // G
-    rgbaData[index + 2] = color_03; // B
-    rgbaData[index + 3] = color_04; // A
-  }
-
-  const sampler = device.createSampler({
-    minFilter: 'linear',
-    magFilter: 'linear',
-    addressModeU: addressModeU as GPUAddressMode,
-    addressModeV: addressModeV as GPUAddressMode,
-    addressModeW: addressModeW as GPUAddressMode,
-  });
-
-  const texture = device.createTexture({
-    size: { width: width, height: height, depthOrArrayLayers: depth },
-    format: 'rgba8unorm',
-    usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST,
-    dimension: '3d', // Specify that the texture is 3D
-  });
-  device.queue.writeTexture(
-    { texture: texture },
-    rgbaData,
-    { offset: 0, bytesPerRow: 4 * width, rowsPerImage: height },
-    { width: width, height: height, depthOrArrayLayers: depth }
+  const perlinNoiseData_01 = generatePerlinFbmNoise(
+    width,
+    height,
+    depth,
+    25,
+    25
   );
-  return {
-    texture,
-    sampler,
-  };
-};
-
-function generateWorleyFbmNoise(
-  width: number,
-  height: number,
-  depth: number,
-  freq: number
-): Float32Array {
-  const noiseData = new Float32Array(width * height * depth);
-
-  for (let z = 0; z < depth; z++) {
-    for (let y = 0; y < height; y++) {
-      for (let x = 0; x < width; x++) {
-        const noiseValue = worleyFbm({ x, y, z }, freq);
-        noiseData[z * width * height + y * width + x] = noiseValue;
-      }
-    }
+  const noiseData_01 = generateWorleyFbmNoise(width, height, depth, 6);
+  const noiseData_02 = generateWorleyFbmNoise(width, height, depth, 8);
+  const noiseData_03 = generateWorleyFbmNoise(width, height, depth, 10);
+  const noiseData_04 = generateWorleyFbmNoise(width, height, depth, 12);
+  // Create RGBA data from noise data
+  const rgbaData = new Uint8Array(noiseData_04.length * 4);
+  for (let i = 0; i < noiseData_04.length; i++) {
+    const index = i * 4;
+    rgbaData[index] = perlinNoiseData_01[i] * 255; // R
+    rgbaData[index + 1] = noiseData_02[i] * 255; // G
+    rgbaData[index + 2] = noiseData_03[i] * 255; // B
+    rgbaData[index + 3] = noiseData_04[i] * 255; // A
   }
 
-  return noiseData;
-}
-
-export const GetTextureFromGribData3D = async (
-  device: GPUDevice,
-  encodedRunsArrays: any, // Now an array of arrays
-  width: number = 1440, // the number of longitudes
-  height: number = 721, // the number of latitudes
-  depth: number, // the number of layers
-  addressModeU = 'repeat',
-  addressModeV = 'repeat',
-  addressModeW = 'clamp-to-edge' // 3D textures need a third address mode
-) => {
-  const rgbaData = new Uint8Array(width * height * depth * 4); // 4 for RGBA channels
-
-  // Iterate over each layer
-  for (let d = 0; d < depth; d++) {
-    const encodedRuns = encodedRunsArrays[d];
-
-    // Decode run-length encoded data
-    const gribData = new Float32Array(width * height);
-    let index = 0;
-    for (const run of encodedRuns) {
-      for (let i = 0; i < run.count && index < gribData.length; i++) {
-        gribData[index++] = run.value;
-      }
-    }
-
-    // Create RGBA data from grib data and insert it into the larger array
-    for (let i = 0; i < gribData.length; i++) {
-      const value = gribData[i];
-      const color = value * 2.55; // scale 0-100 to 0-255
-      const index = (d * width * height + i) * 4; // Account for depth in the index
-      rgbaData[index] = color; // R
-      rgbaData[index + 1] = color; // G
-      rgbaData[index + 2] = color; // B
-      rgbaData[index + 3] = color; // A
-    }
-  }
+  console.log(rgbaData);
 
   const sampler = device.createSampler({
     minFilter: 'linear',
@@ -229,17 +152,12 @@ export const GetTextureFromGribData3D = async (
     usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST,
     dimension: '3d',
   });
-
-  const bytesPerRow = Math.ceil((width * 4) / 256) * 256; // must be a multiple of 256
-  const rowsPerImage = height;
-
   device.queue.writeTexture(
     { texture: texture },
     rgbaData,
-    { offset: 0, bytesPerRow: bytesPerRow, rowsPerImage: rowsPerImage },
+    { offset: 0, bytesPerRow: 4 * width, rowsPerImage: height },
     { width: width, height: height, depthOrArrayLayers: depth }
   );
-
   return {
     texture,
     sampler,
