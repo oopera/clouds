@@ -61,9 +61,7 @@ fn blend(baseColor: vec3<f32>, newColor: vec3<f32>, light: f32) -> vec3<f32> {
   return baseColor + newColor * light;
 }
 
-fn getNoise(p: vec3<f32>) -> vec4<f32> {
-  let noiseScale = vec3<f32>(2.5, 2.5,2.5);
-  
+fn getNoise(p: vec3<f32>, noiseScale: vec3<f32>) -> vec4<f32> {
    let noise = textureSample(noise_texture, noise_sampler, p * noiseScale);
    return noise;
   }
@@ -89,7 +87,7 @@ fn clamp(x: f32, minVal: f32, maxVal: f32) -> f32 {
 
 @fragment fn fs(output: Output) -> @location(0) vec4<f32> {
   let cameraPosition: vec3<f32> = uni.cameraPosition.rgb;
-  var rayOrigin: vec3<f32> = output.vNormal.xyz;
+  var rayOrigin: vec3<f32> = output.vNormal.xyz - cloudUniforms.radius * cameraPosition;
   var rayDirection: vec3<f32> = normalize(rayOrigin + cameraPosition);
 
   var sunRayDirection: vec3<f32> = normalize(rayOrigin + lightUni.lightPosition);
@@ -100,10 +98,10 @@ fn clamp(x: f32, minVal: f32, maxVal: f32) -> f32 {
   var coverage: f32;
   var color : vec4<f32> = vec4<f32>(0.0, 0.0, 0.0, 1.0);
 
-  var OGNoise = getNoise(rayOrigin).b / 25;
+  var ogNoise = getNoise(rayOrigin, vec3<f32>(2.5, 2.5,2.5));
 
   let startDepth: f32 = -1 * (cloudUniforms.radius) / 2; 
-  let endDepth: f32 = -1 * (cloudUniforms.radius / 100); 
+  let endDepth: f32 = 0; 
   let stepSize: f32 = cloudUniforms.radius / 50; 
 
 
@@ -111,10 +109,10 @@ fn clamp(x: f32, minVal: f32, maxVal: f32) -> f32 {
     rayDirection = normalize(rayOrigin + cameraPosition);
     let texturePosition: vec3<f32> = rayOrigin + rayDirection * depth;
 
-    noise = getNoise(texturePosition);
+    noise = getNoise(texturePosition, vec3<f32>(depth * 0.025, depth * 0.025,depth * 0.025));
     coverage = getCoverage(texturePosition);
 
-    density += coverage;
+    density += coverage * noise.b;
 
     // for (var depth: f32 = startDepth; depth < endDepth / 10; depth += stepSize) {
     //   sunRayDirection = normalize(rayOrigin + lightUni.lightPosition);
@@ -140,8 +138,6 @@ fn clamp(x: f32, minVal: f32, maxVal: f32) -> f32 {
   
   var outputDensity: f32 = density + sunDensity;
 
-  var lightDirection: vec3<f32> = normalize(lightUni.lightPosition - output.vPosition.xyz);
-  var lightIntensity: f32 = max(dot(output.vNormal.xyz, lightDirection), 0.0);
   color = vec4<f32>(blend(vec3<f32>(0.0, 0.0, 0.0), vec3<f32>(1.0, 1.0, 1.0), outputDensity), outputDensity);
   
   if(color.a < 0.1) {
@@ -152,15 +148,15 @@ fn clamp(x: f32, minVal: f32, maxVal: f32) -> f32 {
   let scaledDotProduct: f32 = dotProduct * 10.0;
   var lightness: f32 = 1.0 - (1.0 / (1.0 + exp(-scaledDotProduct)));
 
-  if(lightness < 0.25) {
-    lightness = 0.25;
+  if(lightness < 0.5) {
+    lightness = 0.5;
   }
 
   if(coverage < 1){
-    return vec4(color.r, color.g, color.b, color.a + 0.25) * lightness * noise.b;
+    return vec4(color.r, color.g, color.b, color.a) * lightness * noise.b;
   }
 
-  return vec4(color.r, color.g, color.b, color.a + 0.25) * lightness * noise.g;
+  return vec4(color.r, color.g, color.b, color.a) * lightness * noise.a;
 
 }
 `;

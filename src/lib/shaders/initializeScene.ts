@@ -536,11 +536,11 @@ async function InitializeScene() {
     },
   }));
 
-  const cloudUniValues_01 = new Float32Array([0.01, 1.0, 0.0, 0.0]);
+  const cloudUniValues_01 = new Float32Array([0.016, 1.0, 0.0, 0.0]);
 
-  const cloudUniValues_02 = new Float32Array([0.015, 1.0, 0.0, 0.0]);
+  const cloudUniValues_02 = new Float32Array([0.032, 1.0, 0.0, 0.0]);
 
-  const cloudUniValues_03 = new Float32Array([0.02, 1.0, 0.0, 0.0]);
+  const cloudUniValues_03 = new Float32Array([0.048, 1.0, 0.0, 0.0]);
 
   async function frame() {
     elapsed += 0.0005;
