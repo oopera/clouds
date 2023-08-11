@@ -91,7 +91,7 @@ fn getCoverage(p: vec3<f32>) -> f32 {
   var color : vec4<f32> = vec4<f32>(0.0, 0.0, 0.0, 1.0);
 
   let startDepth: f32 = cloudUniforms.radius / 10;
-  let endDepth: f32 = cloudUniforms.radius / 2;
+  let endDepth: f32 = cloudUniforms.radius;
 
   let stepSize: f32 = cloudUniforms.radius / 50;
 
@@ -124,6 +124,20 @@ fn getCoverage(p: vec3<f32>) -> f32 {
   var lightIntensity: f32 = max(dot(output.vNormal.xyz, lightDirection), 0.0);
    color = vec4<f32>(blend(vec3<f32>(0.0, 0.0, 0.0), vec3<f32>(1.0, 1.0, 1.0), density), density);
   
-  return vec4(color.r * noise.a * 0.80, color.g * noise.a * 0.82, color.b * noise.a * 0.92, color.a * noise.a  ) ;
+   if(color.a < 0.1) {
+    discard;
+  }
+
+  let dotProduct = dot(lightUni.lightPosition, output.vNormal.xyz);
+  let scaledDotProduct: f32 = dotProduct * 10.0;
+  var lightness: f32 = 1.0 - (1.0 / (1.0 + exp(-scaledDotProduct)));
+
+  if(lightness < 0.25) {
+    lightness = 0.25;
+  }
+
+
+  return vec4(color.r * noise.a * 0.80, color.g * noise.a * 0.82, color.b * noise.a * 0.92, color.a * noise.a + 0.25) * lightness;
+
 }
 `;
