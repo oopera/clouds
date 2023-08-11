@@ -6,5 +6,5 @@
     }
   ],
 
-  "devCommand": "CHOKIDAR_USEPOLLING=true vite --port $PORT"
+  "devCommand": "vite --port $PORT"
 }
