@@ -124,6 +124,10 @@ fn getCoverage(p: vec3<f32>) -> f32 {
   var lightIntensity: f32 = max(dot(output.vNormal.xyz, lightDirection), 0.0);
    color = vec4<f32>(blend(vec3<f32>(0.0, 0.0, 0.0), vec3<f32>(1.0, 1.0, 1.0), density), density);
   
-  return vec4(color.r * noise.a * 0.80, color.g * noise.a * 0.82, color.b * noise.a * 0.92, color.a * noise.a  ) ;
+   if(color.a < 0.1) {
+    discard;
+  }
+  
+  return vec4(color.r * noise.a * 0.80, color.g * noise.a * 0.82, color.b * noise.a * 0.92, color.a * noise.a + 0.25) ;
 }
 `;
