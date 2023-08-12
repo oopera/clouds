@@ -168,6 +168,7 @@ fn schlickPhase(g: f32, cosTheta: f32) -> f32 {
 
   color = vec4<f32>(blend(vec3<f32>(0.0, 0.0, 0.0), vec3<f32>(1.0, 1.0, 1.0), outputDensity), outputDensity);
   
+
   if(color.a < 0.05) {
     discard;
   }
