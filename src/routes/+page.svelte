@@ -16,15 +16,6 @@
   import { inject } from '@vercel/analytics';
 
   inject({ mode: dev ? 'development' : 'production' });
-
-  onMount(() => {
-    window.onmousedown = (e) => {
-      if (e.buttons === 4 || e.buttons === 2) {
-        e.preventDefault();
-        return false;
-      }
-    };
-  });
 </script>
 
 <svelte:head>
@@ -59,6 +50,7 @@
         max={0.05}
         step={0.0005}
       />
+      <RangeInput delay={6} title="scale" min={0.05} max={10.0} step={0.1} />
     </Container>
   </div>
 </main>
@@ -66,7 +58,7 @@
 <Canvas />
 
 <style lang="scss">
-  @use '$lib/styles/mixins.scss';
+  @import '$lib/styles/mixins.scss';
   .main {
     overflow: hidden;
     position: relative;
@@ -80,10 +72,10 @@
     position: absolute;
     display: flex;
     flex-direction: column;
-    right: 16px;
+    right: gap(2);
     top: 50%;
     transform: translateY(-50%);
-    gap: 32px;
+    gap: gap(4);
   }
   .flex {
     position: relative;
@@ -93,8 +85,8 @@
     width: 100%;
     height: fit-content;
     justify-content: space-between;
-    padding: 24px 16px;
-    gap: 16px;
+    padding: gap(3) gap(2);
+    gap: gap(2);
   }
   .align-end {
     align-items: flex-end;

@@ -1,19 +1,16 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import Text from './Text.svelte';
+  import type { Stores } from '$lib/types/types';
 
-  export let title:
-    | 'amount_of_points'
-    | 'displacement'
-    | 'rotation_speed'
-    | 'zoom';
+  export let title: Stores;
 
   export let step: number = 1;
   export let min: number = 0;
   export let max: number = 100;
   export let disabled: boolean = false;
   export let delay: number = 1;
-  let text: string = title;
+  let text: Stores = title;
   let store: any;
 
   onMount(async () => {

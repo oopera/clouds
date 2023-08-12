@@ -12,7 +12,7 @@ import {
 import InitStores from './utils/initStores.js';
 import { CreateViewProjection } from './utils/createViewProjection.js';
 import { earthShader } from './shaders/earthShader.js';
-import { pitch, yaw, loading } from '$lib/stores/stores.js';
+import { yaw, loading, scale } from '$lib/stores/stores.js';
 import { cloudShader } from './shaders/cloudShader.js';
 
 import {
@@ -89,6 +89,12 @@ var uniOptions: UniOptions = {
 const pipeline: GPURenderPipeline[] = [];
 const bindGroup = [];
 const buffers = [];
+
+var usedScale;
+
+scale.subscribe((value) => {
+  usedScale = value;
+});
 
 var elapsed = 0;
 
@@ -206,6 +212,12 @@ async function InitializeScene() {
   });
 
   const lightUniBuffer = device.createBuffer({
+    label: 'light uniform buffer',
+    size: 64,
+    usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+  });
+
+  const atmosphereUniBuffer = device.createBuffer({
     label: 'light uniform buffer',
     size: 64,
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
@@ -430,6 +442,12 @@ async function InitializeScene() {
         buffer: lightUniBuffer,
       },
     },
+    {
+      binding: 2,
+      resource: {
+        buffer: atmosphereUniBuffer,
+      },
+    },
   ];
 
   pipeline[0] = CreatePipeline(
@@ -444,7 +462,7 @@ async function InitializeScene() {
     device.createShaderModule({ code: cloudShader }),
     {
       ...options,
-      cullmode: 'none',
+      cullmode: 'back',
     },
     presentationFormat
   );
@@ -463,7 +481,7 @@ async function InitializeScene() {
     device.createShaderModule({ code: cloudShader }),
     {
       ...options,
-      cullmode: 'none',
+      cullmode: 'back',
     },
     presentationFormat
   );
@@ -473,7 +491,7 @@ async function InitializeScene() {
     device.createShaderModule({ code: cloudShader }),
     {
       ...options,
-      cullmode: 'none',
+      cullmode: 'back',
     },
     presentationFormat
   );
@@ -536,13 +554,35 @@ async function InitializeScene() {
     },
   }));
 
-  const cloudUniValues_01 = new Float32Array([0.016, 1.0, 0.0, 0.0]);
-
-  const cloudUniValues_02 = new Float32Array([0.032, 1.0, 0.0, 0.0]);
-
-  const cloudUniValues_03 = new Float32Array([0.048, 1.0, 0.0, 0.0]);
-
   async function frame() {
+    const cloudUniValues_01 = new Float32Array([
+      0.02 * usedScale,
+      1.0,
+      0.0,
+      0.0,
+    ]);
+
+    const cloudUniValues_02 = new Float32Array([
+      0.04 * usedScale,
+      1.0,
+      0.0,
+      0.0,
+    ]);
+
+    const cloudUniValues_03 = new Float32Array([
+      0.06 * usedScale,
+      1.0,
+      0.0,
+      0.0,
+    ]);
+
+    const atmosphereUniValues = new Float32Array([
+      0.08 * usedScale,
+      1.0,
+      0.0,
+      0.0,
+    ]);
+
     elapsed += 0.0005;
 
     var lightPosition = vec3.create();
@@ -554,7 +594,7 @@ async function InitializeScene() {
     var newYaw = options.yaw + options.rotationSpeed / 250;
     newYaw = newYaw % 360;
 
-    yaw.set(newYaw);
+    yaw.update((n) => (n = newYaw));
 
     const cameraPosition = vec3.create();
     vec3.set(
@@ -618,7 +658,7 @@ async function InitializeScene() {
 
     vec4.set(
       scales,
-      uniOptions.heightDisplacement,
+      usedScale,
       uniOptions.useTexture ? 1 : 0,
       uniOptions.intersection.x,
       uniOptions.intersection.y
@@ -650,7 +690,12 @@ async function InitializeScene() {
     );
     device.queue.writeBuffer(lightUniBuffer, 0, lightPosition as ArrayBuffer);
     device.queue.writeBuffer(lightUniBuffer, 16, lightColor as ArrayBuffer);
-    // device.queue.writeBuffer(lightUniBuffer, 32, 0.5 as ArrayBuffer);
+
+    device.queue.writeBuffer(
+      atmosphereUniBuffer,
+      0,
+      atmosphereUniValues as ArrayBuffer
+    );
 
     if (hasChanged.numFs) {
       const newData = await executeAndUpdate(

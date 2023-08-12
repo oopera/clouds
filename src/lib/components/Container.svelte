@@ -4,7 +4,8 @@
   </div>
 </div>
 
-<style>
+<style lang="scss">
+  @import '$lib/styles/mixins.scss';
   .container {
     height: fit-content;
     width: fit-content;
@@ -24,10 +25,10 @@
   .container-inner {
     max-width: fit-content;
     height: 100%;
-    padding: 16px;
+    padding: gap(2);
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: gap(1);
     align-items: flex-end;
     justify-content: center;
     flex-wrap: wrap;

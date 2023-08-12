@@ -57,3 +57,9 @@ export interface LightUniforms {
   lightColor: vec3;
   lightIntensity: number;
 }
+export type Stores =
+  | 'amount_of_points'
+  | 'displacement'
+  | 'rotation_speed'
+  | 'zoom'
+  | 'scale';

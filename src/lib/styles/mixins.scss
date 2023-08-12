@@ -9,6 +9,7 @@ $grid-breakpoints: (
 );
 
 $gap: 8px;
+
 @function gap($factor) {
   @return $gap * $factor;
 }
