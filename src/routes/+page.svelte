@@ -82,7 +82,10 @@
       <Layout horizontal gap="1" justify="start">
         <Text secondary delay={12} text={'Backend:'} />
         <Text vertical delay={16} text={' Vercel Serverless'} />
-        <Text vertical tertiary delay={19} text={'[go-grib2]'} />
+
+        <Link href="https://lucaslichner.de">
+          <Text tertiary vertical delay={19} text={'[go-grib2]'} /></Link
+        >
       </Layout>
       <Layout horizontal gap="1" justify="start">
         <Text secondary delay={13} text={'Data:'} />

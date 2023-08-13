@@ -106,47 +106,19 @@ export const GetTextureFromGribData = async (
   };
 };
 
-export const Get3DNoiseTexture = async (
+export function Create3DTextureFromData(
   device: GPUDevice,
+  data: Uint8Array,
   width: number = 128,
   height: number = 128,
-  depth: number = 128,
-  addressModeU = 'repeat',
-  addressModeV = 'repeat',
-  addressModeW = 'repeat'
-) => {
-  const perlinNoiseData_01 = generatePerlinFbmNoise(
-    width,
-    height,
-    depth,
-    25,
-    25
-  );
-  const noiseData_01 = generateWorleyFbmNoise(width, height, depth, 6);
-  const noiseData_02 = generateWorleyFbmNoise(width, height, depth, 12);
-  const rgbaData = new Uint8Array(noiseData_01.length * 4);
-
-  function mix(a: number, b: number, t: number): number {
-    return a * (1 - t) + b * t;
-  }
-
-  for (let i = 0; i < noiseData_01.length; i++) {
-    const index = i * 4;
-    let pfbm = mix(noiseData_01[i], perlinNoiseData_01[i], 0.25);
-    const billowyPerlinData = Math.abs(pfbm * 2.0 - 1.0);
-
-    rgbaData[index] = perlinNoiseData_01[i] * 255; // R
-    rgbaData[index + 1] = noiseData_01[i] * 255; // G
-    rgbaData[index + 2] = noiseData_02[i] * 255; // B
-    rgbaData[index + 3] = billowyPerlinData * 255; // A
-  }
-
+  depth: number = 128
+): { texture: GPUTexture; sampler: GPUSampler } {
   const sampler = device.createSampler({
     minFilter: 'linear',
     magFilter: 'linear',
-    addressModeU: addressModeU as GPUAddressMode,
-    addressModeV: addressModeV as GPUAddressMode,
-    addressModeW: addressModeW as GPUAddressMode,
+    addressModeU: 'repeat',
+    addressModeV: 'repeat',
+    addressModeW: 'repeat',
   });
 
   const texture = device.createTexture({
@@ -155,36 +127,18 @@ export const Get3DNoiseTexture = async (
     usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST,
     dimension: '3d',
   });
+
   device.queue.writeTexture(
     { texture: texture },
-    rgbaData,
+    data,
     { offset: 0, bytesPerRow: 4 * width, rowsPerImage: height },
     { width: width, height: height, depthOrArrayLayers: depth }
   );
-
-  // downloadData(rgbaData, 'noiseTexture.bin');
 
   return {
     texture,
     sampler,
   };
-};
-
-function downloadData(data: Uint8Array, filename: string) {
-  const blob = new Blob([data], { type: 'application/octet-stream' });
-  const url = URL.createObjectURL(blob);
-
-  const a = document.createElement('a');
-  a.style.display = 'none';
-  document.body.appendChild(a);
-
-  a.href = url;
-  a.download = filename;
-
-  a.click();
-
-  window.URL.revokeObjectURL(url);
-  document.body.removeChild(a);
 }
 
 export const GetPartitionedTexture = async (
@@ -282,3 +236,97 @@ export const GetDepthTexture = async (
     sampler,
   };
 };
+
+// This function is used to load existing noise textures from the generated binary file
+
+export async function loadBinaryData(url: string): Promise<ArrayBuffer> {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  const arrayBuffer = await response.arrayBuffer();
+  return arrayBuffer;
+}
+
+// These functions are used to create new Noise Textures
+
+export const Get3DNoiseTexture = async (
+  device: GPUDevice,
+  width: number = 128,
+  height: number = 128,
+  depth: number = 128,
+  addressModeU = 'repeat',
+  addressModeV = 'repeat',
+  addressModeW = 'repeat'
+) => {
+  const perlinNoiseData_01 = generatePerlinFbmNoise(
+    width,
+    height,
+    depth,
+    25,
+    25
+  );
+  const noiseData_01 = generateWorleyFbmNoise(width, height, depth, 6);
+  const noiseData_02 = generateWorleyFbmNoise(width, height, depth, 12);
+  const rgbaData = new Uint8Array(noiseData_01.length * 4);
+
+  function mix(a: number, b: number, t: number): number {
+    return a * (1 - t) + b * t;
+  }
+
+  for (let i = 0; i < noiseData_01.length; i++) {
+    const index = i * 4;
+    let pfbm = mix(noiseData_01[i], perlinNoiseData_01[i], 0.25);
+    const billowyPerlinData = Math.abs(pfbm * 2.0 - 1.0);
+
+    rgbaData[index] = perlinNoiseData_01[i] * 255; // R
+    rgbaData[index + 1] = noiseData_01[i] * 255; // G
+    rgbaData[index + 2] = noiseData_02[i] * 255; // B
+    rgbaData[index + 3] = billowyPerlinData * 255; // A
+  }
+
+  const sampler = device.createSampler({
+    minFilter: 'linear',
+    magFilter: 'linear',
+    addressModeU: addressModeU as GPUAddressMode,
+    addressModeV: addressModeV as GPUAddressMode,
+    addressModeW: addressModeW as GPUAddressMode,
+  });
+
+  const texture = device.createTexture({
+    size: { width: width, height: height, depthOrArrayLayers: depth },
+    format: 'rgba8unorm',
+    usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST,
+    dimension: '3d',
+  });
+  device.queue.writeTexture(
+    { texture: texture },
+    rgbaData,
+    { offset: 0, bytesPerRow: 4 * width, rowsPerImage: height },
+    { width: width, height: height, depthOrArrayLayers: depth }
+  );
+
+  downloadData(rgbaData, 'noiseTexture.bin');
+
+  return {
+    texture,
+    sampler,
+  };
+};
+
+function downloadData(data: Uint8Array, filename: string) {
+  const blob = new Blob([data], { type: 'application/octet-stream' });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement('a');
+  a.style.display = 'none';
+  document.body.appendChild(a);
+
+  a.href = url;
+  a.download = filename;
+
+  a.click();
+
+  window.URL.revokeObjectURL(url);
+  document.body.removeChild(a);
+}

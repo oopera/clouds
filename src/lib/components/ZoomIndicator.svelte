@@ -112,6 +112,7 @@
     p {
       color: var(--c-tertiary);
     }
+    background-color: var(--c-blue);
   }
 
   .rotate {
@@ -179,5 +180,30 @@
       height: 32px;
       opacity: 0;
     }
+  }
+  .slider::-webkit-slider-thumb {
+    animation: blink2 1.5s ease-in-out infinite alternate;
+    height: 24px;
+    width: 24px;
+    border-radius: 15px;
+    border: 1pt solid var(--c-g);
+    -webkit-appearance: none;
+    margin-top: 4px;
+    transition: 100ms ease-in;
+    transform-origin: center;
+    backdrop-filter: blur(8px);
+    background: radial-gradient(
+      circle,
+      rgba(0, 33, 95, 1) 0%,
+      rgba(33, 33, 39, 0.05) 30%,
+      rgba(0, 0, 0, 0) 50%
+    );
+  }
+  .slider:hover::-webkit-slider-thumb,
+  .slider:focus-visible::-webkit-slider-thumb {
+    height: 24px;
+    width: 24px;
+    margin-top: 4px;
+    border: 1pt solid white;
   }
 </style>

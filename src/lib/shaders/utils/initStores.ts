@@ -17,6 +17,7 @@ export default function InitStores(
   canvas: HTMLCanvasElement
 ) {
   if (!document) return;
+
   let isFirstInvocation = true;
 
   var isDragging = false;

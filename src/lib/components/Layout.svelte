@@ -42,15 +42,15 @@
   }
 
   .pad-s {
-    padding: gap(1) gap(2);
+    padding: gap(1);
   }
 
   .pad-m {
-    padding: gap(2) gap(4);
+    padding: gap(2);
   }
 
   .pad-l {
-    padding: gap(3) gap(6);
+    padding: gap(3);
   }
 
   .horizontal {
