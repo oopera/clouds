@@ -111,15 +111,9 @@ export const earthShader = /* wgsl */ `
       var lightColor: vec4<f32>;
       var distance: f32 = length(output.vNormal.xyz - normal);
 
-
-      let dotProduct = dot(output.lightPosition, output.vNormal.xyz);
-      let scaledDotProduct: f32 = dotProduct * 10.0;
-      let lightness: f32 = 1.0 - (1.0 / (1.0 + exp(-scaledDotProduct)));
-
       // if (distance < 0.1) {
       //   return mix(vec4(textureColor), vec4(0.2, 0.3, 0.4, 1.0), 2.0);
       // }
-
 
       if (output.vUV.x < 0.5) {
           textureColor = textureColor_01;
@@ -133,6 +127,22 @@ export const earthShader = /* wgsl */ `
         textureColor = heightColor;
       }
 
-      return vec4(textureColor.rgb * lightness, 1) + vec4(lightColor.rgb  * (1.0 - lightness) , 1.0);
+// COMMON LIGHT CALCS
+
+      let dotProduct = dot(output.lightPosition, output.vNormal.xyz);
+      let scaledDotProduct: f32 = dotProduct * 10.0;
+      let lightness: f32 = 1.0 - (1.0 / (1.0 + exp(-scaledDotProduct)));
+      let edge = fwidth(lightness);
+      let borderColor = vec4(1.0, 0.92, 0.95, 1.0);
+      let blendRadius = 0.1; 
+      let mask = smoothstep(0.0, blendRadius, edge);
+
+// COMMON LIGHT CALCS
+
+      let resultColor = vec4(textureColor.rgb * pow(lightness, 1.2), 1) + 
+                   vec4(lightColor.rgb  * pow(1.0 - lightness, 1.2) , 1.0) +
+                   mask * borderColor;
+
+      return resultColor;
     }       
     `;

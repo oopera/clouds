@@ -1,7 +1,7 @@
 import type { LoadingStore } from '$lib/types/types';
 import { derived, writable, type Writable } from 'svelte/store';
 
-export const amount_of_points = writable(150);
+export const amount_of_points = writable(250);
 export const displacement = writable(0.01);
 export const scale = writable(0.15);
 export const topology = writable<'triangle-list' | 'line-list' | 'point-list'>(

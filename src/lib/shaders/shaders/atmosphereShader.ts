@@ -41,6 +41,11 @@ struct Output {
 @group(0) @binding(1) var<uniform> lightUni: LightUniforms;
 @group(0) @binding(2) var<uniform> atmopshereUniforms: AtmosphereUniforms;
 
+fn smoothstep(edge0: f32, edge1: f32, x: f32) -> f32 {
+  let t = clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);
+  return t * t * (3.0 - 2.0 * t);
+}
+
 @vertex fn vs(input: Input, @builtin(vertex_index) vertexIndex: u32) -> Output {
   var output: Output;
 
@@ -63,17 +68,28 @@ struct Output {
 
   let viewDirection: vec3<f32> = normalize(output.cameraPosition.xyz - output.vPosition.xyz);
 
+// COMMON LIGHT CALCS
+
   let dotProduct = dot(output.lightPosition, output.vNormal.xyz);
   let scaledDotProduct: f32 = dotProduct * 10.0;
   let lightness: f32 = 1.0 - (1.0 / (1.0 + exp(-scaledDotProduct)));
+  let edge = fwidth(lightness);
+  let borderColor = vec4(1.0, 0.92, 0.95, 1.0);
+  let blendRadius = 0.1; 
+  let mask = smoothstep(0.0, blendRadius, edge);
+
+// COMMON LIGHT CALCS
+
   var rim: f32 = 1.0 - dot(viewDirection, output.vNormal.xyz); 
-  rim = pow(rim, 5.0 + 20.0 * ( 1 - lightness )); 
+  rim = pow(rim, 2.5 + 20.0 * ( 1 - lightness )); 
 
   let blueColor: vec4<f32> = vec4<f32>(0.6, 0.8, 1.0, rim); 
   let orangeColor: vec4<f32> = vec4<f32>(1.0, 1.0, 1.0, rim); 
 
   let color: vec4<f32> = mix(orangeColor, blueColor, lightness);
-  // discard;
-  return color;
+
+  let resultColor =   mask * borderColor;
+
+  return color + resultColor ;
 }
 `;
