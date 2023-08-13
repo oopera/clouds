@@ -47,7 +47,28 @@ struct Output {
     let mPosition: vec4<f32> = uni.modelMatrix * input.position;
     let mNormal: vec4<f32> = uni.normalMatrix * input.normal;
 
-    let displacement: vec4<f32> = vec4<f32>(normalize(mPosition.xyz) * (cloudUniforms.radius), 0.0);
+    var d: vec2<i32> = vec2<i32>(textureDimensions(texture));
+
+    var heightPixel: vec4<f32> = textureLoad(
+      texture,
+      vec2<i32>(i32(input.uv.x * f32(d.x)), i32(input.uv.y * f32(d.y))),
+      0
+    );
+    var height: f32 = heightPixel.x;
+
+    var noisePixel: vec4<f32> = textureLoad(
+      noise_texture,
+      vec3<i32>(i32(input.uv.x * f32(d.x)), i32(input.uv.y * f32(d.y)), 0),
+      0
+    );
+
+    var displacement:vec4<f32> = vec4<f32>(normalize(mPosition.xyz) * (cloudUniforms.radius), 0.0);
+    // if(height < 0.25) {
+    // }else if(height < 0.5){
+    //   displacement = vec4<f32>(normalize(mPosition.xyz) * (cloudUniforms.radius + noisePixel.r / 30), 0.0);
+    // }else{
+    //   displacement = vec4<f32>(normalize(mPosition.xyz) * (cloudUniforms.radius + noisePixel.b / 30), 0.0);
+    // }
     
     output.Position = uni.viewProjectionMatrix * (mPosition + displacement);
     output.vPosition = mPosition;
@@ -142,14 +163,24 @@ fn schlickPhase(g: f32, cosTheta: f32) -> f32 {
     noise = getNoise(texturePosition, vec3<f32>(1.0, 1.0,1.0));
     coverage = getCoverage(texturePosition);
 
-    density += (endDepth /depth) * noise.a * coverage;
+    if(coverage < 1){
+      density += (endDepth /depth) * noise.r * coverage  / 500;
+    }else{
+    density += (endDepth /depth) * noise.a * coverage  / 200;
+    }
     
     for (var depth: f32 = -1 * startDepth; depth < -1 * endDepth; depth -= stepSize * 25) {
       sunRayDirection = normalize(rayOrigin + lightUni.lightPosition);
       let sunTexturePosition: vec3<f32> = rayOrigin + sunRayDirection * depth;
   
       coverage = getCoverage(sunTexturePosition);
-      sunDensity += (endDepth /depth) * noise.r * coverage;
+
+      if(coverage < 1){
+        sunDensity += (endDepth /depth) * noise.r * coverage / 500;
+      }else{
+        sunDensity += (endDepth /depth) * noise.a * coverage  / 200;
+      }
+
     }
 
     outputDensity += density - (sunDensity * 0.5);
@@ -165,10 +196,10 @@ fn schlickPhase(g: f32, cosTheta: f32) -> f32 {
   noise = getNoise(rayOrigin, vec3<f32>(2.5, 2.5,2.5));
 
   if(coverage < 1){
-    return vec4<f32>(blend(color.rgb, vec3(noise.r, noise.r, noise.r), coverage), outputDensity) * noise.r;
+    return vec4<f32>(blend(color.rgb, vec3(noise.r, noise.r, noise.r), 1 - coverage), outputDensity);
   }
 
-  return vec4<f32>(blend(color.rgb, vec3(noise.a, noise.a, noise.a), coverage), outputDensity) * noise.g;
+  return vec4<f32>(blend(color.rgb, vec3(noise.a, noise.a, noise.a), 1 - coverage), outputDensity);
 
 }
 `;

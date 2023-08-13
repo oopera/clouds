@@ -161,11 +161,31 @@ export const Get3DNoiseTexture = async (
     { offset: 0, bytesPerRow: 4 * width, rowsPerImage: height },
     { width: width, height: height, depthOrArrayLayers: depth }
   );
+
+  // downloadData(rgbaData, 'noiseTexture.bin');
+
   return {
     texture,
     sampler,
   };
 };
+
+function downloadData(data: Uint8Array, filename: string) {
+  const blob = new Blob([data], { type: 'application/octet-stream' });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement('a');
+  a.style.display = 'none';
+  document.body.appendChild(a);
+
+  a.href = url;
+  a.download = filename;
+
+  a.click();
+
+  window.URL.revokeObjectURL(url);
+  document.body.removeChild(a);
+}
 
 export const GetPartitionedTexture = async (
   device: GPUDevice,
