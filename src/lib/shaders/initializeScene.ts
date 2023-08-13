@@ -22,6 +22,8 @@ import {
   GetTextureFromGribData,
   GetPartitionedTexture,
   Get3DNoiseTexture,
+  loadBinaryData,
+  Create3DTextureFromData,
 } from './utils/getTexture.js';
 
 import { GetDepthTexture } from './utils/getTexture.js';
@@ -103,6 +105,7 @@ var elapsed = 0;
 async function InitializeScene() {
   const adapter = await navigator.gpu?.requestAdapter();
   const device = await adapter?.requestDevice();
+  // const device = false;
   if (!device) {
     var counter = 0;
     var interval = setInterval(() => {
@@ -134,10 +137,10 @@ async function InitializeScene() {
           },
         };
       });
-      if (counter > 10) {
+      if (counter > 5) {
         clearInterval(interval);
       }
-    }, 250);
+    }, 500);
     return;
   }
 
@@ -162,9 +165,16 @@ async function InitializeScene() {
     'light map'
   );
 
+  let noise = await executePromise(
+    'noise',
+    loadBinaryData('/textures/noise.bin'),
+    'noise texture'
+  );
+
   const heightMapV = await GetTexture(device, heightMap);
   const textureV = await GetPartitionedTexture(device, texture);
   const lightMapV = await GetPartitionedTexture(device, lightmap);
+  const noiseV = await Create3DTextureFromData(device, noise);
 
   let data = await executePromise(
     'sphere',
@@ -226,24 +236,21 @@ async function InitializeScene() {
   var parsedGribTexture_2;
   var parsedGribTexture_3;
 
-  var worleyNoiseTexture;
+  const generateNewNoiseTexture = false;
+  var worleyNoiseTexture = noiseV;
+  if (generateNewNoiseTexture) {
+    worleyNoiseTexture = await executePromise(
+      'worleyNoiseTexture',
+      await Get3DNoiseTexture(device),
+      '3D Noise Texture'
+    );
+  }
 
   if (dev) {
     parsedGribTexture = await GetTextureFromGribData(device, mb300);
     parsedGribTexture_2 = await GetTextureFromGribData(device, mb500);
     parsedGribTexture_3 = await GetTextureFromGribData(device, mb700);
-    worleyNoiseTexture = await executePromise(
-      'worleyNoiseTexture',
-      await Get3DNoiseTexture(device),
-      '3D Noise Texture'
-    );
   } else {
-    worleyNoiseTexture = await executePromise(
-      'worleyNoiseTexture',
-      await Get3DNoiseTexture(device),
-      '3D Noise Texture'
-    );
-
     const mb300RD = await executePromise(
       'mb300RD',
       fetch(`/api/cloud-texture?level_mb=300_mb&date=${dateString}`),

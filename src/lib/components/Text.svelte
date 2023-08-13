@@ -7,6 +7,7 @@
   export let type: 'p' | 'h1' = 'p';
   export let secondary = false;
   export let tertiary = false;
+  export let accent = false;
   export let vertical = false;
   export let text = '';
 
@@ -75,5 +76,8 @@
   }
   .tertiary {
     color: var(--c-tertiary);
+  }
+  .accent {
+    color: var(--c-accent);
   }
 </style>

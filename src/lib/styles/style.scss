@@ -1,11 +1,13 @@
 @import './mixins.scss';
 
 @font-face {
-  font-family: 'Air';
+  font-family: 'Air', monospace;
   font-weight: 500;
-  letter-spacing: 0.1em;
+  letter-spacing: 0em;
+  font-style: italic;
   src: url('../assets/fonts/air/PPAir-RegularMono.woff'); /* IE9 Compat Modes */
 }
+
 @font-face {
   font-family: 'Supply';
   font-weight: 500;
@@ -39,10 +41,10 @@ body {
   --c-secondary: #dadada;
   --c-tertiary: #c4d7ff;
 
-  --c-racing-green: rgb(0, 81, 68);
+  --c-blue: #00215f
   --c-mint: #65c6b3;
   --c-accent: #dbf75f;
-
+  --c-accent-hover: var(--c-tertiary);
   --font-size-xs: 12px;
   --font-size-xl: 76px;
 
@@ -116,7 +118,7 @@ h1 {
 }
 p {
   @include type-xs;
-  // text-transform: capitalize;
+  text-transform: capitalize;
 }
 
 button {
@@ -129,13 +131,12 @@ button {
   border-radius: 5px;
   cursor: pointer;
   font-size: 10px;
-  font-family: 'Supply', monospace;
+  font-family: var(--font-family-mono);
 }
 a:visited {
   accent-color: var(--c-accent);
 }
 a {
-  font-family: 'Supply', monospace;
+  pointer-events: all;
   font-family: var(--font-family-mono);
-  color: var(--c-accent);
 }

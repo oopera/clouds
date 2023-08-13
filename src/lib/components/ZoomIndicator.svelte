@@ -3,6 +3,7 @@
   import { tweened } from 'svelte/motion';
   import { zoom, loading, yaw, pitch } from './../stores/stores.js';
   import { quintOut } from 'svelte/easing';
+  import Text from './Text.svelte';
 
   export let step: number = 0.0025;
   export let min: number = 1;
@@ -79,9 +80,12 @@
         style="--i: {i}; "
         class="zoom__indicator {i + 1 === Math.floor($zoom) ? 'current' : ''}"
       >
-        <p class="zoom__indicator__number">
-          {i / 2}
-        </p>
+        <Text
+          tertiary={i + 1 === Math.floor($zoom)}
+          secondary={i + 1 !== Math.floor($zoom)}
+          text={`${i / 2}`}
+        />
+
         {#if i !== 9}
           <div class="zoom__indicator__divider" />
         {/if}
@@ -98,31 +102,40 @@
     class="slider"
     id="zoom-input"
   />
+  <span class="rotate">
+    <Text text={`zoom`} />
+  </span>
 </div>
 
 <style lang="scss">
   .current {
     p {
-      color: yellow;
+      color: var(--c-tertiary);
     }
+    background-color: var(--c-blue);
+  }
+
+  .rotate {
+    margin: 0;
+    padding: 0;
+    rotate: 90deg;
   }
 
   .zoom {
-    display: flex;
-    flex-direction: column;
+    position: relative;
     align-items: center;
-    rotate: 90deg;
-    transform: translateY(108px);
-    height: 48px;
+    display: flex;
+    height: 224px;
+    width: fit-content;
     z-index: 1;
     &__bar {
       display: flex;
-      width: 100%;
-      height: 24px;
+      width: 32px;
+      height: 100%;
       justify-content: space-between;
-      position: absolute;
+      flex-direction: column;
+      position: relative;
       pointer-events: none;
-      border-radius: 24px;
       overflow: hidden;
       outline: none;
       backdrop-filter: blur(24px);
@@ -132,24 +145,14 @@
       width: 100%;
       height: 100%;
       display: flex;
+      flex-direction: column;
       justify-content: center;
-      align-items: center;
-      &__number {
-        margin: 0;
-        padding: 0;
-        color: rgba(
-          calc((var(--i) + 1) / var(--zoom) * 255),
-          calc((var(--i) + 1) / var(--zoom) * 255),
-          calc((var(--i) + 1) / var(--zoom) * 255)
-        );
-        rotate: -90deg;
-      }
+      align-items: flex-start;
       &__divider {
-        position: absolute;
-        left: 15px;
+        position: relative;
         transform: translateX(2px);
-        width: 1px;
-        height: calc(16px - var(--zoom) * 2px);
+        height: 1px;
+        width: calc(16px - var(--zoom) * 2px);
         background: rgba(
           calc((var(--i) + 1) / var(--zoom) * 255),
           calc((var(--i) + 1) / var(--zoom) * 255),
@@ -160,18 +163,47 @@
   }
 
   .slider {
+    position: absolute;
     appearance: none;
     -webkit-appearance: none;
     height: 32px;
     width: 224px;
     margin: 0;
-    height: 48px;
     border-radius: 25px;
     background-color: transparent;
+    rotate: 90deg;
+    transform-origin: top left;
+    top: 0;
+    left: 32px;
     &::-webkit-slider-runnable-track {
       width: 32px;
       height: 32px;
       opacity: 0;
     }
+  }
+  .slider::-webkit-slider-thumb {
+    animation: blink2 1.5s ease-in-out infinite alternate;
+    height: 24px;
+    width: 24px;
+    border-radius: 15px;
+    border: 1pt solid var(--c-g);
+    -webkit-appearance: none;
+    margin-top: 4px;
+    transition: 100ms ease-in;
+    transform-origin: center;
+    backdrop-filter: blur(8px);
+    background: radial-gradient(
+      circle,
+      rgba(0, 33, 95, 1) 0%,
+      rgba(33, 33, 39, 0.05) 30%,
+      rgba(0, 0, 0, 0) 50%
+    );
+  }
+  .slider:hover::-webkit-slider-thumb,
+  .slider:focus-visible::-webkit-slider-thumb {
+    height: 24px;
+    width: 24px;
+    margin-top: 4px;
+    border: 1pt solid white;
   }
 </style>

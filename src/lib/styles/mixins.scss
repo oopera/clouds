@@ -103,3 +103,19 @@ $gap: 8px;
     grid-template-columns: 1fr 1fr 1fr;
   }
 }
+
+@mixin link {
+  text-decoration: none;
+  color: var(--c-accent);
+  accent-color: var(--c-accent);
+  transition: color 0.2s ease-in-out;
+  z-index: 1;
+
+  &:hover {
+    color: var(--c-accent-hover);
+  }
+  &::visited {
+    color: var(--c-accent);
+    accent-color: var(--c-accent);
+  }
+}

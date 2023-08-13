@@ -4,9 +4,11 @@
   import { quintOut } from 'svelte/easing';
   import { fly } from 'svelte/transition';
   import Text from './Text.svelte';
+  import Layout from './Layout.svelte';
 
   let mounted = false;
   let loaded = false;
+  let deviceFailed = false;
   onMount(() => {
     mounted = true;
   });
@@ -14,15 +16,25 @@
   $: if (!$loading.welcome.status) {
     loaded = true;
   }
+
+  $: if ($loading.welcome.message === 'oh-oh') {
+    deviceFailed = true;
+  }
 </script>
 
-{#if mounted}
+{#if mounted && !deviceFailed}
   <span class="parent">
     <span
       in:fly={{
         delay: 4 * 125,
         duration: 350,
         y: 15,
+        easing: quintOut,
+      }}
+      out:fly={{
+        delay: 8 * 125,
+        duration: 350,
+        y: -15,
         easing: quintOut,
       }}
       class:loaded
@@ -35,6 +47,12 @@
         y: -15,
         easing: quintOut,
       }}
+      out:fly={{
+        delay: 3.0 * 125,
+        duration: 350,
+        y: 15,
+        easing: quintOut,
+      }}
       class:loaded
       class="letter">L</span
     >
@@ -43,6 +61,12 @@
         delay: 0.5 * 125,
         duration: 350,
         y: 15,
+        easing: quintOut,
+      }}
+      out:fly={{
+        delay: 1.0 * 125,
+        duration: 350,
+        y: -15,
         easing: quintOut,
       }}
       class:loaded
@@ -55,6 +79,12 @@
         y: -15,
         easing: quintOut,
       }}
+      out:fly={{
+        delay: 6 * 125,
+        duration: 350,
+        y: 15,
+        easing: quintOut,
+      }}
       class:loaded
       class="letter">U</span
     >
@@ -65,6 +95,12 @@
         y: 15,
         easing: quintOut,
       }}
+      out:fly={{
+        delay: 2 * 125,
+        duration: 350,
+        y: -15,
+        easing: quintOut,
+      }}
       class:loaded
       class="letter">D</span
     >
@@ -73,6 +109,12 @@
         delay: 2 * 125,
         duration: 350,
         y: -15,
+        easing: quintOut,
+      }}
+      out:fly={{
+        delay: 4 * 125,
+        duration: 350,
+        y: 15,
         easing: quintOut,
       }}
       class:loaded
@@ -94,8 +136,30 @@
   </span>
 {/if}
 
+{#if deviceFailed}
+  <span class="error">
+    <Layout>
+      <Text vertical type="p" delay={4} text={'Attaching to GPU Failed.'} />
+      <Text
+        vertical
+        type="p"
+        tertiary
+        delay={4}
+        text={'You need to use Chrome 113 onwards.'}
+      />
+    </Layout>
+  </span>
+{/if}
+
 <style lang="scss">
   @import '$lib/styles/mixins.scss';
+
+  .error {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
   .crosshair {
     height: 28px;
     width: 28px;

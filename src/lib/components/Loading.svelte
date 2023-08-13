@@ -51,7 +51,7 @@
 <style lang="scss">
   @import '$lib/styles/mixins.scss';
   .indicator {
-    right: -gap(4);
+    right: calc(gap(1) * -1);
     position: absolute;
     width: gap(0.5);
     height: gap(0.5);

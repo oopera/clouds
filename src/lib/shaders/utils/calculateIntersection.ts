@@ -54,7 +54,7 @@ export function CalculateIntersection(
   );
 
   const sphereCenter = vec3.fromValues(0, 0, 0);
-  const sphereRadius = 2; // Assuming the fixed radius of the globe is 2
+  const sphereRadius = 2;
 
   const rayOriginToSphereCenter = vec3.sub(
     vec3.create(),
@@ -70,7 +70,7 @@ export function CalculateIntersection(
   const discriminant = b * b - 4 * a * c;
 
   if (discriminant >= 0) {
-    const t = (-b + Math.sqrt(discriminant)) / (2.0 * a); // Use positive root
+    const t = (-b + Math.sqrt(discriminant)) / (2.0 * a);
     const intersectionPoint = vec3.add(
       vec3.create(),
       rayOriginToSphereCenter,
