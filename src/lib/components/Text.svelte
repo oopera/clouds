@@ -23,62 +23,46 @@
   }
 </script>
 
-{#if mounted && vertical}
-  <p>
-    {#each splitText as letter, i}
-      <span
-        class:secondary
-        class:tertiary
-        in:fly={{
-          delay: delay * 125 + i * 25,
-          duration: 350,
-          x: -15,
-          easing: quintOut,
-        }}
-        out:fly={{
-          delay: 1 * 125 + i * 25,
-          duration: 350,
-          x: 15,
-          easing: quintOut,
-        }}
-      >
-        {letter === ' ' ? '\u00A0' : letter}
-      </span>
-    {/each}
-  </p>
-{/if}
+{#if mounted}
+  {#if type === 'p'}
+    <p>
+      {#each splitText as letter, i}
+        <span
+          class:secondary
+          class:tertiary
+          in:fly={{
+            delay: delay * 125 + i * 25,
+            duration: 350,
+            x: vertical ? -15 : 0,
+            y: !vertical ? -15 : 0,
+            easing: quintOut,
+          }}
+          out:fly={{
+            delay: 1 * 125 + i * 25,
+            duration: 350,
+            x: vertical ? 15 : 0,
+            y: !vertical ? 15 : 0,
+            easing: quintOut,
+          }}
+        >
+          {letter === ' ' ? '\u00A0' : letter}
+        </span>
+      {/each}
+    </p>
+  {/if}
 
-{#if mounted && type === 'p' && !vertical}
-  <p
-    class:secondary
-    in:fly={{
-      delay: delay * 125,
-      duration: 350,
-      y: -15,
-      easing: quintOut,
-    }}
-    out:fly={{
-      delay: 1 * 125,
-      duration: 350,
-      y: 15,
-      easing: quintOut,
-    }}
-  >
-    <slot />
-  </p>
-{/if}
-
-{#if mounted && type === 'h1' && !vertical}
-  <h1
-    in:fly={{
-      delay: delay * 125,
-      duration: 350,
-      y: 15,
-      easing: quintOut,
-    }}
-  >
-    <slot />
-  </h1>
+  {#if type === 'h1'}
+    <h1
+      in:fly={{
+        delay: delay * 125,
+        duration: 350,
+        y: 15,
+        easing: quintOut,
+      }}
+    >
+      <slot />
+    </h1>
+  {/if}
 {/if}
 
 <style lang="scss">

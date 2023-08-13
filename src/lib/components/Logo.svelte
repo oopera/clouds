@@ -95,6 +95,7 @@
 {/if}
 
 <style lang="scss">
+  @import '$lib/styles/mixins.scss';
   .crosshair {
     height: 28px;
     width: 28px;
@@ -231,7 +232,7 @@
     transform: translateX(-50%);
     @media (max-width: 768px) {
       left: 50%;
-      transform: translateX(calc(-50% + 36px));
+      transform: translateX(calc(-50%));
     }
   }
 
@@ -280,10 +281,10 @@
   }
 
   .loaded {
-    top: 38px;
-    @media (max-width: 768px) {
-      top: 32px;
-      font-size: 24px;
+    opacity: 0;
+    top: gap(4);
+    @media (min-width: 768px) {
+      opacity: 1;
     }
   }
 </style>

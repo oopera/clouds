@@ -1,19 +1,17 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import Text from './Text.svelte';
+  import type { Stores } from '$lib/types/types';
+  import Layout from './Layout.svelte';
 
-  export let title:
-    | 'amount_of_points'
-    | 'displacement'
-    | 'rotation_speed'
-    | 'zoom';
+  export let title: Stores;
 
   export let step: number = 1;
   export let min: number = 0;
   export let max: number = 100;
   export let disabled: boolean = false;
   export let delay: number = 1;
-  let text: string = title;
+  let text: Stores = title;
   let store: any;
 
   onMount(async () => {
@@ -28,32 +26,34 @@
 </script>
 
 <div class="range-input-container">
-  <input
-    data-interactable
-    {disabled}
-    {min}
-    {max}
-    {step}
-    {title}
-    value={$store}
-    on:input={handleInput}
-    type="range"
-    class="slider"
-  />
-  <Text {delay} {text} vertical />
+  <Layout gap="2" align="end" justify="between">
+    <input
+      data-interactable
+      {disabled}
+      {min}
+      {max}
+      {step}
+      {title}
+      value={$store}
+      on:input={handleInput}
+      type="range"
+      class="slider"
+    />
+    <Layout horizontal gap="2" align="end" justify="end">
+      <Text {delay} secondary text={min.toString()} vertical />
+      <Text {delay} tertiary text={$store?.toString()} vertical />
+      <Text {delay} secondary text={max.toString()} vertical />
+    </Layout>
+    <Text {delay} {text} vertical />
+  </Layout>
 </div>
 
 <style lang="scss">
   .range-input-container {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    align-items: flex-end;
-    width: 100%;
-    gap: 16px;
     min-width: 144px;
     white-space: nowrap;
     box-sizing: border-box;
+    z-index: 2;
   }
   .slider {
     appearance: none;

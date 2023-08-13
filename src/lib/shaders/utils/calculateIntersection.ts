@@ -1,7 +1,7 @@
 import { mat4, vec3, vec4 } from 'gl-matrix';
-import { CreateViewProjection } from './createViewProjection';
+import { CreateViewProjection } from './helper/matrixHelper';
 import type { RenderOptions } from '$lib/types/types';
-import { degToRad } from './helper';
+import { degToRad } from './helper/wgslHelper';
 
 export function CalculateIntersection(
   mouseX: number,

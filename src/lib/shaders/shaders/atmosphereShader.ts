@@ -13,6 +13,13 @@ struct LightUniforms {
   lightIntensity : f32,
 };
 
+struct AtmosphereUniforms {
+  radius : f32,
+  coverage : f32, 
+  noiseScale : f32,
+  noiseStrength : f32,
+}
+
 
 struct Input {
   @location(0) position : vec4<f32>,
@@ -32,12 +39,13 @@ struct Output {
 
 @group(0) @binding(0) var<uniform> uni: Uniforms;
 @group(0) @binding(1) var<uniform> lightUni: LightUniforms;
+@group(0) @binding(2) var<uniform> atmopshereUniforms: AtmosphereUniforms;
 
 @vertex fn vs(input: Input, @builtin(vertex_index) vertexIndex: u32) -> Output {
   var output: Output;
 
   let mPosition: vec4<f32> = uni.modelMatrix * input.position;
-  let displacement: vec4<f32> = vec4<f32>(normalize(mPosition.xyz) * (0.04), 0.0);
+  let displacement: vec4<f32> = vec4<f32>(normalize(mPosition.xyz) * (atmopshereUniforms.radius), 0.0);
   let worldPosition: vec4<f32> = mPosition + displacement;
   
   output.Position = uni.viewProjectionMatrix * worldPosition;

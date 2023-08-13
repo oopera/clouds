@@ -3,9 +3,11 @@ import { derived, writable, type Writable } from 'svelte/store';
 
 export const amount_of_points = writable(150);
 export const displacement = writable(0.01);
+export const scale = writable(0.15);
 export const topology = writable<'triangle-list' | 'line-list' | 'point-list'>(
   'triangle-list'
 );
+export const cloud_type = writable<'Stratus' | 'Cirrus' | 'Cumulus'>('Cumulus');
 export const rotation_speed = writable(2.5);
 export const use_texture = writable(true);
 export const wireframe = writable(false);

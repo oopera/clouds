@@ -1,30 +1,43 @@
 <script lang="ts">
   import Canvas from '$lib/components/GlobeCanvas.svelte';
-  import Container from '$lib/components/Container.svelte';
   import RangeInput from '$lib/components/RangeInput.svelte';
   import '$lib/styles/style.scss';
   import Cursor from '$lib/components/Cursor.svelte';
   import ZoomIndicator from '$lib/components/ZoomIndicator.svelte';
   import Starfield from '$lib/components/Starfield.svelte';
-  import Footer from '$lib/components/Footer.svelte';
   import Loading from '$lib/components/Loading.svelte';
   import Earthfield from '$lib/components/Earthfield.svelte';
-  import Tasks from '$lib/components/Tasks.svelte';
-  import { onMount } from 'svelte';
   import Logo from '$lib/components/Logo.svelte';
   import { dev } from '$app/environment';
   import { inject } from '@vercel/analytics';
+  import Layout from '$lib/components/Layout.svelte';
+  import Text from '$lib/components/Text.svelte';
+  import RadioButton from '$lib/components/RadioButton.svelte';
 
   inject({ mode: dev ? 'development' : 'production' });
 
-  onMount(() => {
-    window.onmousedown = (e) => {
-      if (e.buttons === 4 || e.buttons === 2) {
-        e.preventDefault();
-        return false;
-      }
-    };
-  });
+  let tasks = [
+    {
+      a: '(improve)',
+      b: 'Volumetric Cloud Rendering',
+    },
+    {
+      a: '(improve)',
+      b: 'Dynamic Light and shimmer',
+    },
+    {
+      a: '',
+      b: 'Cloud Dissapation animation',
+    },
+    {
+      a: '',
+      b: 'User Date Input',
+    },
+    {
+      a: '♡＼(￣▽￣)／♡',
+      b: 'Make it cuter',
+    },
+  ];
 </script>
 
 <svelte:head>
@@ -35,38 +48,63 @@
 <Logo />
 
 <main class="main">
-  <div class="flex">
+  <Layout padding="m" horizontal justify="between" align="start" gap="2">
     <Loading />
-    <Tasks />
-  </div>
+    <Layout short align="end" justify="end">
+      {#each tasks as task, i}
+        {#if task.a !== ''}
+          <Layout align="end" horizontal justify="between">
+            <Text text={task.a} secondary delay={i + i + 1} type="p" />
+            <Text vertical delay={i + 1} text={task.b} />
+          </Layout>
+        {:else}
+          <Text vertical delay={i + 2} text={task.b} />
+        {/if}
+      {/each}
+    </Layout>
+  </Layout>
 
-  <div class="flex">
+  <Layout padding="m" horizontal justify="between">
     <ZoomIndicator />
     <div class="indicators">
       <Starfield />
       <Earthfield />
     </div>
-  </div>
+  </Layout>
 
-  <div class="flex align-end">
-    <Footer />
-    <Container>
-      <RangeInput title="rotation_speed" min={0} max={5} step={0.25} />
-      <RangeInput
-        delay={5}
-        title="displacement"
-        min={-0.05}
-        max={0.05}
-        step={0.0005}
+  <Layout padding="m" horizontal justify="between" align="end">
+    <Layout align="start" gap="0" fit>
+      <Text secondary vertical text={'BSC BSC BSC BSC'} delay={10} />
+      <Text
+        vertical
+        delay={11}
+        text={'Custom Webgpu Engine + nomads.ncep.noaa'}
       />
-    </Container>
-  </div>
+      <Text
+        vertical
+        delay={12}
+        text={'Sveltekit + Vercel Serverless Go Function'}
+      />
+      <a data-interactable target="_blank" href="https://lucaslichner.de">
+        <Text vertical delay={14} text={'Lucas Lichner'} /></a
+      >
+    </Layout>
+    <Layout align="end" gap="2">
+      <RadioButton
+        delay={1}
+        title="cloud_type"
+        options={['cumulus', 'stratus', 'cirrus']}
+      />
+      <RangeInput title="rotation_speed" min={0} max={5} step={0.25} />
+      <RangeInput delay={6} title="scale" min={0.05} max={10.0} step={0.1} />
+    </Layout>
+  </Layout>
 </main>
 
 <Canvas />
 
 <style lang="scss">
-  @use '$lib/styles/mixins.scss';
+  @import '$lib/styles/mixins.scss';
   .main {
     overflow: hidden;
     position: relative;
@@ -80,23 +118,9 @@
     position: absolute;
     display: flex;
     flex-direction: column;
-    right: 16px;
+    right: gap(2);
     top: 50%;
     transform: translateY(-50%);
-    gap: 32px;
-  }
-  .flex {
-    position: relative;
-    display: flex;
-    flex-direction: row;
-    box-sizing: border-box;
-    width: 100%;
-    height: fit-content;
-    justify-content: space-between;
-    padding: 24px 16px;
-    gap: 16px;
-  }
-  .align-end {
-    align-items: flex-end;
+    gap: gap(2);
   }
 </style>

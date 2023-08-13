@@ -1,18 +1,20 @@
 // @ts-nocheck
 import { mat4, vec4, vec3 } from 'gl-matrix';
 import {
-  CreateTransforms,
   CreatePipeline,
   CreateBindGroup,
   CreateVertexBuffers,
   WriteVertexBuffers,
   CreateSphereData,
   UpdateVertexBuffers,
-} from './utils/helper.js';
+} from './utils/helper/wgslHelper.js';
 import InitStores from './utils/initStores.js';
-import { CreateViewProjection } from './utils/createViewProjection.js';
+import {
+  CreateViewProjection,
+  CreateTransforms,
+} from './utils/helper/matrixHelper.js';
 import { earthShader } from './shaders/earthShader.js';
-import { pitch, yaw, loading } from '$lib/stores/stores.js';
+import { yaw, loading, scale } from '$lib/stores/stores.js';
 import { cloudShader } from './shaders/cloudShader.js';
 
 import {
@@ -22,14 +24,14 @@ import {
   Get3DNoiseTexture,
 } from './utils/getTexture.js';
 
-import { GetDepthTexture } from './utils/getDepthTexture.js';
+import { GetDepthTexture } from './utils/getTexture.js';
 import type {
   RenderOptions,
   HasChanged,
   UniOptions,
 } from '$lib/types/types.js';
 import { atmosphereShader } from './shaders/atmosphereShader.js';
-import { executeAndUpdate } from './utils/executeAndUpdate.js';
+import { executePromise, loadImage } from './utils/executeAndUpdate.js';
 import { mb300 } from '$lib/assets/mb300.js';
 import { mb500 } from '$lib/assets/mb500.js';
 import { mb700 } from '$lib/assets/mb700.js';
@@ -90,16 +92,13 @@ const pipeline: GPURenderPipeline[] = [];
 const bindGroup = [];
 const buffers = [];
 
-var elapsed = 0;
+var usedScale;
 
-async function loadImage(url: string) {
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-  const blob = await response.blob();
-  return URL.createObjectURL(blob);
-}
+scale.subscribe((value) => {
+  usedScale = value;
+});
+
+var elapsed = 0;
 
 async function InitializeScene() {
   const adapter = await navigator.gpu?.requestAdapter();
@@ -147,17 +146,17 @@ async function InitializeScene() {
 
   InitStores(uniOptions, options, hasChanged, canvas);
 
-  let heightMap = await executeAndUpdate(
+  let heightMap = await executePromise(
     'heightMap',
     loadImage('/textures/nasa-heightmap.png'),
     'height map'
   );
-  let texture = await executeAndUpdate(
+  let texture = await executePromise(
     'texture',
     loadImage('/textures/Earth_Diffuse.jpg'),
     'texture map'
   );
-  let lightmap = await executeAndUpdate(
+  let lightmap = await executePromise(
     'lightmap',
     loadImage('/textures/nasa-lightmap.jpg'),
     'light map'
@@ -167,7 +166,7 @@ async function InitializeScene() {
   const textureV = await GetPartitionedTexture(device, texture);
   const lightMapV = await GetPartitionedTexture(device, lightmap);
 
-  let data = await executeAndUpdate(
+  let data = await executePromise(
     'sphere',
     CreateSphereData(options),
     'Vertex Data'
@@ -211,6 +210,12 @@ async function InitializeScene() {
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
 
+  const atmosphereUniBuffer = device.createBuffer({
+    label: 'light uniform buffer',
+    size: 64,
+    usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+  });
+
   const normalMatrix = mat4.create();
   const modelMatrix = mat4.create();
 
@@ -227,31 +232,31 @@ async function InitializeScene() {
     parsedGribTexture = await GetTextureFromGribData(device, mb300);
     parsedGribTexture_2 = await GetTextureFromGribData(device, mb500);
     parsedGribTexture_3 = await GetTextureFromGribData(device, mb700);
-    worleyNoiseTexture = await executeAndUpdate(
+    worleyNoiseTexture = await executePromise(
       'worleyNoiseTexture',
       await Get3DNoiseTexture(device),
       '3D Noise Texture'
     );
   } else {
-    worleyNoiseTexture = await executeAndUpdate(
+    worleyNoiseTexture = await executePromise(
       'worleyNoiseTexture',
       await Get3DNoiseTexture(device),
       '3D Noise Texture'
     );
 
-    const mb300RD = await executeAndUpdate(
+    const mb300RD = await executePromise(
       'mb300RD',
       fetch(`/api/cloud-texture?level_mb=300_mb&date=${dateString}`),
       '300 millibar cloud-data'
     );
 
-    const mb500RD = await executeAndUpdate(
+    const mb500RD = await executePromise(
       'mb500RD',
       fetch(`/api/cloud-texture?level_mb=500_mb&date=${dateString}`),
       '500 millibar cloud-data'
     );
 
-    const mb700RD = await executeAndUpdate(
+    const mb700RD = await executePromise(
       'mb700RD',
       fetch(`/api/cloud-texture?level_mb=700_mb&date=${dateString}`),
       '700 millibar cloud-data'
@@ -430,6 +435,12 @@ async function InitializeScene() {
         buffer: lightUniBuffer,
       },
     },
+    {
+      binding: 2,
+      resource: {
+        buffer: atmosphereUniBuffer,
+      },
+    },
   ];
 
   pipeline[0] = CreatePipeline(
@@ -444,7 +455,7 @@ async function InitializeScene() {
     device.createShaderModule({ code: cloudShader }),
     {
       ...options,
-      cullmode: 'none',
+      cullmode: 'back',
     },
     presentationFormat
   );
@@ -463,7 +474,7 @@ async function InitializeScene() {
     device.createShaderModule({ code: cloudShader }),
     {
       ...options,
-      cullmode: 'none',
+      cullmode: 'back',
     },
     presentationFormat
   );
@@ -473,7 +484,7 @@ async function InitializeScene() {
     device.createShaderModule({ code: cloudShader }),
     {
       ...options,
-      cullmode: 'none',
+      cullmode: 'back',
     },
     presentationFormat
   );
@@ -536,13 +547,35 @@ async function InitializeScene() {
     },
   }));
 
-  const cloudUniValues_01 = new Float32Array([0.01, 1.0, 0.0, 0.0]);
-
-  const cloudUniValues_02 = new Float32Array([0.015, 1.0, 0.0, 0.0]);
-
-  const cloudUniValues_03 = new Float32Array([0.02, 1.0, 0.0, 0.0]);
-
   async function frame() {
+    const cloudUniValues_01 = new Float32Array([
+      0.02 * usedScale,
+      1.0,
+      0.0,
+      0.0,
+    ]);
+
+    const cloudUniValues_02 = new Float32Array([
+      0.04 * usedScale,
+      1.0,
+      0.0,
+      0.0,
+    ]);
+
+    const cloudUniValues_03 = new Float32Array([
+      0.06 * usedScale,
+      1.0,
+      0.0,
+      0.0,
+    ]);
+
+    const atmosphereUniValues = new Float32Array([
+      0.08 * usedScale,
+      1.0,
+      0.0,
+      0.0,
+    ]);
+
     elapsed += 0.0005;
 
     var lightPosition = vec3.create();
@@ -554,7 +587,7 @@ async function InitializeScene() {
     var newYaw = options.yaw + options.rotationSpeed / 250;
     newYaw = newYaw % 360;
 
-    yaw.set(newYaw);
+    yaw.update((n) => (n = newYaw));
 
     const cameraPosition = vec3.create();
     vec3.set(
@@ -618,7 +651,7 @@ async function InitializeScene() {
 
     vec4.set(
       scales,
-      uniOptions.heightDisplacement,
+      usedScale,
       uniOptions.useTexture ? 1 : 0,
       uniOptions.intersection.x,
       uniOptions.intersection.y
@@ -650,10 +683,15 @@ async function InitializeScene() {
     );
     device.queue.writeBuffer(lightUniBuffer, 0, lightPosition as ArrayBuffer);
     device.queue.writeBuffer(lightUniBuffer, 16, lightColor as ArrayBuffer);
-    // device.queue.writeBuffer(lightUniBuffer, 32, 0.5 as ArrayBuffer);
+
+    device.queue.writeBuffer(
+      atmosphereUniBuffer,
+      0,
+      atmosphereUniValues as ArrayBuffer
+    );
 
     if (hasChanged.numFs) {
-      const newData = await executeAndUpdate(
+      const newData = await executePromise(
         'sphere',
         CreateSphereData(options),
         'Verex Data'

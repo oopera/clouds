@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { tweened } from 'svelte/motion';
   import { zoom, loading, yaw, pitch } from './../stores/stores.js';
-  import { quadOut, quintOut } from 'svelte/easing';
+  import { quintOut } from 'svelte/easing';
 
   export let step: number = 0.0025;
   export let min: number = 1;

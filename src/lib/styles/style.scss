@@ -35,9 +35,9 @@ body {
   --color-grey-darker: #2d2b2b;
   --color-grey-darkest: #0b0b0b;
 
-  --c-g: rgb(33, 33, 33);
-  --c-secondary: #91969b;
-  --c-tertiary: rgb(196, 215, 255);
+  --c-g: #212121;
+  --c-secondary: #dadada;
+  --c-tertiary: #c4d7ff;
 
   --c-racing-green: rgb(0, 81, 68);
   --c-mint: #65c6b3;
@@ -77,10 +77,15 @@ body {
   width: 100vw;
   height: 100vh;
   overflow-x: clip;
-  cursor: none;
+  cursor: crosshair;
 }
 input {
+  z-index: 2;
+  pointer-events: all;
   cursor: none;
+}
+a {
+  pointer-events: all;
 }
 body::-webkit-scrollbar {
   display: none;
@@ -106,14 +111,12 @@ p {
 }
 
 h1 {
-  font-size: 36px;
-  font-family: 'Cirka', Helvetica, sans-serif;
-  font-weight: 900;
-  text-transform: uppercase;
+  @include type-m;
+  // text-transform: uppercase;
 }
 p {
   @include type-xs;
-  text-transform: uppercase;
+  // text-transform: capitalize;
 }
 
 button {
@@ -123,7 +126,6 @@ button {
   outline: none;
   border: none;
   width: 75px;
-  padding: 3px 8px;
   border-radius: 5px;
   cursor: pointer;
   font-size: 10px;
