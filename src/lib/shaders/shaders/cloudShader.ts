@@ -161,9 +161,12 @@ fn schlickPhase(g: f32, cosTheta: f32) -> f32 {
 
   outputDensity = clamp(outputDensity, 0.0, 1.0);
 
+  color = vec4<f32>(blend(vec3<f32>(0.0, 0.0, 0.0), vec3<f32>(1.0, 1.0, 1.0), outputDensity), outputDensity);
+  
+  if(color.a < 0.05) {
+    discard;
+  }
 
-  color = vec4<f32>(blend(baseColor, highColor, outputDensity), outputDensity);
-  noise = getNoise(rayOrigin, vec3<f32>(2.5, 2.5,2.5));
 
   if(coverage < 1){
     return vec4<f32>(blend(color.rgb, vec3(noise.r, noise.r, noise.r), coverage), outputDensity) * noise.r;
