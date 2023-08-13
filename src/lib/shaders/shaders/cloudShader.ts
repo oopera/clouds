@@ -139,12 +139,19 @@ fn schlickPhase(g: f32, cosTheta: f32) -> f32 {
     lightness = 0.5;
   }
 
+
   var density: f32 = 0.0;
   var noise : vec4<f32>;
+
+  var perlin = noise.r;
+  var worley_l = noise.g;
+  var worley_s = noise.b;
+  var billowy = noise.a;
+
   var coverage: f32;
   var color : vec4<f32> = vec4<f32>(0.0, 0.0, 0.0, 1.0);
   var light: f32 = 1.0;
-  var ogNoise = getNoise(rayOrigin, vec3<f32>(2.5, 2.5,2.5));
+  var ogNoise = getNoise(rayOrigin, vec3<f32>(1, 1, 1));
 
   let stepSize: f32 = 0.000001; 
   let startDepth: f32 = (cloudUniforms.radius * 0.95) ; 
@@ -163,12 +170,18 @@ fn schlickPhase(g: f32, cosTheta: f32) -> f32 {
     light = clamp(computeLighting(density, depth, endDepth, dot(rayDirection, output.vNormal.xyz)), 0.0, 1.0);
 
     noise = getNoise(texturePosition, vec3<f32>(1.0, 1.0,1.0));
+
+    perlin = noise.r;
+    worley_l = noise.g;
+    worley_s = noise.b;
+    billowy = noise.a;
+
     coverage = getCoverage(texturePosition);
 
     if(coverage < 1){
-      density += (endDepth /depth) * noise.r * coverage  / 500;
+      density += (endDepth /depth) * perlin * coverage  / 500;
     }else{
-    density += (endDepth /depth) * noise.a * coverage  / 200;
+    density += (endDepth /depth) * worley_l * coverage  / 200;
     }
     
     for (var depth: f32 = -1 * startDepth; depth < -1 * endDepth; depth -= stepSize * 25) {
@@ -178,16 +191,14 @@ fn schlickPhase(g: f32, cosTheta: f32) -> f32 {
       coverage = getCoverage(sunTexturePosition);
 
       if(coverage < 1){
-        sunDensity += (endDepth /depth) * noise.r * coverage / 500 ;
+        sunDensity += (endDepth /depth) * worley_s * coverage / 500 ;
       }else{
-        sunDensity += (endDepth /depth) * noise.a * coverage  / 200 ;
+        sunDensity += (endDepth /depth) * billowy * coverage  / 200 ;
       }
 
     }
 
     outputDensity += density - (sunDensity * 0.5);
-
-    // falloff = smoothstep(min, falloff, 1, distance + noise);
   
     rayOrigin = texturePosition;
   }

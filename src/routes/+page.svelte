@@ -16,29 +16,6 @@
   import Link from '$lib/components/Link.svelte';
 
   inject({ mode: dev ? 'development' : 'production' });
-
-  let tasks = [
-    {
-      a: '(improve)',
-      b: 'Volumetric Cloud Rendering',
-    },
-    {
-      a: '(improve)',
-      b: 'Dynamic Light and shimmer',
-    },
-    {
-      a: '',
-      b: 'Cloud Dissapation animation',
-    },
-    {
-      a: '',
-      b: 'User Date Input',
-    },
-    {
-      a: '♡＼(￣▽￣)／♡',
-      b: 'Make it cuter',
-    },
-  ];
 </script>
 
 <svelte:head>
@@ -51,28 +28,38 @@
 <main class="main">
   <Layout padding="m" horizontal justify="between" align="start" gap="2">
     <Loading />
-    <Layout short align="end" justify="end">
-      {#each tasks as task, i}
-        {#if task.a !== ''}
-          <Layout align="end" horizontal justify="between">
-            <Text text={task.a} secondary delay={i + i + 1} type="p" />
-            <Text vertical delay={i + 1} text={task.b} />
-          </Layout>
-        {:else}
-          <Text vertical delay={i + 2} text={task.b} />
-        {/if}
-      {/each}
+    <Layout align="end" gap="0" fit>
+      <Text tertiary text={'Current Todos'} delay={10} />
+      <Layout horizontal gap="1" justify="between">
+        <Text secondary delay={6} text={'Improve'} />
+        <Text vertical delay={1} text={'Volumetric Cloud Rendering'} />
+      </Layout>
+      <Layout horizontal gap="1" justify="between">
+        <Text secondary delay={7} text={'Improve'} />
+        <Text vertical delay={2} text={' Dynamic Light and shimmer'} />
+      </Layout>
+
+      <Layout horizontal gap="1" justify="between">
+        <Text secondary delay={8} text={'add'} />
+        <Text vertical delay={3} text={' Cloud Dissapation animation'} />
+      </Layout>
+      <Layout horizontal gap="1" justify="between">
+        <Text secondary delay={9} text={'add'} />
+        <Text vertical delay={4} text={'User Date Input'} />
+      </Layout>
+      <Layout horizontal gap="1" justify="between">
+        <Text secondary delay={10} text={'♡＼(￣▽￣)／♡'} />
+        <Text vertical delay={5} text={'Make it cuter'} />
+      </Layout>
     </Layout>
   </Layout>
 
   <Layout padding="m" horizontal justify="between">
-    <div class="indicators">
-      <Starfield />
-      <Earthfield />
-    </div>
+    <Starfield />
+    <Earthfield />
   </Layout>
 
-  <Layout padding="m" horizontal justify="between" align="end">
+  <Layout padding="m" horizontal justify="between" align="end" gap="2">
     <Layout align="start" gap="0" fit>
       <Text tertiary text={'B.sc. Human Computer Interaction'} delay={10} />
       <Layout horizontal gap="1" justify="start">
@@ -113,7 +100,7 @@
           options={['cumulus', 'stratus', 'cirrus']}
         />
         <RangeInput title="rotation_speed" min={0} max={5} step={0.25} />
-        <RangeInput delay={6} title="scale" min={0.05} max={10.0} step={0.5} />
+        <RangeInput delay={6} title="scale" min={0.05} max={2.0} step={0.05} />
       </Layout>
 
       <ZoomIndicator />

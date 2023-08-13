@@ -75,7 +75,7 @@
 
 <div class="zoom" style="--zoom: {$zoom};">
   <div class="zoom__bar">
-    {#each indicatorArray as indicator, i}
+    {#each indicatorArray as i}
       <div
         style="--i: {i}; "
         class="zoom__indicator {i + 1 === Math.floor($zoom) ? 'current' : ''}"
@@ -84,6 +84,7 @@
           tertiary={i + 1 === Math.floor($zoom)}
           secondary={i + 1 !== Math.floor($zoom)}
           text={`${i / 2}`}
+          delay={i}
         />
 
         {#if i !== 9}
@@ -93,6 +94,7 @@
     {/each}
   </div>
   <input
+    data-interactable
     value={$zoom}
     {min}
     {max}
@@ -119,6 +121,11 @@
     margin: 0;
     padding: 0;
     rotate: 90deg;
+    transform: translateY(10px);
+    p {
+      margin: 0;
+      padding: 0;
+    }
   }
 
   .zoom {
@@ -128,6 +135,7 @@
     height: 224px;
     width: fit-content;
     z-index: 1;
+
     &__bar {
       display: flex;
       width: 32px;
