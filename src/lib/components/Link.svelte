@@ -10,8 +10,5 @@
   @import '$lib/styles/mixins.scss';
   .link {
     @include link();
-    p {
-      @include link();
-    }
   }
 </style>
