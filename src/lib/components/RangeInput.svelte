@@ -11,6 +11,7 @@
   export let max: number = 100;
   export let disabled: boolean = false;
   export let delay: number = 1;
+  let steps: number = (max - min) / step;
   let text: Stores = title;
   let store: any;
 
@@ -23,22 +24,34 @@
     if (!store) return;
     store.set(Number((e.target as HTMLInputElement).value));
   };
+
+  $: {
+    steps = (max - min) / step;
+  }
 </script>
 
 <div class="range-input-container">
   <Layout gap="2" align="end" justify="between">
-    <input
-      data-interactable
-      {disabled}
-      {min}
-      {max}
-      {step}
-      {title}
-      value={$store}
-      on:input={handleInput}
-      type="range"
-      class="slider"
-    />
+    <div class="slider_container">
+      {#each Array.from({ length: steps }, (_, i) => i + 1) as step}
+        <div
+          class="step {step % 2 === 0 ? 'even' : 'odd'}"
+          style="--i: {step}; --steps: {steps}"
+        />
+      {/each}
+      <input
+        data-interactable
+        {disabled}
+        {min}
+        {max}
+        {step}
+        {title}
+        value={$store}
+        on:input={handleInput}
+        type="range"
+        class="slider"
+      />
+    </div>
     <Layout horizontal gap="2" align="end" justify="end">
       <Text {delay} secondary text={min.toString()} vertical />
       <Text {delay} tertiary text={$store?.toString()} vertical />
@@ -55,14 +68,34 @@
     box-sizing: border-box;
     z-index: 2;
   }
+  .slider__container {
+    position: relative;
+    width: 128px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+  }
   .slider {
     appearance: none;
     -webkit-appearance: none;
-    height: 32px;
+    height: 100%;
     width: 100%;
     margin: 0;
-    border-radius: 25px;
     background-color: transparent;
+  }
+
+  .step {
+    position: absolute;
+    height: 16px;
+    width: 1px;
+    top: 8px;
+    background-color: var(--c-tertiary);
+    left: calc(var(--i) * (100% / var(--steps)));
+  }
+  .even {
+    background-color: var(--c-tertiary);
+    height: 8px;
+    top: 12px;
   }
   .slider:focus {
     outline: none;
@@ -72,19 +105,18 @@
     width: 100%;
     height: 32px;
     padding: 0 8px 0 8px;
-    border-radius: 24px;
-    border: 1pt solid var(--c-g);
   }
   .slider::-webkit-slider-thumb {
     animation: blink2 1.5s ease-in-out infinite alternate;
-    height: 16px;
-    width: 16px;
+    height: 24px;
+    width: 24px;
     border-radius: 15px;
     border: 1pt solid var(--c-g);
     -webkit-appearance: none;
-    margin-top: 8px;
+    margin-top: 4px;
     transition: 100ms ease-in;
     transform-origin: center;
+    backdrop-filter: blur(8px);
     background: radial-gradient(
       circle,
       rgba(0, 33, 95, 1) 0%,

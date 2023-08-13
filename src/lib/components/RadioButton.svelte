@@ -26,19 +26,19 @@
 </script>
 
 <Layout fit align="center" justify="between" gap="0">
-  {#each options as option, i}
+  {#each options as text, i}
     <Layout horizontal align="center" justify="between" gap="2">
       <input
         data-interactable
-        id={option}
-        title={option}
-        value={option}
-        checked={value === option}
+        id={text}
+        title={text}
+        value={text}
+        checked={value === text}
         on:input={handleInput}
         type="radio"
         class="radio"
       />
-      <Text delay={delay + i}>{option}</Text>
+      <Text delay={delay + i} {text} />
     </Layout>
   {/each}
 </Layout>

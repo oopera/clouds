@@ -143,7 +143,7 @@ fn schlickPhase(g: f32, cosTheta: f32) -> f32 {
   var noise : vec4<f32>;
   var coverage: f32;
   var color : vec4<f32> = vec4<f32>(0.0, 0.0, 0.0, 1.0);
-
+  var light: f32 = 1.0;
   var ogNoise = getNoise(rayOrigin, vec3<f32>(2.5, 2.5,2.5));
 
   let stepSize: f32 = 0.000001; 
@@ -159,6 +159,8 @@ fn schlickPhase(g: f32, cosTheta: f32) -> f32 {
   for (var depth: f32 = startDepth; depth < endDepth; depth += stepSize) {
     rayDirection = normalize(rayOrigin + cameraPosition);
     let texturePosition: vec3<f32> = rayOrigin + rayDirection * depth;
+
+    light = clamp(computeLighting(density, depth, endDepth, dot(rayDirection, output.vNormal.xyz)), 0.0, 1.0);
 
     noise = getNoise(texturePosition, vec3<f32>(1.0, 1.0,1.0));
     coverage = getCoverage(texturePosition);
@@ -176,9 +178,9 @@ fn schlickPhase(g: f32, cosTheta: f32) -> f32 {
       coverage = getCoverage(sunTexturePosition);
 
       if(coverage < 1){
-        sunDensity += (endDepth /depth) * noise.r * coverage / 500;
+        sunDensity += (endDepth /depth) * noise.r * coverage / 500 ;
       }else{
-        sunDensity += (endDepth /depth) * noise.a * coverage  / 200;
+        sunDensity += (endDepth /depth) * noise.a * coverage  / 200 ;
       }
 
     }
@@ -196,10 +198,10 @@ fn schlickPhase(g: f32, cosTheta: f32) -> f32 {
   noise = getNoise(rayOrigin, vec3<f32>(2.5, 2.5,2.5));
 
   if(coverage < 1){
-    return vec4<f32>(blend(color.rgb, vec3(noise.r, noise.r, noise.r), 1 - coverage), outputDensity);
+    return vec4<f32>(blend(color.rgb, vec3(noise.r, noise.r, noise.r),outputDensity), outputDensity);
   }
 
-  return vec4<f32>(blend(color.rgb, vec3(noise.a, noise.a, noise.a), 1 - coverage), outputDensity);
+  return vec4<f32>(blend(color.rgb, vec3(noise.a, noise.a, noise.a), outputDensity), outputDensity);
 
 }
 `;

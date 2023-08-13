@@ -103,6 +103,7 @@ var elapsed = 0;
 async function InitializeScene() {
   const adapter = await navigator.gpu?.requestAdapter();
   const device = await adapter?.requestDevice();
+  // const device = false;
   if (!device) {
     var counter = 0;
     var interval = setInterval(() => {
@@ -134,10 +135,10 @@ async function InitializeScene() {
           },
         };
       });
-      if (counter > 10) {
+      if (counter > 5) {
         clearInterval(interval);
       }
-    }, 250);
+    }, 500);
     return;
   }
 

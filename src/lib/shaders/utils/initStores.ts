@@ -95,7 +95,6 @@ export default function InitStores(
     options.coords.lastY = 0;
   });
   canvas.addEventListener('mousemove', (e) => {
-    console.log('zoo');
     if (isDragging) {
       var changeX = e.clientX - options.coords.lastX;
       var changeY = e.clientY - options.coords.lastY;
