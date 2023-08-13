@@ -10,6 +10,7 @@
   export let accent = false;
   export let vertical = false;
   export let text = '';
+  export let mini: boolean = false;
 
   let splitText = text?.split('');
 
@@ -26,11 +27,12 @@
 
 {#if mounted}
   {#if type === 'p'}
-    <p>
+    <p class:mini>
       {#each splitText as letter, i}
         <span
           class:secondary
           class:tertiary
+          class:accent
           in:fly={{
             delay: delay * 125 + i * 25,
             duration: 350,
@@ -79,5 +81,8 @@
   }
   .accent {
     color: var(--c-accent);
+  }
+  .mini {
+    max-width: 16px;
   }
 </style>

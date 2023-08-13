@@ -1,18 +1,18 @@
 <script lang="ts">
-  import Canvas from '$lib/components/GlobeCanvas.svelte';
-  import RangeInput from '$lib/components/RangeInput.svelte';
+  import Canvas from '$lib/components/Canvas.svelte';
+  import Range_Input from '$lib/components/Range_Input.svelte';
   import '$lib/styles/style.scss';
   import Cursor from '$lib/components/Cursor.svelte';
-  import ZoomIndicator from '$lib/components/ZoomIndicator.svelte';
-  import Starfield from '$lib/components/Starfield.svelte';
+  import Zoom_Input from '$lib/components/Zoom_Input.svelte';
+  import Zoom_Indicator from '$lib/components/Zoom_Indicator.svelte';
   import Loading from '$lib/components/Loading.svelte';
-  import Earthfield from '$lib/components/Earthfield.svelte';
+  import Axis_Indicator from '$lib/components/Axis_Indicator.svelte';
   import Logo from '$lib/components/Logo.svelte';
   import { dev } from '$app/environment';
   import { inject } from '@vercel/analytics';
   import Layout from '$lib/components/Layout.svelte';
   import Text from '$lib/components/Text.svelte';
-  import RadioButton from '$lib/components/RadioButton.svelte';
+  import Radio_Button from '$lib/components/Radio_Button.svelte';
   import Link from '$lib/components/Link.svelte';
 
   inject({ mode: dev ? 'development' : 'production' });
@@ -48,15 +48,15 @@
         <Text vertical delay={4} text={'User Date Input'} />
       </Layout>
       <Layout horizontal gap="1" justify="between">
-        <Text secondary delay={10} text={'♡＼(￣▽￣)／♡'} />
+        <Text tertiary delay={10} text={'♡＼(￣▽￣)／♡'} />
         <Text vertical delay={5} text={'Make it cuter'} />
       </Layout>
     </Layout>
   </Layout>
 
   <Layout padding="m" horizontal justify="between">
-    <Starfield />
-    <Earthfield />
+    <Zoom_Indicator />
+    <Axis_Indicator />
   </Layout>
 
   <Layout padding="m" horizontal justify="between" align="end" gap="2">
@@ -93,17 +93,17 @@
       </Layout>
     </Layout>
     <Layout align="end" gap="2" fit horizontal>
-      <Layout align="end" gap="2" fit>
-        <RadioButton
+      <Layout align="end" gap="1" fit>
+        <Radio_Button
           delay={1}
           title="cloud_type"
           options={['cumulus', 'stratus', 'cirrus']}
         />
-        <RangeInput title="rotation_speed" min={0} max={5} step={0.25} />
-        <RangeInput delay={6} title="scale" min={0.05} max={2.0} step={0.05} />
+        <Range_Input title="rotation_speed" min={0} max={5} step={0.25} />
+        <Range_Input delay={6} title="scale" min={0.05} max={2.0} step={0.05} />
       </Layout>
 
-      <ZoomIndicator />
+      <Zoom_Input />
     </Layout>
   </Layout>
 </main>

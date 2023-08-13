@@ -151,7 +151,6 @@ fn schlickPhase(g: f32, cosTheta: f32) -> f32 {
   var coverage: f32;
   var color : vec4<f32> = vec4<f32>(0.0, 0.0, 0.0, 1.0);
   var light: f32 = 1.0;
-  var ogNoise = getNoise(rayOrigin, vec3<f32>(1, 1, 1));
 
   let stepSize: f32 = 0.000001; 
   let startDepth: f32 = (cloudUniforms.radius * 0.95) ; 
@@ -165,7 +164,7 @@ fn schlickPhase(g: f32, cosTheta: f32) -> f32 {
 
   for (var depth: f32 = startDepth; depth < endDepth; depth += stepSize) {
     rayDirection = normalize(rayOrigin + cameraPosition);
-    let texturePosition: vec3<f32> = rayOrigin + rayDirection * depth;
+    let texturePosition: vec3<f32> = rayOrigin + rayDirection * depth ;
 
     light = clamp(computeLighting(density, depth, endDepth, dot(rayDirection, output.vNormal.xyz)), 0.0, 1.0);
 
@@ -184,19 +183,18 @@ fn schlickPhase(g: f32, cosTheta: f32) -> f32 {
     density += (endDepth /depth) * worley_l * coverage  / 200;
     }
     
-    for (var depth: f32 = -1 * startDepth; depth < -1 * endDepth; depth -= stepSize * 25) {
-      sunRayDirection = normalize(rayOrigin + lightUni.lightPosition);
-      let sunTexturePosition: vec3<f32> = rayOrigin + sunRayDirection * depth;
+    // for (var depth: f32 = -1 * startDepth; depth < -1 * endDepth; depth -= stepSize * 25) {
+    //   sunRayDirection = normalize(rayOrigin + lightUni.lightPosition);
+    //   let sunTexturePosition: vec3<f32> = rayOrigin + sunRayDirection * depth;
   
-      coverage = getCoverage(sunTexturePosition);
+    //   coverage = getCoverage(sunTexturePosition);
 
-      if(coverage < 1){
-        sunDensity += (endDepth /depth) * worley_s * coverage / 500 ;
-      }else{
-        sunDensity += (endDepth /depth) * billowy * coverage  / 200 ;
-      }
-
-    }
+    //   if(coverage < 1){
+    //     sunDensity += (endDepth /depth) * worley_s * coverage / 500 * light;
+    //   }else{
+    //     sunDensity += (endDepth /depth) * billowy * coverage  / 200 * light;
+    //   }
+    // }
 
     outputDensity += density - (sunDensity * 0.5);
   
@@ -206,13 +204,12 @@ fn schlickPhase(g: f32, cosTheta: f32) -> f32 {
   outputDensity = clamp(outputDensity, 0.0, 1.0);
 
   color = vec4<f32>(blend(baseColor, highColor, outputDensity), outputDensity);
-  noise = getNoise(rayOrigin, vec3<f32>(2.5, 2.5,2.5));
 
   if(coverage < 1){
-    return vec4<f32>(blend(color.rgb, vec3(noise.r, noise.r, noise.r),outputDensity), outputDensity);
+    return vec4<f32>(blend(color.rgb, vec3(perlin, perlin,perlin),outputDensity), outputDensity);
   }
 
-  return vec4<f32>(blend(color.rgb, vec3(noise.a, noise.a, noise.a), outputDensity), outputDensity);
+  return vec4<f32>(blend(color.rgb, vec3(billowy, billowy, billowy), outputDensity), outputDensity);
 
 }
 `;
