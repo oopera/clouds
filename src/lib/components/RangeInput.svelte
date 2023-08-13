@@ -31,7 +31,7 @@
 </script>
 
 <div class="range-input-container">
-  <Layout gap="2" align="end" justify="between">
+  <Layout gap="1" align="end" justify="between">
     <div class="slider_container">
       {#each Array.from({ length: steps }, (_, i) => i + 1) as step}
         <div
@@ -52,7 +52,7 @@
         class="slider"
       />
     </div>
-    <Layout horizontal gap="2" align="end" justify="end">
+    <Layout horizontal gap="1" align="end" justify="between">
       <Text {delay} secondary text={min.toString()} vertical />
       <Text {delay} tertiary text={$store?.toString()} vertical />
       <Text {delay} secondary text={max.toString()} vertical />
@@ -103,7 +103,7 @@
 
   .slider::-webkit-slider-runnable-track {
     width: 100%;
-    height: 32px;
+    height: 24px;
     padding: 0 8px 0 8px;
   }
   .slider::-webkit-slider-thumb {

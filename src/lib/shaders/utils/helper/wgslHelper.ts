@@ -1,7 +1,4 @@
 import type { RenderOptions, SphereData } from '$lib/types/types';
-import { vec3, mat4 } from 'gl-matrix';
-
-export const degToRad = (d: number) => (d * Math.PI) / 180;
 
 export async function CreateSphereData(options: RenderOptions): Promise<any> {
   const worker: Worker = new Worker(

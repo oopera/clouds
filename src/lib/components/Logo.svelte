@@ -22,7 +22,7 @@
   }
 </script>
 
-{#if mounted && !deviceFailed}
+{#if mounted && !deviceFailed && !loaded}
   <span class="parent">
     <span
       in:fly={{
@@ -32,7 +32,7 @@
         easing: quintOut,
       }}
       out:fly={{
-        delay: 8 * 125,
+        delay: 2 * 125,
         duration: 350,
         y: -15,
         easing: quintOut,
@@ -344,11 +344,11 @@
     transition-duration: 1.14s;
   }
 
-  .loaded {
-    opacity: 0;
-    top: gap(4);
-    @media (min-width: 768px) {
-      opacity: 1;
-    }
-  }
+  // .loaded {
+  //   opacity: 0;
+  //   top: gap(4);
+  //   @media (min-width: 768px) {
+  //     opacity: 1;
+  //   }
+  // }
 </style>
