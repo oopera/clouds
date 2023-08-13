@@ -53,6 +53,7 @@
     min-width: 144px;
     white-space: nowrap;
     box-sizing: border-box;
+    z-index: 2;
   }
   .slider {
     appearance: none;

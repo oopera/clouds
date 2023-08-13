@@ -48,7 +48,7 @@
 <Logo />
 
 <main class="main">
-  <Layout padding="m" horizontal justify="between" align="start" gap="4">
+  <Layout padding="m" horizontal justify="between" align="start" gap="2">
     <Loading />
     <Layout short align="end" justify="end">
       {#each tasks as task, i}
@@ -113,7 +113,6 @@
     flex-direction: column;
     align-items: flex-start;
     justify-content: space-between;
-    z-index: 1;
   }
   .indicators {
     position: absolute;

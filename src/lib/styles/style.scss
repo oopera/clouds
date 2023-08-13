@@ -81,7 +81,11 @@ body {
 }
 input {
   z-index: 2;
+  pointer-events: all;
   cursor: none;
+}
+a {
+  pointer-events: all;
 }
 body::-webkit-scrollbar {
   display: none;

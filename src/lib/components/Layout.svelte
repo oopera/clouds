@@ -1,6 +1,6 @@
 <script lang="ts">
   export let horizontal: boolean = false;
-  export let gap: '0' | '2' | '4' | '6' | '8' = '0';
+  export let gap: '0' | '2' | '4' | '6' | '8' | '10' = '0';
   export let align: 'start' | 'center' | 'end' = 'center';
   export let justify: 'start' | 'center' | 'end' | 'between' = 'center';
   export let padding: '0' | 's' | 'm' | 'l' = '0';
@@ -26,6 +26,7 @@
     flex-direction: column;
     width: 100%;
     box-sizing: border-box;
+    pointer-events: none;
   }
 
   .fit {
@@ -90,5 +91,8 @@
   }
   .gap-8 {
     gap: gap(8);
+  }
+  .gap-10 {
+    gap: gap(10);
   }
 </style>
