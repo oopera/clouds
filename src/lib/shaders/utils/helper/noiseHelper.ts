@@ -123,7 +123,7 @@ function worley(p: Vec3, scale: number, frequency: number): number {
   return 1.0 - minimalDist;
 }
 
-export default function generateWorleyFbmNoise(
+export function generateWorleyFbmNoise(
   width: number,
   height: number,
   depth: number,

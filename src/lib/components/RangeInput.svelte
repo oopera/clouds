@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import Text from './Text.svelte';
   import type { Stores } from '$lib/types/types';
+  import Layout from './Layout.svelte';
 
   export let title: Stores;
 
@@ -25,29 +26,30 @@
 </script>
 
 <div class="range-input-container">
-  <input
-    data-interactable
-    {disabled}
-    {min}
-    {max}
-    {step}
-    {title}
-    value={$store}
-    on:input={handleInput}
-    type="range"
-    class="slider"
-  />
-  <Text {delay} {text} vertical />
+  <Layout gap="2" align="end" justify="between">
+    <input
+      data-interactable
+      {disabled}
+      {min}
+      {max}
+      {step}
+      {title}
+      value={$store}
+      on:input={handleInput}
+      type="range"
+      class="slider"
+    />
+    <Layout horizontal gap="2" align="end" justify="end">
+      <Text {delay} secondary text={min.toString()} vertical />
+      <Text {delay} tertiary text={$store?.toString()} vertical />
+      <Text {delay} secondary text={max.toString()} vertical />
+    </Layout>
+    <Text {delay} {text} vertical />
+  </Layout>
 </div>
 
 <style lang="scss">
   .range-input-container {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    align-items: flex-end;
-    width: 100%;
-    gap: 16px;
     min-width: 144px;
     white-space: nowrap;
     box-sizing: border-box;

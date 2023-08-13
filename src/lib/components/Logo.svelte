@@ -281,6 +281,7 @@
 
   .loaded {
     top: 38px;
+    font-size: 24px;
     @media (max-width: 768px) {
       top: 32px;
       font-size: 24px;

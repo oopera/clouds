@@ -1,16 +1,18 @@
 // @ts-nocheck
 import { mat4, vec4, vec3 } from 'gl-matrix';
 import {
-  CreateTransforms,
   CreatePipeline,
   CreateBindGroup,
   CreateVertexBuffers,
   WriteVertexBuffers,
   CreateSphereData,
   UpdateVertexBuffers,
-} from './utils/helper.js';
+} from './utils/helper/wgslHelper.js';
 import InitStores from './utils/initStores.js';
-import { CreateViewProjection } from './utils/createViewProjection.js';
+import {
+  CreateViewProjection,
+  CreateTransforms,
+} from './utils/helper/matrixHelper.js';
 import { earthShader } from './shaders/earthShader.js';
 import { yaw, loading, scale } from '$lib/stores/stores.js';
 import { cloudShader } from './shaders/cloudShader.js';
@@ -22,14 +24,14 @@ import {
   Get3DNoiseTexture,
 } from './utils/getTexture.js';
 
-import { GetDepthTexture } from './utils/getDepthTexture.js';
+import { GetDepthTexture } from './utils/getTexture.js';
 import type {
   RenderOptions,
   HasChanged,
   UniOptions,
 } from '$lib/types/types.js';
 import { atmosphereShader } from './shaders/atmosphereShader.js';
-import { executeAndUpdate } from './utils/executeAndUpdate.js';
+import { executePromise, loadImage } from './utils/executeAndUpdate.js';
 import { mb300 } from '$lib/assets/mb300.js';
 import { mb500 } from '$lib/assets/mb500.js';
 import { mb700 } from '$lib/assets/mb700.js';
@@ -98,15 +100,6 @@ scale.subscribe((value) => {
 
 var elapsed = 0;
 
-async function loadImage(url: string) {
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-  const blob = await response.blob();
-  return URL.createObjectURL(blob);
-}
-
 async function InitializeScene() {
   const adapter = await navigator.gpu?.requestAdapter();
   const device = await adapter?.requestDevice();
@@ -153,17 +146,17 @@ async function InitializeScene() {
 
   InitStores(uniOptions, options, hasChanged, canvas);
 
-  let heightMap = await executeAndUpdate(
+  let heightMap = await executePromise(
     'heightMap',
     loadImage('/textures/nasa-heightmap.png'),
     'height map'
   );
-  let texture = await executeAndUpdate(
+  let texture = await executePromise(
     'texture',
     loadImage('/textures/Earth_Diffuse.jpg'),
     'texture map'
   );
-  let lightmap = await executeAndUpdate(
+  let lightmap = await executePromise(
     'lightmap',
     loadImage('/textures/nasa-lightmap.jpg'),
     'light map'
@@ -173,7 +166,7 @@ async function InitializeScene() {
   const textureV = await GetPartitionedTexture(device, texture);
   const lightMapV = await GetPartitionedTexture(device, lightmap);
 
-  let data = await executeAndUpdate(
+  let data = await executePromise(
     'sphere',
     CreateSphereData(options),
     'Vertex Data'
@@ -239,31 +232,31 @@ async function InitializeScene() {
     parsedGribTexture = await GetTextureFromGribData(device, mb300);
     parsedGribTexture_2 = await GetTextureFromGribData(device, mb500);
     parsedGribTexture_3 = await GetTextureFromGribData(device, mb700);
-    worleyNoiseTexture = await executeAndUpdate(
+    worleyNoiseTexture = await executePromise(
       'worleyNoiseTexture',
       await Get3DNoiseTexture(device),
       '3D Noise Texture'
     );
   } else {
-    worleyNoiseTexture = await executeAndUpdate(
+    worleyNoiseTexture = await executePromise(
       'worleyNoiseTexture',
       await Get3DNoiseTexture(device),
       '3D Noise Texture'
     );
 
-    const mb300RD = await executeAndUpdate(
+    const mb300RD = await executePromise(
       'mb300RD',
       fetch(`/api/cloud-texture?level_mb=300_mb&date=${dateString}`),
       '300 millibar cloud-data'
     );
 
-    const mb500RD = await executeAndUpdate(
+    const mb500RD = await executePromise(
       'mb500RD',
       fetch(`/api/cloud-texture?level_mb=500_mb&date=${dateString}`),
       '500 millibar cloud-data'
     );
 
-    const mb700RD = await executeAndUpdate(
+    const mb700RD = await executePromise(
       'mb700RD',
       fetch(`/api/cloud-texture?level_mb=700_mb&date=${dateString}`),
       '700 millibar cloud-data'
@@ -698,7 +691,7 @@ async function InitializeScene() {
     );
 
     if (hasChanged.numFs) {
-      const newData = await executeAndUpdate(
+      const newData = await executePromise(
         'sphere',
         CreateSphereData(options),
         'Verex Data'

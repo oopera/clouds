@@ -7,11 +7,13 @@
   let controls = false;
 
   onMount(() => {
-    window.onmousemove = (e) => {
+    window.onmousemove = (e: MouseEvent) => {
       x = e.clientX;
       y = e.clientY;
-      controls = e.target.closest('[data-hud]') !== null;
-      interactable = e.target.closest('[data-interactable]') !== null;
+
+      controls = (e.target as HTMLElement).closest('[data-hud]') !== null;
+      interactable =
+        (e.target as HTMLElement).closest('[data-interactable]') !== null;
     };
   });
 </script>
@@ -29,17 +31,15 @@
   </div>
 </div>
 
-<style>
+<style lang="scss">
   .cursor {
     pointer-events: none;
     z-index: 100;
     width: 24px;
     height: 24px;
-    left: -12px;
-    top: -12px;
-    /* backdrop-filter: blur(24px); */
+    left: -7px;
+    top: -6px;
     position: fixed;
-    /* transition: all 150ms cubic-bezier(0.25, 0.8, 0.25, 1); */
     mix-blend-mode: difference;
   }
 
@@ -116,49 +116,46 @@
     border-right: 1px solid white;
   }
 
-  .interactable .crosshair-line:nth-child(1) {
-    transform: translate(-5px, -50%);
-  }
-  .interactable .crosshair-line:nth-child(2) {
-    transform: translate(5px, -50%);
-  }
-  .interactable .crosshair-line:nth-child(3) {
-    transform: translate(-50%, -5px);
-  }
-  .interactable .crosshair-line:nth-child(4) {
-    transform: translate(-50%, 5px);
+  .interactable {
+    // Loop for .crosshair-line
+    @for $i from 1 through 4 {
+      .crosshair-line:nth-child(#{$i}) {
+        @if $i == 1 {
+          transform: translate(-5px, -50%);
+        } @else if $i == 2 {
+          transform: translate(5px, -50%);
+        } @else if $i == 3 {
+          transform: translate(-50%, -5px);
+        } @else if $i == 4 {
+          transform: translate(-50%, 5px);
+        }
+      }
+    }
+
+    // Loop for .crosshair-edge
+    $positions: (top left, top right, bottom left, bottom right);
+    @for $i from 1 through length($positions) {
+      .crosshair-edge:nth-child(#{$i}) {
+        $position: nth($positions, $i);
+        #{nth($position, 1)}: 8px;
+        #{nth($position, 2)}: 8px;
+      }
+    }
   }
 
-  .interactable .crosshair-edge:nth-child(5) {
-    top: 8px;
-    left: 8px;
-  }
-
-  .interactable .crosshair-edge:nth-child(6) {
-    top: 8px;
-    right: 8px;
-  }
-
-  .interactable .crosshair-edge:nth-child(7) {
-    bottom: 8px;
-    left: 8px;
-  }
-
-  .interactable .crosshair-edge:nth-child(8) {
-    bottom: 8px;
-    right: 8px;
-  }
-
-  .controls .crosshair-line:nth-child(1) {
-    transform: translate(-5px, -50%);
-  }
-  .controls .crosshair-line:nth-child(2) {
-    transform: translate(5px, -50%);
-  }
-  .controls .crosshair-line:nth-child(3) {
-    transform: translate(-50%, -5px);
-  }
-  .controls .crosshair-line:nth-child(4) {
-    transform: translate(-50%, 5px);
+  .controls {
+    @for $i from 1 through 4 {
+      .crosshair-line:nth-child(#{$i}) {
+        @if $i == 1 {
+          transform: translate(-5px, -50%);
+        } @else if $i == 2 {
+          transform: translate(5px, -50%);
+        } @else if $i == 3 {
+          transform: translate(-50%, -5px);
+        } @else if $i == 4 {
+          transform: translate(-50%, 5px);
+        }
+      }
+    }
   }
 </style>

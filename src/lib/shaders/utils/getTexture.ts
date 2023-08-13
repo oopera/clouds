@@ -1,6 +1,7 @@
-import { vec3 } from 'gl-matrix';
-import worleyFbm, { generatePerlinFbmNoise } from './worleyNoise';
-import generateWorleyFbmNoise from './worleyNoise';
+import {
+  generatePerlinFbmNoise,
+  generateWorleyFbmNoise,
+} from './helper/noiseHelper';
 
 export const GetTexture = async (
   device: GPUDevice,
@@ -105,14 +106,6 @@ export const GetTextureFromGribData = async (
   };
 };
 
-function remap(x: number, a: number, b: number, c: number, d: number): number {
-  return ((x - a) / (b - a)) * (d - c) + c;
-}
-
-function mix(a: number, b: number, t: number): number {
-  return a * (1 - t) + b * t;
-}
-
 export const Get3DNoiseTexture = async (
   device: GPUDevice,
   width: number = 128,
@@ -133,20 +126,20 @@ export const Get3DNoiseTexture = async (
   const noiseData_02 = generateWorleyFbmNoise(width, height, depth, 12);
   const rgbaData = new Uint8Array(noiseData_01.length * 4);
 
+  function mix(a: number, b: number, t: number): number {
+    return a * (1 - t) + b * t;
+  }
+
   for (let i = 0; i < noiseData_01.length; i++) {
     const index = i * 4;
     let pfbm = mix(noiseData_01[i], perlinNoiseData_01[i], 0.25);
     const billowyPerlinData = Math.abs(pfbm * 2.0 - 1.0);
 
-    let pfbm2 = mix(noiseData_02[i], perlinNoiseData_01[i], 0.25);
-    const billowyPerlinData2 = Math.abs(pfbm2 * 2.0 - 1.0);
     rgbaData[index] = perlinNoiseData_01[i] * 255; // R
     rgbaData[index + 1] = noiseData_01[i] * 255; // G
-    rgbaData[index + 2] = billowyPerlinData2 * 255; // B
+    rgbaData[index + 2] = noiseData_02[i] * 255; // B
     rgbaData[index + 3] = billowyPerlinData * 255; // A
   }
-
-  console.log(rgbaData);
 
   const sampler = device.createSampler({
     minFilter: 'linear',
@@ -227,4 +220,45 @@ export const GetPartitionedTexture = async (
   }
 
   return textures;
+};
+
+export const GetDepthTexture = async (
+  device: GPUDevice,
+  width: any,
+  height: any
+) => {
+  // Create texture for texture binding
+  const texture = device.createTexture({
+    size: [width, height],
+    format: 'depth24plus',
+    sampleCount: 4,
+    usage:
+      GPUTextureUsage.TEXTURE_BINDING |
+      GPUTextureUsage.COPY_DST |
+      GPUTextureUsage.RENDER_ATTACHMENT,
+  });
+
+  // Create texture for render attachment
+  const textureRenderAttachment = device.createTexture({
+    size: [width, height],
+    format: 'depth24plus',
+    sampleCount: 4,
+    usage:
+      GPUTextureUsage.TEXTURE_BINDING |
+      GPUTextureUsage.COPY_DST |
+      GPUTextureUsage.RENDER_ATTACHMENT,
+  });
+
+  // Create sampler with nearest filtering
+  const sampler = device.createSampler({
+    magFilter: 'nearest',
+    minFilter: 'nearest',
+    compare: 'less',
+  });
+
+  return {
+    texture,
+    textureRenderAttachment,
+    sampler,
+  };
 };

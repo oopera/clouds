@@ -1,7 +1,9 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import Text from './Text.svelte';
-  export let title: 'topology';
+  import type { Stores } from '$lib/types/types';
+  import Layout from './Layout.svelte';
+  export let title: Stores;
   export let options: string[] = [];
   export let value: string = '';
   export let delay: number = 1;
@@ -23,9 +25,9 @@
   };
 </script>
 
-<div class="range-input-container">
+<Layout fit align="center" justify="between" gap="0">
   {#each options as option, i}
-    <div class="radio-container">
+    <Layout horizontal align="center" justify="between" gap="2">
       <input
         data-interactable
         id={option}
@@ -36,29 +38,12 @@
         type="radio"
         class="radio"
       />
-
       <Text delay={delay + i}>{option}</Text>
-    </div>
+    </Layout>
   {/each}
-</div>
+</Layout>
 
 <style>
-  .radio-container {
-    display: flex;
-    width: 100%;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .range-input-container {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-    min-width: 128px;
-  }
-
   .radio {
     height: 24px;
     width: 24px;

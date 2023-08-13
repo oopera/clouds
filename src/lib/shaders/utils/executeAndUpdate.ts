@@ -1,6 +1,6 @@
 import { loading } from '$lib/stores/stores';
 
-export async function executeAndUpdate(
+export async function executePromise(
   key: string,
   promise: Promise<any>,
   message: string
@@ -58,4 +58,13 @@ export async function executeAndUpdate(
   });
 
   return data;
+}
+
+export async function loadImage(url: string) {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  const blob = await response.blob();
+  return URL.createObjectURL(blob);
 }

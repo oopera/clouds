@@ -125,9 +125,12 @@ fn schlickPhase(g: f32, cosTheta: f32) -> f32 {
 
   var ogNoise = getNoise(rayOrigin, vec3<f32>(2.5, 2.5,2.5));
 
-  let stepSize: f32 = 0.0001; 
+  let stepSize: f32 = 0.000001; 
   let startDepth: f32 = (cloudUniforms.radius * 0.95) ; 
-  let endDepth: f32 =  (cloudUniforms.radius * 0.95) +(50 * stepSize); 
+  let endDepth: f32 =  (cloudUniforms.radius * 0.95) + (50 * stepSize); 
+
+  let baseColor = vec3<f32>(0.14, 0.17, 0.22);  
+  let highColor = vec3<f32>(0.84, 0.87, 0.92); 
 
 
   var outputDensity: f32;
@@ -140,44 +143,33 @@ fn schlickPhase(g: f32, cosTheta: f32) -> f32 {
     coverage = getCoverage(texturePosition);
 
     density += (endDepth /depth) * noise.a * coverage;
-
-    // for (var depth: f32 = startDepth ; depth < endDepth; depth += stepSize * 4) {
-    //   sunRayDirection = normalize(rayOrigin + lightUni.lightPosition);
-    //   let sunTexturePosition: vec3<f32> = rayOrigin + sunRayDirection * depth;
+    
+    for (var depth: f32 = -1 * startDepth; depth < -1 * endDepth; depth -= stepSize * 25) {
+      sunRayDirection = normalize(rayOrigin + lightUni.lightPosition);
+      let sunTexturePosition: vec3<f32> = rayOrigin + sunRayDirection * depth;
   
-    //   coverage = getCoverage(sunTexturePosition);
-    //   sunDensity += pow(0.25, coverage * noise.r);
-    // }
+      coverage = getCoverage(sunTexturePosition);
+      sunDensity += (endDepth /depth) * noise.r * coverage;
+    }
 
-    outputDensity = density;
+    outputDensity += density - (sunDensity * 0.5);
 
     // falloff = smoothstep(min, falloff, 1, distance + noise);
-
-    let baseColor = vec3<f32>(0.14, 0.17, 0.22);  
-    let highColor = vec3<f32>(0.84, 0.87, 0.92); 
-
-    var cloudColor: vec3<f32> = mix(baseColor, highColor, outputDensity);
-    cloudColor = cloudColor * stepSize;
-    color.r = cloudColor.r;
-    color.g = cloudColor.g;
-    color.b = cloudColor.b;
   
     rayOrigin = texturePosition;
   }
 
+  outputDensity = clamp(outputDensity, 0.0, 1.0);
 
-  color = vec4<f32>(blend(vec3<f32>(0.0, 0.0, 0.0), vec3<f32>(1.0, 1.0, 1.0), outputDensity), outputDensity);
-  
-  if(color.a < 0.05) {
-    discard;
-  }
 
+  color = vec4<f32>(blend(baseColor, highColor, outputDensity), outputDensity);
+  noise = getNoise(rayOrigin, vec3<f32>(2.5, 2.5,2.5));
 
   if(coverage < 1){
-    return vec4(color.r, color.g, color.b, color.a) * lightness * noise.r;
+    return vec4<f32>(blend(color.rgb, vec3(noise.r, noise.r, noise.r), coverage), outputDensity) * noise.r;
   }
 
-  return vec4(color.r, color.g, color.b, color.a) * lightness * noise.a;
+  return vec4<f32>(blend(color.rgb, vec3(noise.a, noise.a, noise.a), coverage), outputDensity) * noise.g;
 
 }
 `;

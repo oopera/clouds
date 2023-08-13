@@ -1,0 +1,94 @@
+<script lang="ts">
+  export let horizontal: boolean = false;
+  export let gap: '0' | '2' | '4' | '6' | '8' = '0';
+  export let align: 'start' | 'center' | 'end' = 'center';
+  export let justify: 'start' | 'center' | 'end' | 'between' = 'center';
+  export let padding: '0' | 's' | 'm' | 'l' = '0';
+  export let short: boolean = false;
+  export let fit: boolean = false;
+</script>
+
+<div
+  class="layout gap-{gap} align-{align} justify-{justify} pad-{padding}"
+  class:horizontal
+  class:short
+  class:fit
+>
+  <slot />
+</div>
+
+<style lang="scss">
+  @import '$lib/styles/mixins.scss';
+
+  .layout {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .fit {
+    width: fit-content;
+  }
+
+  .short {
+    max-width: 512px;
+  }
+
+  .pad-0 {
+    padding: 0;
+  }
+
+  .pad-s {
+    padding: gap(1) gap(2);
+  }
+
+  .pad-m {
+    padding: gap(2) gap(4);
+  }
+
+  .pad-l {
+    padding: gap(3) gap(6);
+  }
+
+  .horizontal {
+    flex-direction: row;
+  }
+  .align-start {
+    align-items: flex-start;
+  }
+  .align-center {
+    align-items: center;
+  }
+  .align-end {
+    align-items: flex-end;
+  }
+  .justify-start {
+    justify-content: flex-start;
+  }
+  .justify-center {
+    justify-content: center;
+  }
+  .justify-end {
+    justify-content: flex-end;
+  }
+  .justify-between {
+    justify-content: space-between;
+  }
+  .gap-0 {
+    gap: 0;
+  }
+  .gap-2 {
+    gap: gap(2);
+  }
+  .gap-4 {
+    gap: gap(4);
+  }
+  .gap-6 {
+    gap: gap(6);
+  }
+  .gap-8 {
+    gap: gap(8);
+  }
+</style>

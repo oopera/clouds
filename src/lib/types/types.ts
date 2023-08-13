@@ -62,4 +62,5 @@ export type Stores =
   | 'displacement'
   | 'rotation_speed'
   | 'zoom'
-  | 'scale';
+  | 'scale'
+  | 'cloud_type';
