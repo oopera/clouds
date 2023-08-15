@@ -792,39 +792,45 @@ async function InitializeScene() {
     renderPass.setBindGroup(0, bindGroup[0]);
 
     renderPass.draw(options.amountOfVertices);
+    if (options.layer.mb300 > 0) {
+      renderPass.setPipeline(pipeline[1]);
+      renderPass.setVertexBuffer(0, buffers[0][0]);
+      renderPass.setVertexBuffer(1, buffers[0][1]);
+      renderPass.setVertexBuffer(2, buffers[0][2]);
+      renderPass.setBindGroup(0, bindGroup[1]);
 
-    renderPass.setPipeline(pipeline[1]);
-    renderPass.setVertexBuffer(0, buffers[0][0]);
-    renderPass.setVertexBuffer(1, buffers[0][1]);
-    renderPass.setVertexBuffer(2, buffers[0][2]);
-    renderPass.setBindGroup(0, bindGroup[1]);
+      renderPass.draw(options.amountOfVertices);
+    }
 
-    renderPass.draw(options.amountOfVertices);
+    if (options.layer.mb500 > 0) {
+      renderPass.setPipeline(pipeline[3]);
+      renderPass.setVertexBuffer(0, buffers[0][0]);
+      renderPass.setVertexBuffer(1, buffers[0][1]);
+      renderPass.setVertexBuffer(2, buffers[0][2]);
+      renderPass.setBindGroup(0, bindGroup[3]);
 
-    renderPass.setPipeline(pipeline[3]);
-    renderPass.setVertexBuffer(0, buffers[0][0]);
-    renderPass.setVertexBuffer(1, buffers[0][1]);
-    renderPass.setVertexBuffer(2, buffers[0][2]);
-    renderPass.setBindGroup(0, bindGroup[3]);
+      renderPass.draw(options.amountOfVertices);
+    }
 
-    renderPass.draw(options.amountOfVertices);
+    if (options.layer.mb700 > 0) {
+      renderPass.setPipeline(pipeline[4]);
+      renderPass.setVertexBuffer(0, buffers[0][0]);
+      renderPass.setVertexBuffer(1, buffers[0][1]);
+      renderPass.setVertexBuffer(2, buffers[0][2]);
+      renderPass.setBindGroup(0, bindGroup[4]);
 
-    renderPass.setPipeline(pipeline[4]);
-    renderPass.setVertexBuffer(0, buffers[0][0]);
-    renderPass.setVertexBuffer(1, buffers[0][1]);
-    renderPass.setVertexBuffer(2, buffers[0][2]);
-    renderPass.setBindGroup(0, bindGroup[4]);
+      renderPass.draw(options.amountOfVertices);
+    }
 
-    renderPass.draw(options.amountOfVertices);
+    if (options.layer.atmo > 0) {
+      renderPass.setPipeline(pipeline[2]);
+      renderPass.setVertexBuffer(0, buffers[0][0]);
+      renderPass.setVertexBuffer(1, buffers[0][1]);
+      renderPass.setVertexBuffer(2, buffers[0][2]);
+      renderPass.setBindGroup(0, bindGroup[2]);
 
-    renderPass.setPipeline(pipeline[2]);
-    renderPass.setVertexBuffer(0, buffers[0][0]);
-    renderPass.setVertexBuffer(1, buffers[0][1]);
-    renderPass.setVertexBuffer(2, buffers[0][2]);
-    renderPass.setBindGroup(0, bindGroup[2]);
-
-    renderPass.draw(options.amountOfVertices);
-
+      renderPass.draw(options.amountOfVertices);
+    }
     renderPass.end();
     device.queue.submit([commandEncoder.finish()]);
   }
