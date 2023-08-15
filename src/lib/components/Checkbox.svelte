@@ -2,7 +2,8 @@
   import { onMount } from 'svelte';
 
   import Text from './Text.svelte';
-  export let title: 'use_texture' | 'theme';
+  import Layout from './Layout.svelte';
+  export let title: 'use_texture' | 'theme' | 'mb300' | 'mb500' | 'mb700';
   export let id: string = '';
   export let delay: number = 1;
 
@@ -23,7 +24,7 @@
   };
 </script>
 
-<div class="checkbox-container">
+<Layout gap="1">
   <input
     data-interactable
     class="checkbox"
@@ -34,19 +35,10 @@
     on:input={handleInput}
   />
 
-  <Text {delay}>{title}</Text>
-</div>
+  <Text secondary={!$store} vertical {delay} text={title} />
+</Layout>
 
 <style>
-  .checkbox-container {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    align-items: center;
-    height: 64px;
-    position: relative;
-  }
-
   .checkbox {
     position: relative;
     -webkit-appearance: none;

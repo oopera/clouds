@@ -14,6 +14,7 @@
   import Text from '$lib/components/Text.svelte';
   import Radio_Button from '$lib/components/Radio_Button.svelte';
   import Link from '$lib/components/Link.svelte';
+  import Checkbox from '$lib/components/Checkbox.svelte';
 
   inject({ mode: dev ? 'development' : 'production' });
 </script>
@@ -99,17 +100,23 @@
           title="cloud_type"
           options={['cumulus', 'stratus', 'cirrus']}
         />
+        <Layout align="end" gap="1" fit horizontal>
+          <Checkbox delay={5} title="mb300" />
+          <Checkbox delay={6} title="mb500" />
+          <Checkbox delay={7} title="mb700" />
+        </Layout>
+
         <Range_Input
-          delay={6}
+          delay={8}
           title="rotation_speed"
           min={0}
           max={5}
           step={0.25}
         />
-        <Range_Input delay={7} title="scale" min={0.05} max={2.0} step={0.05} />
+        <Range_Input delay={9} title="scale" min={0.05} max={2.0} step={0.05} />
       </Layout>
 
-      <Zoom_Input delay={7} />
+      <Zoom_Input delay={10} />
     </Layout>
   </Layout>
 </main>

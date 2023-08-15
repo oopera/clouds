@@ -117,7 +117,7 @@ fn clamp(x: f32, minVal: f32, maxVal: f32) -> f32 {
   var outputDensity: f32;
   var outputColor: vec3<f32>;
 
-  for (var depth: f32 =  startDepth; depth < endDepth; depth += stepSize) {
+  for (var depth: f32 = startDepth; depth < endDepth; depth += stepSize) {
     rayDirection = normalize(rayOrigin + cameraPosition);
     let texturePosition: vec3<f32> = rayOrigin + rayDirection * depth;
 

@@ -2,6 +2,9 @@ import {
   amount_of_points,
   cameraposition,
   displacement,
+  mb300,
+  mb500,
+  mb700,
   pitch,
   rotation_speed,
   topology,
@@ -39,6 +42,18 @@ export default function InitStores(
 
   pitch.subscribe((value) => {
     options.pitch = value;
+  });
+
+  mb300.subscribe((value) => {
+    options.layer.mb300 = value;
+  });
+
+  mb500.subscribe((value) => {
+    options.layer.mb500 = value;
+  });
+
+  mb700.subscribe((value) => {
+    options.layer.mb700 = value;
   });
 
   use_texture.subscribe((value) => {

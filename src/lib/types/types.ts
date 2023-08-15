@@ -8,6 +8,11 @@ export interface RenderOptions {
   zoom: number;
   pitch: number;
   yaw: number;
+  layer: {
+    mb300: boolean;
+    mb500: boolean;
+    mb700: boolean;
+  };
   cameraPosition: { x: number; y: number; z: number };
   topology: 'point-list' | 'line-list' | 'triangle-list';
   amountOfVertices: number;

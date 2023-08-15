@@ -85,4 +85,8 @@
   .mini {
     max-width: 16px;
   }
+  span {
+    transition: color 128ms ease-in-out;
+    will-change: color;
+  }
 </style>

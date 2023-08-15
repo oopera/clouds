@@ -59,6 +59,11 @@ var options: RenderOptions = {
   zoom: 1,
   pitch: 0,
   yaw: 0,
+  layer: {
+    mb300: true,
+    mb500: true,
+    mb700: true,
+  },
   cameraPosition: [0, 0, 0],
   topology: 'point-list',
   amountOfVertices: 0,
@@ -728,29 +733,35 @@ async function InitializeScene() {
 
     renderPass.draw(options.amountOfVertices);
 
-    renderPass.setPipeline(pipeline[1]);
-    renderPass.setVertexBuffer(0, buffers[0][0]);
-    renderPass.setVertexBuffer(1, buffers[0][1]);
-    renderPass.setVertexBuffer(2, buffers[0][2]);
-    renderPass.setBindGroup(0, bindGroup[1]);
+    if (options.layer.mb300) {
+      renderPass.setPipeline(pipeline[1]);
+      renderPass.setVertexBuffer(0, buffers[0][0]);
+      renderPass.setVertexBuffer(1, buffers[0][1]);
+      renderPass.setVertexBuffer(2, buffers[0][2]);
+      renderPass.setBindGroup(0, bindGroup[1]);
 
-    renderPass.draw(options.amountOfVertices);
+      renderPass.draw(options.amountOfVertices);
+    }
 
-    renderPass.setPipeline(pipeline[3]);
-    renderPass.setVertexBuffer(0, buffers[0][0]);
-    renderPass.setVertexBuffer(1, buffers[0][1]);
-    renderPass.setVertexBuffer(2, buffers[0][2]);
-    renderPass.setBindGroup(0, bindGroup[3]);
+    if (options.layer.mb500) {
+      renderPass.setPipeline(pipeline[3]);
+      renderPass.setVertexBuffer(0, buffers[0][0]);
+      renderPass.setVertexBuffer(1, buffers[0][1]);
+      renderPass.setVertexBuffer(2, buffers[0][2]);
+      renderPass.setBindGroup(0, bindGroup[3]);
 
-    renderPass.draw(options.amountOfVertices);
+      renderPass.draw(options.amountOfVertices);
+    }
 
-    renderPass.setPipeline(pipeline[4]);
-    renderPass.setVertexBuffer(0, buffers[0][0]);
-    renderPass.setVertexBuffer(1, buffers[0][1]);
-    renderPass.setVertexBuffer(2, buffers[0][2]);
-    renderPass.setBindGroup(0, bindGroup[4]);
+    if (options.layer.mb700) {
+      renderPass.setPipeline(pipeline[4]);
+      renderPass.setVertexBuffer(0, buffers[0][0]);
+      renderPass.setVertexBuffer(1, buffers[0][1]);
+      renderPass.setVertexBuffer(2, buffers[0][2]);
+      renderPass.setBindGroup(0, bindGroup[4]);
 
-    renderPass.draw(options.amountOfVertices);
+      renderPass.draw(options.amountOfVertices);
+    }
 
     renderPass.setPipeline(pipeline[2]);
     renderPass.setVertexBuffer(0, buffers[0][0]);
