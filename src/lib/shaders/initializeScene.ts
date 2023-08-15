@@ -63,6 +63,7 @@ var options: RenderOptions = {
     mb300: true,
     mb500: true,
     mb700: true,
+    atmo: true,
   },
   cameraPosition: [0, 0, 0],
   topology: 'point-list',
@@ -161,7 +162,7 @@ async function InitializeScene() {
   );
   let texture = await executePromise(
     'texture',
-    loadImage('/textures/Earth_Diffuse.jpg'),
+    loadImage('/textures/nasa-texture.jpg'),
     'texture map'
   );
   let lightmap = await executePromise(
@@ -763,14 +764,15 @@ async function InitializeScene() {
       renderPass.draw(options.amountOfVertices);
     }
 
-    renderPass.setPipeline(pipeline[2]);
-    renderPass.setVertexBuffer(0, buffers[0][0]);
-    renderPass.setVertexBuffer(1, buffers[0][1]);
-    renderPass.setVertexBuffer(2, buffers[0][2]);
-    renderPass.setBindGroup(0, bindGroup[2]);
+    if (options.layer.atmo) {
+      renderPass.setPipeline(pipeline[2]);
+      renderPass.setVertexBuffer(0, buffers[0][0]);
+      renderPass.setVertexBuffer(1, buffers[0][1]);
+      renderPass.setVertexBuffer(2, buffers[0][2]);
+      renderPass.setBindGroup(0, bindGroup[2]);
 
-    renderPass.draw(options.amountOfVertices);
-
+      renderPass.draw(options.amountOfVertices);
+    }
     renderPass.end();
     device.queue.submit([commandEncoder.finish()]);
   }

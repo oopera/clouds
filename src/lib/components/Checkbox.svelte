@@ -3,7 +3,13 @@
 
   import Text from './Text.svelte';
   import Layout from './Layout.svelte';
-  export let title: 'use_texture' | 'theme' | 'mb300' | 'mb500' | 'mb700';
+  export let title:
+    | 'use_texture'
+    | 'theme'
+    | 'mb300'
+    | 'mb500'
+    | 'mb700'
+    | 'atmo';
   export let id: string = '';
   export let delay: number = 1;
 
@@ -35,7 +41,7 @@
     on:input={handleInput}
   />
 
-  <Text secondary={!$store} vertical {delay} text={title} />
+  <Text secondary={!$store} vertical {delay} text={title} nowrap />
 </Layout>
 
 <style>
@@ -45,10 +51,10 @@
     appearance: none;
     margin: 0;
     font: inherit;
-    width: 34px;
-    height: 34px;
-    max-width: 34px;
-    max-height: 34px;
+    width: 24px;
+    height: 24px;
+    max-width: 24px;
+    max-height: 24px;
     aspect-ratio: 1/1;
     border-radius: 50px;
     background: radial-gradient(

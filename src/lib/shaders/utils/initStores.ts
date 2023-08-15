@@ -1,5 +1,6 @@
 import {
   amount_of_points,
+  atmo,
   cameraposition,
   displacement,
   mb300,
@@ -54,6 +55,10 @@ export default function InitStores(
 
   mb700.subscribe((value) => {
     options.layer.mb700 = value;
+  });
+
+  atmo.subscribe((value) => {
+    options.layer.atmo = value;
   });
 
   use_texture.subscribe((value) => {

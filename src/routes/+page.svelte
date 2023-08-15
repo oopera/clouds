@@ -64,11 +64,11 @@
     <Layout align="start" gap="0" fit>
       <Text tertiary text={'B.sc. Human Computer Interaction'} delay={10} />
       <Layout horizontal gap="1" justify="start">
-        <Text secondary delay={11} text={'Frontend:'} />
+        <Text nowrap secondary delay={11} text={'Frontend:'} />
         <Text vertical delay={15} text={'Sveltekit'} />
       </Layout>
       <Layout horizontal gap="1" justify="start">
-        <Text secondary delay={12} text={'Backend:'} />
+        <Text nowrap secondary delay={12} text={'Backend:'} />
         <Text vertical delay={16} text={' Vercel Serverless'} />
 
         <Link href="https://lucaslichner.de">
@@ -76,20 +76,26 @@
         >
       </Layout>
       <Layout horizontal gap="1" justify="start">
-        <Text secondary delay={13} text={'Data:'} />
+        <Text nowrap secondary delay={13} text={'Data:'} />
         <Text vertical delay={17} text={'nomads.ncep.noaa.gov'} />
         <Text vertical tertiary delay={20} text={'[0.25 hourly TCDC]'} />
       </Layout>
       <Layout horizontal gap="1" justify="start">
-        <Text secondary delay={14} text={'Render:'} />
+        <Text nowrap secondary delay={14} text={'Render:'} />
         <Text vertical delay={18} text={'Webgpu'} />
       </Layout>
       <Layout horizontal justify="start" gap="1">
         <Link href="https://lucaslichner.de">
-          <Text accent vertical delay={21} text={'Lucas Lichner.'} /></Link
+          <Text
+            nowrap
+            accent
+            vertical
+            delay={21}
+            text={'Lucas Lichner.'}
+          /></Link
         >
         <Link href="https://github.com/oopera/clouds">
-          <Text accent vertical delay={21} text={'GitHub.'} /></Link
+          <Text nowrap accent vertical delay={21} text={'GitHub.'} /></Link
         >
       </Layout>
     </Layout>
@@ -104,6 +110,7 @@
           <Checkbox delay={5} title="mb300" />
           <Checkbox delay={6} title="mb500" />
           <Checkbox delay={7} title="mb700" />
+          <Checkbox delay={8} title="atmo" />
         </Layout>
 
         <Range_Input
