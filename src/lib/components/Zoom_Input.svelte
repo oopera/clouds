@@ -5,9 +5,10 @@
   import { quintOut } from 'svelte/easing';
   import Text from './Text.svelte';
 
-  export let step: number = 0.0025;
+  export let step: number = 1;
   export let min: number = 2.25;
-  export let max: number = 10;
+  export let max: number = 7.25;
+  export let delay: number = 0;
 
   const tweenedZoom = tweened(100, {
     duration: 2500,
@@ -85,7 +86,7 @@
         <Text
           tertiary={$zoom - 1.25 >= i && $zoom - 1.25 <= i + 1}
           text={`${i.toFixed(4)}`}
-          delay={i}
+          delay={i + delay}
           mini
         />
 
@@ -107,7 +108,7 @@
     id="zoom-input"
   />
   <span class="rotate">
-    <Text text={`zoom`} />
+    <Text delay={delay + indicatorArray.length} text={`zoom`} />
   </span>
 </div>
 
@@ -163,43 +164,21 @@
     position: absolute;
     appearance: none;
     -webkit-appearance: none;
-    height: 32px;
+    height: 46px;
     width: 224px;
     margin: 0;
     background-color: transparent;
     rotate: 90deg;
     transform-origin: top left;
     top: 0;
-    left: 32px;
+    left: 46px;
     &::-webkit-slider-runnable-track {
-      width: 32px;
-      height: 32px;
+      opacity: 1;
+      height: 46px;
+      width: 224px;
+    }
+    &::-webkit-slider-thumb {
       opacity: 0;
     }
-  }
-  .slider::-webkit-slider-thumb {
-    animation: blink2 1.5s ease-in-out infinite alternate;
-    height: 24px;
-    width: 24px;
-    border-radius: 15px;
-    border: 1pt solid var(--c-g);
-    -webkit-appearance: none;
-    margin-top: 4px;
-    transition: 100ms ease-in;
-    transform-origin: center;
-    backdrop-filter: blur(8px);
-    background: radial-gradient(
-      circle,
-      rgba(0, 33, 95, 1) 0%,
-      rgba(33, 33, 39, 0.05) 30%,
-      rgba(0, 0, 0, 0) 50%
-    );
-  }
-  .slider:hover::-webkit-slider-thumb,
-  .slider:focus-visible::-webkit-slider-thumb {
-    height: 24px;
-    width: 24px;
-    margin-top: 4px;
-    border: 1pt solid white;
   }
 </style>

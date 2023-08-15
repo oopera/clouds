@@ -87,7 +87,6 @@ fn smoothstep(edge0: f32, edge1: f32, x: f32) -> f32 {
   let orangeColor: vec4<f32> = vec4<f32>(1.0, 1.0, 1.0, rim); 
 
   let color: vec4<f32> = mix(orangeColor, blueColor, lightness);
-
   let resultColor =   mask * borderColor;
 
   return color + resultColor ;

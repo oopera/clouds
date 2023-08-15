@@ -95,15 +95,21 @@
     <Layout align="end" gap="2" fit horizontal>
       <Layout align="end" gap="1" fit>
         <Radio_Button
-          delay={1}
+          delay={5}
           title="cloud_type"
           options={['cumulus', 'stratus', 'cirrus']}
         />
-        <Range_Input title="rotation_speed" min={0} max={5} step={0.25} />
-        <Range_Input delay={6} title="scale" min={0.05} max={2.0} step={0.05} />
+        <Range_Input
+          delay={6}
+          title="rotation_speed"
+          min={0}
+          max={5}
+          step={0.25}
+        />
+        <Range_Input delay={7} title="scale" min={0.05} max={2.0} step={0.05} />
       </Layout>
 
-      <Zoom_Input />
+      <Zoom_Input delay={7} />
     </Layout>
   </Layout>
 </main>

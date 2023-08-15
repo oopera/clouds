@@ -462,7 +462,7 @@ async function InitializeScene() {
     device.createShaderModule({ code: cloudShader }),
     {
       ...options,
-      cullmode: 'back',
+      cullmode: 'none',
     },
     presentationFormat
   );
@@ -481,7 +481,7 @@ async function InitializeScene() {
     device.createShaderModule({ code: cloudShader }),
     {
       ...options,
-      cullmode: 'back',
+      cullmode: 'none',
     },
     presentationFormat
   );
@@ -491,7 +491,7 @@ async function InitializeScene() {
     device.createShaderModule({ code: cloudShader }),
     {
       ...options,
-      cullmode: 'back',
+      cullmode: 'none',
     },
     presentationFormat
   );

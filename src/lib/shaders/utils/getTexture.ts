@@ -198,10 +198,9 @@ export const GetPartitionedTexture = async (
 
 export const GetDepthTexture = async (
   device: GPUDevice,
-  width: any,
-  height: any
+  width: number,
+  height: number
 ) => {
-  // Create texture for texture binding
   const texture = device.createTexture({
     size: [width, height],
     format: 'depth24plus',
@@ -212,18 +211,6 @@ export const GetDepthTexture = async (
       GPUTextureUsage.RENDER_ATTACHMENT,
   });
 
-  // Create texture for render attachment
-  const textureRenderAttachment = device.createTexture({
-    size: [width, height],
-    format: 'depth24plus',
-    sampleCount: 4,
-    usage:
-      GPUTextureUsage.TEXTURE_BINDING |
-      GPUTextureUsage.COPY_DST |
-      GPUTextureUsage.RENDER_ATTACHMENT,
-  });
-
-  // Create sampler with nearest filtering
   const sampler = device.createSampler({
     magFilter: 'nearest',
     minFilter: 'nearest',
@@ -232,12 +219,9 @@ export const GetDepthTexture = async (
 
   return {
     texture,
-    textureRenderAttachment,
     sampler,
   };
 };
-
-// This function is used to load existing noise textures from the generated binary file
 
 export async function loadBinaryData(url: string): Promise<ArrayBuffer> {
   const response = await fetch(url);
@@ -247,8 +231,6 @@ export async function loadBinaryData(url: string): Promise<ArrayBuffer> {
   const arrayBuffer = await response.arrayBuffer();
   return arrayBuffer;
 }
-
-// These functions are used to create new Noise Textures
 
 export const Get3DNoiseTexture = async (
   device: GPUDevice,
