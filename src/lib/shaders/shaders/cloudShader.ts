@@ -8,8 +8,8 @@ struct Uniforms {
 
 struct CloudUniforms {
   radius : f32,
-  coverage : f32, 
-  noiseScale : f32,
+  dissapation : f32, 
+  visibility : f32,
   noiseStrength : f32,
 }
 
@@ -104,11 +104,11 @@ fn computeNoise(coverage: f32, noise: vec4<f32>) -> f32 {
   } else if (coverage < 0.25) {
     return mix(perlin, billowy, smoothstep(0.0, 0.25, coverage));
   } else if (coverage < 0.5) {
-      return mix(billowy, worley_s, smoothstep(0.25, 0.5, coverage));
+      return mix(billowy, billowy, smoothstep(0.25, 0.5, coverage));
   } else if (coverage < 0.75) {
-      return mix(worley_s, worley_l, smoothstep(0.5, 0.75, coverage));
+      return mix(billowy, billowy, smoothstep(0.5, 0.75, coverage));
   } else {
-      return worley_l;
+      return billowy;
   }
 }
 
@@ -124,7 +124,7 @@ fn rayleighScattering(theta: f32) -> f32 {
   var rayDirection: vec3<f32> = normalize(rayOrigin + cameraPosition);
   var sunRayDirection: vec3<f32> = normalize(rayOrigin + lightUni.lightPosition);
   
-  var sunDensity: f32 = 0.0;
+  var sunDensity: f32 = 0.5;
   var density: f32 = 0.0;
   var noise : vec4<f32>;
   var coverage: f32;
@@ -148,12 +148,12 @@ fn rayleighScattering(theta: f32) -> f32 {
     let texturePosition: vec3<f32> = rayOrigin + rayDirection * depth;
 
     coverage = clamp(getCoverage(texturePosition), 0.0, 0.85);
-    noise = getNoise(texturePosition, vec3<f32>(2.0, 2.0, 2.0));
+    noise = getNoise(texturePosition, vec3<f32>(1.0, 1.0, 1.0));
 
     let depthFactor =  (depth - startDepth) / (endDepth - startDepth);
-    caseNoise = computeNoise(coverage, noise);
+    caseNoise = pow(computeNoise(coverage, noise), 1);
 
-    density += getDensity(0.25, caseNoise, depthFactor);
+    density += getDensity(0.2, caseNoise, clamp(depthFactor, 0.25, 1.0)) ;
     for (var depth: f32 = startDepth; depth < endDepth; depth += stepSize) {
       sunRayDirection = normalize(rayOrigin + lightUni.lightPosition);
       let sunTexturePosition: vec3<f32> = rayOrigin + sunRayDirection * depth;
@@ -165,10 +165,10 @@ fn rayleighScattering(theta: f32) -> f32 {
       let theta: f32 = dot(normalize(rayDirection), normalize(sunRayDirection));
 
       light += rayleighScattering(theta);
-      sunDensity += getDensity(0.55, caseNoise, depthFactor);
+      sunDensity += getDensity(0.55, caseNoise, clamp(depthFactor, 0.25, 1.0)) * cloudUniforms.dissapation * coverage+depth;
     }
 
-    outputColor = clamp(density, 0.0, 1.0) * baseColor + clamp(sunDensity, 0.0,1.0) * highColor * clamp(light, 0.0, 1.0);
+    outputColor = clamp(density, 0.0, 1.0) * baseColor * clamp(sunDensity, 0.0,1.0) * highColor * clamp(light, 0.0, 1.0) * 5;
 
     outputDensity += density ;
     rayOrigin = texturePosition;
@@ -186,6 +186,6 @@ fn rayleighScattering(theta: f32) -> f32 {
     lightness = 0.5;
   }
 
-  return vec4(outputColor.rgb * lightness, outputDensity);
+  return vec4(outputColor.rgb * lightness, outputDensity) * cloudUniforms.visibility;
 }
 `;

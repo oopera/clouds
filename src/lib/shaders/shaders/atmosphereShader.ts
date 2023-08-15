@@ -16,7 +16,7 @@ struct LightUniforms {
 struct AtmosphereUniforms {
   radius : f32,
   coverage : f32, 
-  noiseScale : f32,
+  visibility : f32,
   noiseStrength : f32,
 }
 
@@ -89,6 +89,6 @@ fn smoothstep(edge0: f32, edge1: f32, x: f32) -> f32 {
   let color: vec4<f32> = mix(orangeColor, blueColor, lightness);
   let resultColor =   mask * borderColor;
 
-  return color + resultColor ;
+  return (color + resultColor) * atmopshereUniforms.visibility;
 }
 `;

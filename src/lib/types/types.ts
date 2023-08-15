@@ -9,11 +9,12 @@ export interface RenderOptions {
   pitch: number;
   yaw: number;
   layer: {
-    mb300: boolean;
-    mb500: boolean;
-    mb700: boolean;
-    atmo: boolean;
+    mb300: number;
+    mb500: number;
+    mb700: number;
+    atmo: number;
   };
+  cloudType: 'cumulus' | 'stratus' | 'cirrus';
   cameraPosition: { x: number; y: number; z: number };
   topology: 'point-list' | 'line-list' | 'triangle-list';
   amountOfVertices: number;
@@ -39,6 +40,7 @@ export interface HasChanged {
   cullmode: boolean;
   zoom: boolean;
   topology: boolean;
+  cloudType: boolean;
 }
 
 export interface SphereData {

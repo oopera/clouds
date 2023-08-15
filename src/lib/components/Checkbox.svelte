@@ -26,7 +26,7 @@
 
   const handleInput = (e: Event) => {
     if (!store) return;
-    store.set((e.target as HTMLInputElement).checked);
+    store.set((e.target as HTMLInputElement).checked ? 1 : 0);
   };
 </script>
 

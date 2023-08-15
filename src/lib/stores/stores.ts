@@ -7,14 +7,14 @@ export const scale = writable(0.15);
 export const topology = writable<'triangle-list' | 'line-list' | 'point-list'>(
   'triangle-list'
 );
-export const cloud_type = writable<'300mb' | 'Cirrus' | 'Cumulus'>('Cumulus');
+export const cloud_type = writable<'stratus' | 'cirrus' | 'cumulus'>('cumulus');
 export const rotation_speed = writable(0.5);
 export const use_texture = writable(true);
 export const wireframe = writable(false);
-export const mb300 = writable(true);
-export const mb500 = writable(true);
-export const mb700 = writable(true);
-export const atmo = writable(true);
+export const mb300 = writable(1);
+export const mb500 = writable(1);
+export const mb700 = writable(1);
+export const atmo = writable(1);
 export const pitch = writable(1);
 export const yaw = writable(1);
 export const zoom = writable(1);

@@ -41,6 +41,8 @@ import { mb700 } from '$lib/assets/mb700.js';
 let depthTexture: GPUTexture;
 
 import { dev } from '$app/environment';
+import { tweened } from 'svelte/motion';
+import { quintIn, quintOut } from 'svelte/easing';
 
 var hasChanged: HasChanged = {
   numFs: false,
@@ -49,6 +51,7 @@ var hasChanged: HasChanged = {
   cullmode: false,
   zoom: false,
   topology: false,
+  cloudType: false,
 };
 
 var options: RenderOptions = {
@@ -60,11 +63,12 @@ var options: RenderOptions = {
   pitch: 0,
   yaw: 0,
   layer: {
-    mb300: true,
-    mb500: true,
-    mb700: true,
-    atmo: true,
+    mb300: 1,
+    mb500: 1,
+    mb700: 1,
+    atmo: 1,
   },
+  cloudType: 'cumulus',
   cameraPosition: [0, 0, 0],
   topology: 'point-list',
   amountOfVertices: 0,
@@ -99,6 +103,8 @@ var uniOptions: UniOptions = {
 const pipeline: GPURenderPipeline[] = [];
 const bindGroup = [];
 const buffers = [];
+
+var cloudDensity = 1.0;
 
 var usedScale;
 
@@ -527,6 +533,21 @@ async function InitializeScene() {
     },
   };
 
+  const halfResRenderPassDescriptor: GPURenderPassDescriptor = {
+    colorAttachments: [
+      {
+        loadOp: 'clear',
+        storeOp: 'store',
+      },
+    ],
+    depthStencilAttachment: {
+      sampleCount: 4,
+      depthClearValue: 1,
+      depthLoadOp: 'clear',
+      depthStoreOp: 'store',
+    },
+  };
+
   buffers[0] = CreateVertexBuffers(device, data);
   WriteVertexBuffers(device, buffers[0][0], buffers[0][1], buffers[0][2], data);
 
@@ -560,32 +581,44 @@ async function InitializeScene() {
     },
   }));
 
+  const halfWidth = Math.floor(canvas.width / 2);
+  const halfHeight = Math.floor(canvas.height / 2);
+
+  var offscreenTexture = device.createTexture({
+    size: { width: halfWidth, height: halfHeight, depth: 1 },
+    format: 'bgra8unorm', // e.g., 'bgra8unorm'
+    usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
+  });
+
+  halfResRenderPassDescriptor.colorAttachments[0].view =
+    offscreenTexture.createView();
+
   async function frame() {
     const cloudUniValues_01 = new Float32Array([
-      0.02 * usedScale,
-      1.0,
-      0.0,
+      0.01 * usedScale,
+      cloudDensity,
+      options.layer.mb300,
       0.0,
     ]);
 
     const cloudUniValues_02 = new Float32Array([
-      0.04 * usedScale,
-      1.0,
-      0.0,
+      0.02 * usedScale,
+      cloudDensity,
+      options.layer.mb500,
       0.0,
     ]);
 
     const cloudUniValues_03 = new Float32Array([
-      0.06 * usedScale,
-      1.0,
-      0.0,
+      0.03 * usedScale,
+      cloudDensity,
+      options.layer.mb700,
       0.0,
     ]);
 
     const atmosphereUniValues = new Float32Array([
-      0.08 * usedScale,
-      1.0,
-      0.0,
+      0.04 * usedScale,
+      cloudDensity,
+      options.layer.atmo,
       0.0,
     ]);
 
@@ -616,6 +649,13 @@ async function InitializeScene() {
       hasChanged.resolution = false;
       depthTexture.destroy();
       colorTexture.destroy();
+      offscreenTexture.destroy();
+
+      offscreenTexture = device.createTexture({
+        size: { width: halfWidth, height: halfHeight, depth: 1 },
+        format: 'bgra8unorm', // e.g., 'bgra8unorm'
+        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
+      });
 
       colorTexture = device.createTexture({
         size: {
@@ -637,11 +677,43 @@ async function InitializeScene() {
       depthTexture = depth.texture;
     }
 
+    if (hasChanged.cloudType) {
+      if (cloudDensity === 1.0) {
+        const tweenedDensity = tweened(1.0, {
+          duration: 3500,
+          easing: quintOut,
+        });
+
+        tweenedDensity.subscribe((value) => {
+          console.log(value);
+          cloudDensity = value;
+        });
+        tweenedDensity.set(0.0);
+
+        hasChanged.cloudType = false;
+      } else if (cloudDensity === 0) {
+        const tweenedDensity = tweened(0.0, {
+          duration: 3500,
+          easing: quintIn,
+        });
+
+        tweenedDensity.subscribe((value) => {
+          console.log(value);
+          cloudDensity = value;
+        });
+        tweenedDensity.set(1.0);
+        hasChanged.cloudType = false;
+      }
+    }
+
     bindGroup[0] = CreateBindGroup(device, pipeline[0], earthBindings);
     bindGroup[1] = CreateBindGroup(device, pipeline[1], cloudBindings);
     bindGroup[2] = CreateBindGroup(device, pipeline[2], atmosphereBindings);
     bindGroup[3] = CreateBindGroup(device, pipeline[3], cloudBindings_2);
     bindGroup[4] = CreateBindGroup(device, pipeline[4], cloudBindings_3);
+
+    halfResRenderPassDescriptor.depthStencilAttachment.view =
+      offscreenTexture.createView();
 
     renderPassDescriptor.depthStencilAttachment.view =
       depthTexture.createView();
@@ -703,19 +775,6 @@ async function InitializeScene() {
       atmosphereUniValues as ArrayBuffer
     );
 
-    if (hasChanged.numFs) {
-      const newData = await executePromise(
-        'sphere',
-        CreateSphereData(options),
-        'Verex Data'
-      );
-
-      data = newData;
-      UpdateVertexBuffers(device, buffers[0], data);
-      options.amountOfVertices = data.vertexData.length / 3;
-      hasChanged.numFs = false;
-    }
-
     draw(data);
     requestAnimationFrame(frame);
   }
@@ -734,45 +793,38 @@ async function InitializeScene() {
 
     renderPass.draw(options.amountOfVertices);
 
-    if (options.layer.mb300) {
-      renderPass.setPipeline(pipeline[1]);
-      renderPass.setVertexBuffer(0, buffers[0][0]);
-      renderPass.setVertexBuffer(1, buffers[0][1]);
-      renderPass.setVertexBuffer(2, buffers[0][2]);
-      renderPass.setBindGroup(0, bindGroup[1]);
+    renderPass.setPipeline(pipeline[1]);
+    renderPass.setVertexBuffer(0, buffers[0][0]);
+    renderPass.setVertexBuffer(1, buffers[0][1]);
+    renderPass.setVertexBuffer(2, buffers[0][2]);
+    renderPass.setBindGroup(0, bindGroup[1]);
 
-      renderPass.draw(options.amountOfVertices);
-    }
+    renderPass.draw(options.amountOfVertices);
 
-    if (options.layer.mb500) {
-      renderPass.setPipeline(pipeline[3]);
-      renderPass.setVertexBuffer(0, buffers[0][0]);
-      renderPass.setVertexBuffer(1, buffers[0][1]);
-      renderPass.setVertexBuffer(2, buffers[0][2]);
-      renderPass.setBindGroup(0, bindGroup[3]);
+    renderPass.setPipeline(pipeline[3]);
+    renderPass.setVertexBuffer(0, buffers[0][0]);
+    renderPass.setVertexBuffer(1, buffers[0][1]);
+    renderPass.setVertexBuffer(2, buffers[0][2]);
+    renderPass.setBindGroup(0, bindGroup[3]);
 
-      renderPass.draw(options.amountOfVertices);
-    }
+    renderPass.draw(options.amountOfVertices);
 
-    if (options.layer.mb700) {
-      renderPass.setPipeline(pipeline[4]);
-      renderPass.setVertexBuffer(0, buffers[0][0]);
-      renderPass.setVertexBuffer(1, buffers[0][1]);
-      renderPass.setVertexBuffer(2, buffers[0][2]);
-      renderPass.setBindGroup(0, bindGroup[4]);
+    renderPass.setPipeline(pipeline[4]);
+    renderPass.setVertexBuffer(0, buffers[0][0]);
+    renderPass.setVertexBuffer(1, buffers[0][1]);
+    renderPass.setVertexBuffer(2, buffers[0][2]);
+    renderPass.setBindGroup(0, bindGroup[4]);
 
-      renderPass.draw(options.amountOfVertices);
-    }
+    renderPass.draw(options.amountOfVertices);
 
-    if (options.layer.atmo) {
-      renderPass.setPipeline(pipeline[2]);
-      renderPass.setVertexBuffer(0, buffers[0][0]);
-      renderPass.setVertexBuffer(1, buffers[0][1]);
-      renderPass.setVertexBuffer(2, buffers[0][2]);
-      renderPass.setBindGroup(0, bindGroup[2]);
+    renderPass.setPipeline(pipeline[2]);
+    renderPass.setVertexBuffer(0, buffers[0][0]);
+    renderPass.setVertexBuffer(1, buffers[0][1]);
+    renderPass.setVertexBuffer(2, buffers[0][2]);
+    renderPass.setBindGroup(0, bindGroup[2]);
 
-      renderPass.draw(options.amountOfVertices);
-    }
+    renderPass.draw(options.amountOfVertices);
+
     renderPass.end();
     device.queue.submit([commandEncoder.finish()]);
   }
