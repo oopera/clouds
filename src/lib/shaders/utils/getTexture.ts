@@ -44,6 +44,72 @@ export const GetTexture = async (
     sampler,
   };
 };
+
+export const Get3DTextureFromGribData = async (
+  device: GPUDevice,
+  encodedRunsArray: number[][][],
+  width: number = 1440,
+  height: number = 721,
+  addressModeU = 'repeat',
+  addressModeV = 'repeat',
+  addressModeW = 'repeat'
+) => {
+  const depth = encodedRunsArray.length;
+
+  const sampler = device.createSampler({
+    minFilter: 'linear',
+    magFilter: 'linear',
+    addressModeU: addressModeU as GPUAddressMode,
+    addressModeV: addressModeV as GPUAddressMode,
+    addressModeW: addressModeW as GPUAddressMode,
+  });
+
+  const gribData = new Float32Array(width * height);
+  const rgbaData = new Uint8ClampedArray(width * height * depth * 4);
+
+  const texture = device.createTexture({
+    size: { width: width, height: height, depthOrArrayLayers: depth },
+    format: 'rgba8unorm',
+    usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST,
+    dimension: '3d',
+  });
+
+  console.log(encodedRunsArray);
+
+  for (let d = 0; d < depth; d++) {
+    const encodedRuns = encodedRunsArray[d];
+    let index = 0;
+
+    for (const run of encodedRuns) {
+      for (let i = 0; i < run[0] && index < gribData.length; i++) {
+        gribData[index++] = run[1];
+      }
+    }
+
+    // Create RGBA data from grib data
+    for (let i = 0; i < gribData.length; i++) {
+      const value = gribData[i];
+      const color = value * 2.55; // scale 0-100 to 0-255
+      const rgbaIndex = (i + d * gribData.length) * 4; // This index is adjusted for depth
+      rgbaData[rgbaIndex] = color; // R
+      rgbaData[rgbaIndex + 1] = color; // G
+      rgbaData[rgbaIndex + 2] = color; // B
+      rgbaData[rgbaIndex + 3] = color; // A
+    }
+  }
+
+  device.queue.writeTexture(
+    { texture: texture },
+    rgbaData,
+    { offset: 0, bytesPerRow: 4 * width, rowsPerImage: height },
+    { width: width, height: height, depthOrArrayLayers: depth }
+  );
+
+  return {
+    texture,
+    sampler,
+  };
+};
 export const GetTextureFromGribData = async (
   device: GPUDevice,
   encodedRuns: number[][], // Assume that this is an array of {value, count} objects
