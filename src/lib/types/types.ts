@@ -14,6 +14,7 @@ export interface RenderOptions {
     mb700: number;
     atmo: number;
   };
+  scale: number;
   cloudType: 'cumulus' | 'stratus' | 'cirrus';
   cameraPosition: { x: number; y: number; z: number };
   topology: 'point-list' | 'line-list' | 'triangle-list';
@@ -26,7 +27,7 @@ export interface RenderOptions {
   };
 }
 export interface UniOptions {
-  heightDisplacement: number;
+  displacement: number;
   useTexture: boolean;
   intersection: {
     x: number;
@@ -41,6 +42,7 @@ export interface HasChanged {
   zoom: boolean;
   topology: boolean;
   cloudType: boolean;
+  resolution: boolean;
 }
 
 export interface SphereData {

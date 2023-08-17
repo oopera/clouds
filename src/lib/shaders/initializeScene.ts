@@ -1,12 +1,10 @@
-// @ts-nocheck
-import { mat4, vec4, vec3 } from 'gl-matrix';
+import { mat4, vec3 } from 'gl-matrix';
 import {
   CreatePipeline,
   CreateBindGroup,
   CreateVertexBuffers,
   WriteVertexBuffers,
   CreateSphereData,
-  UpdateVertexBuffers,
 } from './utils/helper/wgslHelper.js';
 import InitStores from './utils/initStores.js';
 import {
@@ -14,7 +12,7 @@ import {
   CreateTransforms,
 } from './utils/helper/matrixHelper.js';
 import { earthShader } from './shaders/earthShader.js';
-import { yaw, loading, scale } from '$lib/stores/stores.js';
+import { yaw, loading } from '$lib/stores/stores.js';
 import { cloudShader } from './shaders/cloudShader.js';
 
 import {
@@ -38,11 +36,11 @@ import { mb300 } from '$lib/assets/mb300.js';
 import { mb500 } from '$lib/assets/mb500.js';
 import { mb700 } from '$lib/assets/mb700.js';
 
-let depthTexture: GPUTexture;
-
 import { dev } from '$app/environment';
 import { tweened } from 'svelte/motion';
 import { quintIn, quintOut } from 'svelte/easing';
+
+let depthTexture: GPUTexture;
 
 var hasChanged: HasChanged = {
   numFs: false,
@@ -52,6 +50,7 @@ var hasChanged: HasChanged = {
   zoom: false,
   topology: false,
   cloudType: false,
+  resolution: false,
 };
 
 var options: RenderOptions = {
@@ -68,8 +67,9 @@ var options: RenderOptions = {
     mb700: 1,
     atmo: 1,
   },
+  scale: 0.15,
   cloudType: 'cumulus',
-  cameraPosition: [0, 0, 0],
+  cameraPosition: { x: 0, y: 0, z: 0 },
   topology: 'point-list',
   amountOfVertices: 0,
   depthWriteEnabled: true,
@@ -92,7 +92,7 @@ var options: RenderOptions = {
 };
 
 var uniOptions: UniOptions = {
-  heightDisplacement: 0.0,
+  displacement: 0.0,
   useTexture: true,
   intersection: {
     x: 0,
@@ -101,65 +101,81 @@ var uniOptions: UniOptions = {
 };
 
 const pipeline: GPURenderPipeline[] = [];
-const bindGroup = [];
-const buffers = [];
+const bindGroup: GPUBindGroup[] = [];
+const buffers: GPUBuffer[][] = [];
 
 var cloudDensity = 1.0;
 
-var usedScale;
-
-scale.subscribe((value) => {
-  usedScale = value;
-});
-
 var elapsed = 0;
 
-async function InitializeScene() {
-  const adapter = await navigator.gpu?.requestAdapter();
-  const device = await adapter?.requestDevice();
-  // const device = false;
-  if (!device) {
-    var counter = 0;
-    var interval = setInterval(() => {
-      if (counter === 0) {
-        loading.set({
-          welcome: {
-            id: 0,
-            status: true,
-            message: 'oh-oh',
+const displayError = (message: string) => {
+  var counter = 0;
+  var interval = setInterval(() => {
+    if (counter === 0) {
+      loading.set({
+        welcome: {
+          id: 0,
+          status: true,
+          message: 'oh-oh',
 
-            progress: 0,
-          },
-        });
-      }
-      counter++;
-
-      loading.update((current) => {
-        const id = Object.keys(current).length; // use the current number of keys as id
-        return {
-          ...current,
-          [`Error-${id}`]: {
-            id,
-            status: true,
-            message:
-              counter % 2 === 0
-                ? 'ERROR ERROR ERROR'
-                : 'You need a browser that supports WebGPU',
-            progress: 0,
-          },
-        };
+          progress: 0,
+        },
       });
-      if (counter > 5) {
-        clearInterval(interval);
-      }
-    }, 500);
+    }
+    counter++;
+
+    loading.update((current) => {
+      const id = Object.keys(current).length;
+      return {
+        ...current,
+        [`Error-${id}`]: {
+          id,
+          status: true,
+          message: counter % 2 === 0 ? 'ERROR ERROR ERROR' : message,
+          progress: 0,
+        },
+      };
+    });
+    if (counter > 5) {
+      clearInterval(interval);
+    }
+  }, 500);
+  throw new Error(message);
+};
+
+async function InitializeScene() {
+  if (!navigator.gpu) {
+    displayError('You need a browser that supports WebGPU');
     return;
   }
 
-  const canvas = document.getElementById('canvas');
-  const context = canvas.getContext('webgpu');
+  const adapter = await navigator.gpu.requestAdapter();
+  if (!adapter) {
+    displayError('Failed to get GPU adapter.');
+    return;
+  }
 
-  InitStores(uniOptions, options, hasChanged, canvas);
+  const device = await adapter.requestDevice();
+  if (!device) {
+    displayError('Failed to get GPU device.');
+    return;
+  }
+
+  const canvas: HTMLCanvasElement = document.getElementById(
+    'canvas'
+  ) as HTMLCanvasElement;
+  if (!canvas) {
+    displayError('Failed to get canvas element.');
+    return;
+  }
+
+  const context = canvas.getContext('webgpu');
+  if (!context) {
+    displayError('Failed to get canvas context.');
+    return;
+  }
+
+  InitStores(options, hasChanged, canvas);
 
   let heightMap = await executePromise(
     'heightMap',
@@ -168,7 +184,7 @@ async function InitializeScene() {
   );
   let texture = await executePromise(
     'texture',
-    loadImage('/textures/nasa-texture.jpg'),
+    loadImage('/textures/Earth_Specular.jpg'),
     'texture map'
   );
   let lightmap = await executePromise(
@@ -186,7 +202,7 @@ async function InitializeScene() {
   const heightMapV = await GetTexture(device, heightMap);
   const textureV = await GetPartitionedTexture(device, texture);
   const lightMapV = await GetPartitionedTexture(device, lightmap);
-  const noiseV = await Create3DTextureFromData(device, noise);
+  const noiseV = Create3DTextureFromData(device, noise);
 
   let data = await executePromise(
     'sphere',
@@ -253,7 +269,7 @@ async function InitializeScene() {
   if (generateNewNoiseTexture) {
     worleyNoiseTexture = await executePromise(
       'worleyNoiseTexture',
-      await Get3DNoiseTexture(device),
+      (await Get3DNoiseTexture(device)) as any,
       '3D Noise Texture'
     );
   }
@@ -481,9 +497,10 @@ async function InitializeScene() {
 
   pipeline[2] = CreatePipeline(
     device,
-    device.createShaderModule({ code: atmosphereShader }),
+    device.createShaderModule({ code: cloudShader }),
     {
       ...options,
+      cullmode: 'none',
     },
     presentationFormat
   );
@@ -500,10 +517,9 @@ async function InitializeScene() {
 
   pipeline[4] = CreatePipeline(
     device,
-    device.createShaderModule({ code: cloudShader }),
+    device.createShaderModule({ code: atmosphereShader }),
     {
       ...options,
-      cullmode: 'none',
     },
     presentationFormat
   );
@@ -512,52 +528,19 @@ async function InitializeScene() {
 
   bindGroup[1] = CreateBindGroup(device, pipeline[1], cloudBindings);
 
-  bindGroup[2] = CreateBindGroup(device, pipeline[2], atmosphereBindings);
+  bindGroup[2] = CreateBindGroup(device, pipeline[4], atmosphereBindings);
 
   bindGroup[3] = CreateBindGroup(device, pipeline[3], cloudBindings_2);
 
-  bindGroup[4] = CreateBindGroup(device, pipeline[4], cloudBindings_3);
-
-  const renderPassDescriptor: GPURenderPassDescriptor = {
-    colorAttachments: [
-      {
-        loadOp: 'clear',
-        storeOp: 'store',
-      },
-    ],
-    depthStencilAttachment: {
-      sampleCount: 4,
-      depthClearValue: 1,
-      depthLoadOp: 'clear',
-      depthStoreOp: 'store',
-    },
-  };
-
-  const halfResRenderPassDescriptor: GPURenderPassDescriptor = {
-    colorAttachments: [
-      {
-        loadOp: 'clear',
-        storeOp: 'store',
-      },
-    ],
-    depthStencilAttachment: {
-      sampleCount: 4,
-      depthClearValue: 1,
-      depthLoadOp: 'clear',
-      depthStoreOp: 'store',
-    },
-  };
-
-  buffers[0] = CreateVertexBuffers(device, data);
-  WriteVertexBuffers(device, buffers[0][0], buffers[0][1], buffers[0][2], data);
+  bindGroup[4] = CreateBindGroup(device, pipeline[2], cloudBindings_3);
 
   let canvasTexture = context.getCurrentTexture();
 
   let colorTexture = device.createTexture({
     size: {
       width: canvasTexture.width,
-      height: canvasTexture.height,
-      depth: 1,
+      height: canvasTexture.height || 0,
+      depth: undefined,
     },
     sampleCount: 4, // the same as your pipeline's sampleCount
     format: 'bgra8unorm',
@@ -572,6 +555,28 @@ async function InitializeScene() {
 
   depthTexture = depth.texture;
 
+  const renderPassDescriptor: GPURenderPassDescriptor = {
+    colorAttachments: [
+      {
+        view: colorTexture.createView(),
+        loadOp: 'clear',
+        storeOp: 'store',
+        resolveTarget: canvasTexture.createView(),
+      },
+    ],
+    depthStencilAttachment: {
+      view: depthTexture.createView(),
+      depthClearValue: 1,
+      depthLoadOp: 'clear',
+      depthStoreOp: 'store',
+    },
+  };
+
+  depthTexture.createView();
+
+  buffers[0] = CreateVertexBuffers(device, data);
+  WriteVertexBuffers(device, buffers[0][0], buffers[0][1], buffers[0][2], data);
+
   loading.update((current) => ({
     ...current,
     welcome: {
@@ -581,45 +586,42 @@ async function InitializeScene() {
     },
   }));
 
-  const halfWidth = Math.floor(canvas.width / 2);
-  const halfHeight = Math.floor(canvas.height / 2);
-
-  var offscreenTexture = device.createTexture({
-    size: { width: halfWidth, height: halfHeight, depth: 1 },
-    format: 'bgra8unorm', // e.g., 'bgra8unorm'
-    usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
-  });
-
-  halfResRenderPassDescriptor.colorAttachments[0].view =
-    offscreenTexture.createView();
-
   async function frame() {
+    if (!device) return;
+
     const cloudUniValues_01 = new Float32Array([
-      0.01 * usedScale,
+      0.02 * options.scale,
       cloudDensity,
       options.layer.mb300,
       0.0,
     ]);
 
     const cloudUniValues_02 = new Float32Array([
-      0.02 * usedScale,
+      0.025 * options.scale,
       cloudDensity,
       options.layer.mb500,
       0.0,
     ]);
 
     const cloudUniValues_03 = new Float32Array([
-      0.03 * usedScale,
+      0.03 * options.scale,
       cloudDensity,
       options.layer.mb700,
       0.0,
     ]);
 
     const atmosphereUniValues = new Float32Array([
-      0.04 * usedScale,
+      0.035 * options.scale,
       cloudDensity,
       options.layer.atmo,
       0.0,
+    ]);
+
+    const earthUniValues = new Float32Array([
+      0.015 * options.scale,
+      uniOptions.useTexture ? 1 : 0,
+      uniOptions.intersection.x,
+      uniOptions.intersection.y,
     ]);
 
     elapsed += 0.0005;
@@ -643,25 +645,18 @@ async function InitializeScene() {
       options.cameraPosition.z
     );
 
+    if (!context) return;
     canvasTexture = context.getCurrentTexture();
 
     if (hasChanged.resolution) {
       hasChanged.resolution = false;
       depthTexture.destroy();
       colorTexture.destroy();
-      offscreenTexture.destroy();
-
-      offscreenTexture = device.createTexture({
-        size: { width: halfWidth, height: halfHeight, depth: 1 },
-        format: 'bgra8unorm', // e.g., 'bgra8unorm'
-        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
-      });
 
       colorTexture = device.createTexture({
         size: {
           width: canvasTexture.width,
           height: canvasTexture.height,
-          depth: 1,
         },
         sampleCount: 4,
         format: 'bgra8unorm',
@@ -708,19 +703,17 @@ async function InitializeScene() {
 
     bindGroup[0] = CreateBindGroup(device, pipeline[0], earthBindings);
     bindGroup[1] = CreateBindGroup(device, pipeline[1], cloudBindings);
-    bindGroup[2] = CreateBindGroup(device, pipeline[2], atmosphereBindings);
+    bindGroup[2] = CreateBindGroup(device, pipeline[4], atmosphereBindings);
     bindGroup[3] = CreateBindGroup(device, pipeline[3], cloudBindings_2);
-    bindGroup[4] = CreateBindGroup(device, pipeline[4], cloudBindings_3);
+    bindGroup[4] = CreateBindGroup(device, pipeline[2], cloudBindings_3);
 
-    halfResRenderPassDescriptor.depthStencilAttachment.view =
-      offscreenTexture.createView();
-
-    renderPassDescriptor.depthStencilAttachment.view =
-      depthTexture.createView();
-
-    renderPassDescriptor.colorAttachments[0].view = colorTexture.createView();
-    renderPassDescriptor.colorAttachments[0].resolveTarget =
-      canvasTexture.createView();
+    const colorAttachments =
+      renderPassDescriptor.colorAttachments as (GPURenderPassColorAttachment | null)[];
+    const colorAttachment = colorAttachments[0]!;
+    const depthAttachment = renderPassDescriptor.depthStencilAttachment!;
+    depthAttachment.view = depthTexture.createView();
+    colorAttachment.view = colorTexture.createView();
+    colorAttachment.resolveTarget = canvasTexture.createView();
 
     const vpmatrix = CreateViewProjection(
       canvas.width / canvas.height,
@@ -732,16 +725,6 @@ async function InitializeScene() {
     mat4.invert(normalMatrix, modelMatrix);
     mat4.transpose(normalMatrix, normalMatrix);
 
-    const scales = vec4.create();
-
-    vec4.set(
-      scales,
-      usedScale,
-      uniOptions.useTexture ? 1 : 0,
-      uniOptions.intersection.x,
-      uniOptions.intersection.y
-    );
-
     device.queue.writeBuffer(vertexUniBuffer, 0, vpmatrix as ArrayBuffer);
     device.queue.writeBuffer(vertexUniBuffer, 64, modelMatrix as ArrayBuffer);
     device.queue.writeBuffer(vertexUniBuffer, 128, normalMatrix as ArrayBuffer);
@@ -750,7 +733,11 @@ async function InitializeScene() {
       192,
       cameraPosition as ArrayBuffer
     );
-    device.queue.writeBuffer(vertexUniBuffer, 208, scales as ArrayBuffer);
+    device.queue.writeBuffer(
+      vertexUniBuffer,
+      208,
+      earthUniValues as ArrayBuffer
+    );
     device.queue.writeBuffer(
       cloudUniBuffer_01,
       0,
@@ -775,7 +762,7 @@ async function InitializeScene() {
       atmosphereUniValues as ArrayBuffer
     );
 
-    draw(data);
+    draw();
     requestAnimationFrame(frame);
   }
 
@@ -813,7 +800,7 @@ async function InitializeScene() {
     }
 
     if (options.layer.mb700 > 0) {
-      renderPass.setPipeline(pipeline[4]);
+      renderPass.setPipeline(pipeline[2]);
       renderPass.setVertexBuffer(0, buffers[0][0]);
       renderPass.setVertexBuffer(1, buffers[0][1]);
       renderPass.setVertexBuffer(2, buffers[0][2]);
@@ -823,7 +810,7 @@ async function InitializeScene() {
     }
 
     if (options.layer.atmo > 0) {
-      renderPass.setPipeline(pipeline[2]);
+      renderPass.setPipeline(pipeline[4]);
       renderPass.setVertexBuffer(0, buffers[0][0]);
       renderPass.setVertexBuffer(1, buffers[0][1]);
       renderPass.setVertexBuffer(2, buffers[0][2]);
@@ -832,6 +819,7 @@ async function InitializeScene() {
       renderPass.draw(options.amountOfVertices);
     }
     renderPass.end();
+
     device.queue.submit([commandEncoder.finish()]);
   }
 
@@ -841,17 +829,19 @@ async function InitializeScene() {
       const canvas = entry.target;
       const width = entry.contentBoxSize[0].inlineSize;
       const height = entry.contentBoxSize[0].blockSize;
-      canvas.width = Math.min(width, device.limits.maxTextureDimension2D);
-      canvas.height = Math.min(height, device.limits.maxTextureDimension2D);
+      (canvas as HTMLCanvasElement).width = Math.min(
+        width,
+        device.limits.maxTextureDimension2D
+      );
+      (canvas as HTMLCanvasElement).height = Math.min(
+        height,
+        device.limits.maxTextureDimension2D
+      );
     }
   });
 
   frame();
   observer.observe(canvas);
-}
-
-function fail(msg) {
-  alert(msg);
 }
 
 export default InitializeScene;

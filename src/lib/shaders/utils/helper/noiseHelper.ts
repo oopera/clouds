@@ -1,3 +1,6 @@
+// Adapted from https://www.shadertoy.com/view/3dVXDc
+// Created by piyushslayer in 2019-12-11
+
 type Vec3 = [number, number, number];
 
 function fract(value: number): number {

@@ -16,7 +16,7 @@ export default defineConfig({
     preprocessorOptions: {
       sass: {
         additionalData: `
-          @import '$lib/sass/variables'
+          @import '$lib/sass/style'
           @import '$lib/sass/mixins'
         `,
       },

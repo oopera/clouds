@@ -56,7 +56,7 @@ export const earthShader = /* wgsl */ `
       let mPosition: vec4<f32> = uni.modelMatrix * input.position;
       let mNormal: vec4<f32> = uni.normalMatrix * input.normal;
     
-      let displacement: vec3<f32> = normalize(mNormal.xyz) * (height * uni.options[0] / 50);
+      let displacement: vec3<f32> = normalize(mNormal.xyz) * (height * uni.options[0]);
     
       output.Position = uni.viewProjectionMatrix * (mPosition + vec4<f32>(displacement, 0.0));
   

@@ -3,22 +3,20 @@ import {
   atmo,
   cameraposition,
   cloud_type,
-  displacement,
+  scale,
   mb300,
   mb500,
   mb700,
   pitch,
   rotation_speed,
   topology,
-  use_texture,
   yaw,
 } from '$lib/stores/stores';
-import type { HasChanged, RenderOptions, UniOptions } from '$lib/types/types';
+import type { HasChanged, RenderOptions } from '$lib/types/types';
 import { quintOut } from 'svelte/easing';
 import { tweened } from 'svelte/motion';
 
 export default function InitStores(
-  uniOptions: UniOptions,
   options: RenderOptions,
   hasChanged: HasChanged,
   canvas: HTMLCanvasElement
@@ -107,15 +105,16 @@ export default function InitStores(
     tweenedAtmo.set(value);
   });
 
-  use_texture.subscribe((value) => {
-    uniOptions.useTexture = value;
-    if (!isFirstInvocation) {
-      hasChanged.useTexture = true;
-    }
+  const tweenedscale = tweened<number>(0, {
+    duration: 1000,
+    easing: quintOut,
+  });
+  tweenedscale.subscribe((value) => {
+    options.scale = value;
   });
 
-  displacement.subscribe((value) => {
-    uniOptions.heightDisplacement = value;
+  scale.subscribe((value) => {
+    tweenedscale.set(value);
   });
 
   rotation_speed.subscribe((value) => {

@@ -46,7 +46,7 @@ export const GetTexture = async (
 };
 export const GetTextureFromGribData = async (
   device: GPUDevice,
-  encodedRuns: [], // Assume that this is an array of {value, count} objects
+  encodedRuns: number[][], // Assume that this is an array of {value, count} objects
   addressModeU = 'repeat',
   addressModeV = 'repeat'
 ) => {
@@ -223,15 +223,6 @@ export const GetDepthTexture = async (
   };
 };
 
-export async function loadBinaryData(url: string): Promise<ArrayBuffer> {
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-  const arrayBuffer = await response.arrayBuffer();
-  return arrayBuffer;
-}
-
 export const Get3DNoiseTexture = async (
   device: GPUDevice,
   width: number = 128,
@@ -295,6 +286,15 @@ export const Get3DNoiseTexture = async (
     sampler,
   };
 };
+
+export async function loadBinaryData(url: string): Promise<ArrayBuffer> {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  const arrayBuffer = await response.arrayBuffer();
+  return arrayBuffer;
+}
 
 function downloadData(data: Uint8Array, filename: string) {
   const blob = new Blob([data], { type: 'application/octet-stream' });
