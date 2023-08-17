@@ -2,7 +2,14 @@
   import { onMount } from 'svelte';
 
   import Text from './Text.svelte';
-  export let title: 'use_texture' | 'theme';
+  import Layout from './Layout.svelte';
+  export let title:
+    | 'use_texture'
+    | 'theme'
+    | 'mb300'
+    | 'mb500'
+    | 'mb700'
+    | 'atmo';
   export let id: string = '';
   export let delay: number = 1;
 
@@ -19,11 +26,11 @@
 
   const handleInput = (e: Event) => {
     if (!store) return;
-    store.set((e.target as HTMLInputElement).checked);
+    store.set((e.target as HTMLInputElement).checked ? 1 : 0);
   };
 </script>
 
-<div class="checkbox-container">
+<Layout gap="1">
   <input
     data-interactable
     class="checkbox"
@@ -34,29 +41,20 @@
     on:input={handleInput}
   />
 
-  <Text {delay}>{title}</Text>
-</div>
+  <Text secondary={!$store} vertical {delay} text={title} nowrap />
+</Layout>
 
 <style>
-  .checkbox-container {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    align-items: center;
-    height: 64px;
-    position: relative;
-  }
-
   .checkbox {
     position: relative;
     -webkit-appearance: none;
     appearance: none;
     margin: 0;
     font: inherit;
-    width: 34px;
-    height: 34px;
-    max-width: 34px;
-    max-height: 34px;
+    width: 24px;
+    height: 24px;
+    max-width: 24px;
+    max-height: 24px;
     aspect-ratio: 1/1;
     border-radius: 50px;
     background: radial-gradient(

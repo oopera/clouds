@@ -23,7 +23,7 @@
           text={progress + '%'}
           secondary={progress !== 100}
           tertiary={progress === 100}
-          delay={id + 2}
+          delay={id + 1}
           type="p"
         />
       </Layout>
@@ -36,7 +36,7 @@
             easing: quintOut,
           }}
           out:fly={{
-            delay: 1 * 125,
+            delay: id + 2 * 125,
             duration: 350,
             x: 15,
             easing: quintOut,

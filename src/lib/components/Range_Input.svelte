@@ -104,7 +104,7 @@
   .slider::-webkit-slider-runnable-track {
     width: 100%;
     height: 24px;
-    padding: 0 8px 0 8px;
+    // padding: 0 8px 0 8px;
   }
   .slider::-webkit-slider-thumb {
     animation: blink2 1.5s ease-in-out infinite alternate;
@@ -119,9 +119,9 @@
     backdrop-filter: blur(8px);
     background: radial-gradient(
       circle,
-      rgba(0, 33, 95, 1) 0%,
-      rgba(33, 33, 39, 0.05) 30%,
-      rgba(0, 0, 0, 0) 50%
+      rgb(255, 255, 255) 0%,
+      rgba(33, 33, 39, 1) 30%,
+      rgba(0, 0, 0, 0) 100%
     );
   }
   .slider:hover::-webkit-slider-thumb,

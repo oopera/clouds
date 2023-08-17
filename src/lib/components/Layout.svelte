@@ -6,6 +6,7 @@
   export let padding: '0' | 's' | 'm' | 'l' = '0';
   export let short: boolean = false;
   export let fit: boolean = false;
+  export let marginTop: boolean = false;
 </script>
 
 <div
@@ -13,6 +14,7 @@
   class:horizontal
   class:short
   class:fit
+  class:margin-top={marginTop}
 >
   <slot />
 </div>
@@ -27,6 +29,10 @@
     width: 100%;
     box-sizing: border-box;
     pointer-events: none;
+  }
+
+  .margin-top {
+    margin-top: auto;
   }
 
   .fit {

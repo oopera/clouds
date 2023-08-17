@@ -38,7 +38,7 @@
         type="radio"
         class="radio"
       />
-      <Text delay={delay + i} {text} />
+      <Text tertiary={value === text} delay={delay + i} {text} />
     </Layout>
   {/each}
 </Layout>

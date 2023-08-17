@@ -9,6 +9,7 @@
   export let tertiary = false;
   export let accent = false;
   export let vertical = false;
+  export let nowrap = false;
   export let text = '';
   export let mini: boolean = false;
 
@@ -27,7 +28,7 @@
 
 {#if mounted}
   {#if type === 'p'}
-    <p class:mini>
+    <p class:mini class:nowrap>
       {#each splitText as letter, i}
         <span
           class:secondary
@@ -84,5 +85,12 @@
   }
   .mini {
     max-width: 16px;
+  }
+  span {
+    transition: color 128ms ease-in-out;
+    will-change: color;
+  }
+  .nowrap {
+    white-space: nowrap;
   }
 </style>

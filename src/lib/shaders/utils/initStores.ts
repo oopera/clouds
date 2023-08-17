@@ -1,17 +1,22 @@
 import {
   amount_of_points,
+  atmo,
   cameraposition,
-  displacement,
+  cloud_type,
+  scale,
+  mb300,
+  mb500,
+  mb700,
   pitch,
   rotation_speed,
   topology,
-  use_texture,
   yaw,
 } from '$lib/stores/stores';
-import type { HasChanged, RenderOptions, UniOptions } from '$lib/types/types';
+import type { HasChanged, RenderOptions } from '$lib/types/types';
+import { quintOut } from 'svelte/easing';
+import { tweened } from 'svelte/motion';
 
 export default function InitStores(
-  uniOptions: UniOptions,
   options: RenderOptions,
   hasChanged: HasChanged,
   canvas: HTMLCanvasElement
@@ -29,6 +34,13 @@ export default function InitStores(
     }
   });
 
+  cloud_type.subscribe((value) => {
+    options.cloudType = value;
+    if (!isFirstInvocation) {
+      hasChanged.cloudType = true;
+    }
+  });
+
   cameraposition.subscribe((value) => {
     options.cameraPosition = value;
   });
@@ -41,23 +53,82 @@ export default function InitStores(
     options.pitch = value;
   });
 
-  use_texture.subscribe((value) => {
-    uniOptions.useTexture = value;
-    hasChanged.useTexture = true;
+  const tweenedmb300 = tweened<number>(1, {
+    duration: 1000,
+    easing: quintOut,
   });
 
-  displacement.subscribe((value) => {
-    uniOptions.heightDisplacement = value;
+  mb300.subscribe((value) => {
+    tweenedmb300.set(value);
+  });
+
+  tweenedmb300.subscribe((value) => {
+    options.layer.mb300 = value;
+  });
+
+  const tweenedmb500 = tweened<number>(1, {
+    duration: 1000,
+    easing: quintOut,
+  });
+
+  mb500.subscribe((value) => {
+    tweenedmb500.set(value);
+  });
+
+  tweenedmb500.subscribe((value) => {
+    options.layer.mb500 = value;
+  });
+
+  const tweenedmb700 = tweened<number>(1, {
+    duration: 1000,
+    easing: quintOut,
+  });
+
+  mb700.subscribe((value) => {
+    tweenedmb700.set(value);
+  });
+
+  tweenedmb700.subscribe((value) => {
+    options.layer.mb700 = value;
+  });
+
+  const tweenedAtmo = tweened<number>(1, {
+    duration: 1000,
+    easing: quintOut,
+  });
+
+  tweenedAtmo.subscribe((value) => {
+    options.layer.atmo = value;
+  });
+
+  atmo.subscribe((value) => {
+    tweenedAtmo.set(value);
+  });
+
+  const tweenedscale = tweened<number>(0, {
+    duration: 1000,
+    easing: quintOut,
+  });
+  tweenedscale.subscribe((value) => {
+    options.scale = value;
+  });
+
+  scale.subscribe((value) => {
+    tweenedscale.set(value);
   });
 
   rotation_speed.subscribe((value) => {
     options.rotationSpeed = value;
-    hasChanged.rotationSpeed = true;
+    if (!isFirstInvocation) {
+      hasChanged.rotationSpeed = true;
+    }
   });
 
   topology.subscribe((value) => {
     options.topology = value;
-    hasChanged.topology = true;
+    if (!isFirstInvocation) {
+      hasChanged.topology = true;
+    }
   });
 
   canvas.addEventListener('mousedown', (e) => {

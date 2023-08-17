@@ -14,6 +14,7 @@
   import Text from '$lib/components/Text.svelte';
   import Radio_Button from '$lib/components/Radio_Button.svelte';
   import Link from '$lib/components/Link.svelte';
+  import Checkbox from '$lib/components/Checkbox.svelte';
 
   inject({ mode: dev ? 'development' : 'production' });
 </script>
@@ -63,11 +64,11 @@
     <Layout align="start" gap="0" fit>
       <Text tertiary text={'B.sc. Human Computer Interaction'} delay={10} />
       <Layout horizontal gap="1" justify="start">
-        <Text secondary delay={11} text={'Frontend:'} />
+        <Text nowrap secondary delay={11} text={'Frontend:'} />
         <Text vertical delay={15} text={'Sveltekit'} />
       </Layout>
       <Layout horizontal gap="1" justify="start">
-        <Text secondary delay={12} text={'Backend:'} />
+        <Text nowrap secondary delay={12} text={'Backend:'} />
         <Text vertical delay={16} text={' Vercel Serverless'} />
 
         <Link href="https://lucaslichner.de">
@@ -75,35 +76,54 @@
         >
       </Layout>
       <Layout horizontal gap="1" justify="start">
-        <Text secondary delay={13} text={'Data:'} />
+        <Text nowrap secondary delay={13} text={'Data:'} />
         <Text vertical delay={17} text={'nomads.ncep.noaa.gov'} />
         <Text vertical tertiary delay={20} text={'[0.25 hourly TCDC]'} />
       </Layout>
       <Layout horizontal gap="1" justify="start">
-        <Text secondary delay={14} text={'Render:'} />
+        <Text nowrap secondary delay={14} text={'Render:'} />
         <Text vertical delay={18} text={'Webgpu'} />
       </Layout>
       <Layout horizontal justify="start" gap="1">
         <Link href="https://lucaslichner.de">
-          <Text accent vertical delay={21} text={'Lucas Lichner.'} /></Link
+          <Text
+            nowrap
+            accent
+            vertical
+            delay={21}
+            text={'Lucas Lichner.'}
+          /></Link
         >
         <Link href="https://github.com/oopera/clouds">
-          <Text accent vertical delay={21} text={'GitHub.'} /></Link
+          <Text nowrap accent vertical delay={21} text={'GitHub.'} /></Link
         >
       </Layout>
     </Layout>
     <Layout align="end" gap="2" fit horizontal>
       <Layout align="end" gap="1" fit>
         <Radio_Button
-          delay={1}
+          delay={5}
           title="cloud_type"
           options={['cumulus', 'stratus', 'cirrus']}
         />
-        <Range_Input title="rotation_speed" min={0} max={5} step={0.25} />
-        <Range_Input delay={6} title="scale" min={0.05} max={2.0} step={0.05} />
+        <Layout align="end" gap="1" fit horizontal>
+          <Checkbox delay={5} title="mb300" />
+          <Checkbox delay={6} title="mb500" />
+          <Checkbox delay={7} title="mb700" />
+          <Checkbox delay={8} title="atmo" />
+        </Layout>
+
+        <Range_Input
+          delay={8}
+          title="rotation_speed"
+          min={0}
+          max={5}
+          step={0.25}
+        />
+        <Range_Input delay={9} title="scale" min={0.05} max={2.0} step={0.05} />
       </Layout>
 
-      <Zoom_Input />
+      <Zoom_Input delay={10} />
     </Layout>
   </Layout>
 </main>

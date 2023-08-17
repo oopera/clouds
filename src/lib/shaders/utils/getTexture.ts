@@ -46,7 +46,7 @@ export const GetTexture = async (
 };
 export const GetTextureFromGribData = async (
   device: GPUDevice,
-  encodedRuns: [], // Assume that this is an array of {value, count} objects
+  encodedRuns: number[][], // Assume that this is an array of {value, count} objects
   addressModeU = 'repeat',
   addressModeV = 'repeat'
 ) => {
@@ -198,10 +198,9 @@ export const GetPartitionedTexture = async (
 
 export const GetDepthTexture = async (
   device: GPUDevice,
-  width: any,
-  height: any
+  width: number,
+  height: number
 ) => {
-  // Create texture for texture binding
   const texture = device.createTexture({
     size: [width, height],
     format: 'depth24plus',
@@ -212,18 +211,6 @@ export const GetDepthTexture = async (
       GPUTextureUsage.RENDER_ATTACHMENT,
   });
 
-  // Create texture for render attachment
-  const textureRenderAttachment = device.createTexture({
-    size: [width, height],
-    format: 'depth24plus',
-    sampleCount: 4,
-    usage:
-      GPUTextureUsage.TEXTURE_BINDING |
-      GPUTextureUsage.COPY_DST |
-      GPUTextureUsage.RENDER_ATTACHMENT,
-  });
-
-  // Create sampler with nearest filtering
   const sampler = device.createSampler({
     magFilter: 'nearest',
     minFilter: 'nearest',
@@ -232,23 +219,9 @@ export const GetDepthTexture = async (
 
   return {
     texture,
-    textureRenderAttachment,
     sampler,
   };
 };
-
-// This function is used to load existing noise textures from the generated binary file
-
-export async function loadBinaryData(url: string): Promise<ArrayBuffer> {
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-  const arrayBuffer = await response.arrayBuffer();
-  return arrayBuffer;
-}
-
-// These functions are used to create new Noise Textures
 
 export const Get3DNoiseTexture = async (
   device: GPUDevice,
@@ -313,6 +286,15 @@ export const Get3DNoiseTexture = async (
     sampler,
   };
 };
+
+export async function loadBinaryData(url: string): Promise<ArrayBuffer> {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  const arrayBuffer = await response.arrayBuffer();
+  return arrayBuffer;
+}
 
 function downloadData(data: Uint8Array, filename: string) {
   const blob = new Blob([data], { type: 'application/octet-stream' });

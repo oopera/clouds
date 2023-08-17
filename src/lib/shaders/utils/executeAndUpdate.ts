@@ -8,7 +8,7 @@ export async function executePromise(
   let progress = 0;
 
   loading.update((current) => {
-    const id = Object.keys(current).length; // use the current number of keys as id
+    const id = Object.keys(current).length;
     return {
       ...current,
       [key]: {
@@ -34,7 +34,7 @@ export async function executePromise(
       return {
         ...current,
         [key]: {
-          id: Object.keys(current).length, // use the current number of keys as id
+          id: Object.keys(current).length,
           status: true,
           message,
           progress,
@@ -49,7 +49,7 @@ export async function executePromise(
     return {
       ...current,
       [key]: {
-        id: Object.keys(current).length, // use the current number of keys as id
+        id: Object.keys(current).length,
         status: false,
         message,
         progress: 100,
