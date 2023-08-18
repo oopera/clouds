@@ -90,12 +90,12 @@
             nowrap
             accent
             vertical
-            delay={21}
+            delay={25}
             text={'Lucas Lichner.'}
           /></Link
         >
         <Link href="https://github.com/oopera/clouds">
-          <Text nowrap accent vertical delay={21} text={'GitHub.'} /></Link
+          <Text nowrap accent vertical delay={28} text={'GitHub.'} /></Link
         >
       </Layout>
     </Layout>

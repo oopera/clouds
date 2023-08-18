@@ -44,6 +44,71 @@ export const GetTexture = async (
     sampler,
   };
 };
+
+export const Get3DTextureFromGribData = async (
+  device: GPUDevice,
+  encodedRunsArray: number[][][],
+  width: number = 1440,
+  height: number = 721,
+  addressModeU = 'repeat',
+  addressModeV = 'repeat',
+  addressModeW = 'repeat'
+) => {
+  const depth = encodedRunsArray.length;
+
+  const sampler = device.createSampler({
+    minFilter: 'linear',
+    magFilter: 'linear',
+    addressModeU: addressModeU as GPUAddressMode,
+    addressModeV: addressModeV as GPUAddressMode,
+    addressModeW: addressModeW as GPUAddressMode,
+  });
+
+  const gribData = new Float32Array(width * height);
+  const rgbaData = new Uint8ClampedArray(width * height * depth * 4);
+
+  const texture = device.createTexture({
+    size: { width: width, height: height, depthOrArrayLayers: depth },
+    format: 'rgba8unorm',
+    usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST,
+    dimension: '3d',
+  });
+
+  console.log(encodedRunsArray);
+
+  for (let d = 0; d < depth; d++) {
+    const encodedRuns = encodedRunsArray[d];
+    let index = 0;
+
+    for (const run of encodedRuns) {
+      for (let i = 0; i < run[0] && index < gribData.length; i++) {
+        gribData[index++] = run[1];
+      }
+    }
+
+    for (let i = 0; i < gribData.length; i++) {
+      const value = gribData[i];
+      const color = value * 2.55;
+      const rgbaIndex = (i + d * gribData.length) * 4;
+      rgbaData[rgbaIndex] = color;
+      rgbaData[rgbaIndex + 1] = color;
+      rgbaData[rgbaIndex + 2] = color;
+      rgbaData[rgbaIndex + 3] = color;
+    }
+  }
+
+  device.queue.writeTexture(
+    { texture: texture },
+    rgbaData,
+    { offset: 0, bytesPerRow: 4 * width, rowsPerImage: height },
+    { width: width, height: height, depthOrArrayLayers: depth }
+  );
+
+  return {
+    texture,
+    sampler,
+  };
+};
 export const GetTextureFromGribData = async (
   device: GPUDevice,
   encodedRuns: number[][], // Assume that this is an array of {value, count} objects
@@ -296,7 +361,7 @@ export async function loadBinaryData(url: string): Promise<ArrayBuffer> {
   return arrayBuffer;
 }
 
-function downloadData(data: Uint8Array, filename: string) {
+export const downloadData = async (data: Uint8Array, filename: string) => {
   const blob = new Blob([data], { type: 'application/octet-stream' });
   const url = URL.createObjectURL(blob);
 
@@ -311,4 +376,4 @@ function downloadData(data: Uint8Array, filename: string) {
 
   window.URL.revokeObjectURL(url);
   document.body.removeChild(a);
-}
+};
