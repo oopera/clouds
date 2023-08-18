@@ -306,9 +306,16 @@ async function InitializeScene() {
       '700 millibar cloud-data'
     );
 
+    const mb900RD = await executePromise(
+      'mb800RD',
+      fetch(`/api/cloud-texture?level_mb=900_mb&date=${dateString}`),
+      '900 millibar cloud-data'
+    );
+
     const mb300R = await mb300RD.json();
     const mb500R = await mb500RD.json();
     const mb700R = await mb700RD.json();
+    const mb900R = await mb900RD.json();
 
     parsedGribTexture = await GetTextureFromGribData(device, mb300R);
     parsedGribTexture_2 = await GetTextureFromGribData(device, mb500R);
@@ -318,6 +325,7 @@ async function InitializeScene() {
       mb300R,
       mb500R,
       mb700R,
+      mb900R,
     ]);
   }
 

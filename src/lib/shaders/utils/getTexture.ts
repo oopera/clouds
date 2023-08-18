@@ -86,15 +86,14 @@ export const Get3DTextureFromGribData = async (
       }
     }
 
-    // Create RGBA data from grib data
     for (let i = 0; i < gribData.length; i++) {
       const value = gribData[i];
-      const color = value * 2.55; // scale 0-100 to 0-255
-      const rgbaIndex = (i + d * gribData.length) * 4; // This index is adjusted for depth
-      rgbaData[rgbaIndex] = color; // R
-      rgbaData[rgbaIndex + 1] = color; // G
-      rgbaData[rgbaIndex + 2] = color; // B
-      rgbaData[rgbaIndex + 3] = color; // A
+      const color = value * 2.55;
+      const rgbaIndex = (i + d * gribData.length) * 4;
+      rgbaData[rgbaIndex] = color;
+      rgbaData[rgbaIndex + 1] = color;
+      rgbaData[rgbaIndex + 2] = color;
+      rgbaData[rgbaIndex + 3] = color;
     }
   }
 
@@ -362,7 +361,7 @@ export async function loadBinaryData(url: string): Promise<ArrayBuffer> {
   return arrayBuffer;
 }
 
-function downloadData(data: Uint8Array, filename: string) {
+export const downloadData = async (data: Uint8Array, filename: string) => {
   const blob = new Blob([data], { type: 'application/octet-stream' });
   const url = URL.createObjectURL(blob);
 
@@ -377,4 +376,4 @@ function downloadData(data: Uint8Array, filename: string) {
 
   window.URL.revokeObjectURL(url);
   document.body.removeChild(a);
-}
+};
