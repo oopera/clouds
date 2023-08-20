@@ -64,6 +64,10 @@ var options: RenderOptions = {
   zoom: 1,
   pitch: 0,
   yaw: 0,
+  density: 0.15,
+  sunDensity: 0.5,
+  rayleighIntensity: 0.5,
+  lightType: 'day_cycle',
   layer: {
     mb300: 1,
     mb500: 1,
@@ -73,7 +77,7 @@ var options: RenderOptions = {
   scale: 0.15,
   cloudType: 'cumulus',
   cameraPosition: { x: 0, y: 0, z: 0 },
-  topology: 'point-list',
+  topology: 'triangle-list',
   amountOfVertices: 0,
   depthWriteEnabled: true,
   blend: {
@@ -109,7 +113,7 @@ const buffers: GPUBuffer[][] = [];
 
 var cloudDensity = 1.0;
 
-var elapsed = 0;
+var elapsed = -1;
 
 const displayError = (message: string) => {
   var counter = 0;
@@ -227,7 +231,7 @@ async function InitializeScene() {
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
 
-  const cloudUniBuffer_01 = device.createBuffer({
+  const cloudUniBuffer = device.createBuffer({
     label: 'cloud_01 uniform buffer',
     size: 64,
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
@@ -362,7 +366,7 @@ async function InitializeScene() {
     {
       binding: 1,
       resource: {
-        buffer: cloudUniBuffer_01,
+        buffer: cloudUniBuffer,
       },
     },
     {
@@ -517,12 +521,14 @@ async function InitializeScene() {
 
   async function frame() {
     if (!device) return;
+    var lightPosition = vec3.create();
+    vec3.set(lightPosition, 2 * Math.cos(elapsed), 0.0, 2 * Math.sin(elapsed));
 
-    const cloudUniValues_01 = new Float32Array([
+    const cloudUniValues = new Float32Array([
       0.02 * options.scale,
-      cloudDensity,
       options.layer.mb300,
-      0.0,
+      options.density,
+      options.sunDensity,
     ]);
 
     const atmosphereUniValues = new Float32Array([
@@ -530,6 +536,20 @@ async function InitializeScene() {
       cloudDensity,
       options.layer.atmo,
       0.0,
+    ]);
+
+    const lightUniValues = new Float32Array([
+      lightPosition[0],
+      lightPosition[1],
+      lightPosition[2],
+      options.rayleighIntensity,
+      options.lightType === 'full_day'
+        ? 1
+        : options.lightType === 'day_cycle'
+        ? 0.5
+        : options.lightType === 'full_night'
+        ? 0
+        : 1.0,
     ]);
 
     const earthUniValues = new Float32Array([
@@ -540,12 +560,6 @@ async function InitializeScene() {
     ]);
 
     elapsed += 0.0005;
-
-    var lightPosition = vec3.create();
-    vec3.set(lightPosition, 2 * Math.cos(elapsed), 0.0, 2 * Math.sin(elapsed));
-
-    var lightColor = vec3.create();
-    vec3.set(lightColor, 1.0, 1.0, 1.0);
 
     var newYaw = options.yaw + options.rotationSpeed / 250;
     newYaw = newYaw % 360;
@@ -651,14 +665,9 @@ async function InitializeScene() {
       208,
       earthUniValues as ArrayBuffer
     );
-    device.queue.writeBuffer(
-      cloudUniBuffer_01,
-      0,
-      cloudUniValues_01 as ArrayBuffer
-    );
+    device.queue.writeBuffer(cloudUniBuffer, 0, cloudUniValues as ArrayBuffer);
 
-    device.queue.writeBuffer(lightUniBuffer, 0, lightPosition as ArrayBuffer);
-    device.queue.writeBuffer(lightUniBuffer, 16, lightColor as ArrayBuffer);
+    device.queue.writeBuffer(lightUniBuffer, 0, lightUniValues as ArrayBuffer);
 
     device.queue.writeBuffer(
       atmosphereUniBuffer,

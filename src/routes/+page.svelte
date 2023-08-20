@@ -55,7 +55,7 @@
     </Layout>
   </Layout>
 
-  <Layout padding="m" horizontal justify="between">
+  <Layout horizontal padding="m" justify="between">
     <Zoom_Indicator />
     <Axis_Indicator />
   </Layout>
@@ -103,14 +103,30 @@
       <Layout align="end" gap="1" fit>
         <Radio_Button
           delay={5}
-          title="cloud_type"
-          options={['cumulus', 'stratus', 'cirrus']}
+          title="light_type"
+          options={['day_cycle', 'full_day', 'full_night']}
         />
         <Layout align="end" gap="1" fit horizontal>
-          <Checkbox delay={5} title="mb300" />
+          <Checkbox delay={5} title="clouds" />
           <Checkbox delay={8} title="atmo" />
         </Layout>
 
+        <Range_Input delay={8} title="density" min={0} max={0.1} step={0.005} />
+
+        <Range_Input
+          delay={8}
+          title="rayleigh_intensity"
+          min={0}
+          max={2.0}
+          step={0.05}
+        />
+        <Range_Input
+          delay={8}
+          title="sun_transmittance"
+          min={0}
+          max={0.05}
+          step={0.001}
+        />
         <Range_Input
           delay={8}
           title="rotation_speed"

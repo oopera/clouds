@@ -19,11 +19,6 @@
   </div>
   <div data-hud class="circle" style="--z:{zoomValue}" />
   <div data-hud class="circle" style="--z:{zoomValue}" />
-  <Text
-    tertiary
-    mini
-    text={parseFloat((zoomValue - 1.25).toFixed(4)).toString()}
-  />
 </div>
 
 <style lang="scss">

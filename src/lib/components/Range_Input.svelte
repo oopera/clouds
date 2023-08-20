@@ -52,9 +52,9 @@
     />
 
     <Layout horizontal gap="1" align="end" justify="between">
-      <Text {delay} secondary text={min.toString()} vertical />
-      <Text {delay} tertiary text={$store?.toString()} vertical />
-      <Text {delay} secondary text={max.toString()} vertical />
+      <Text {delay} secondary text={min.toFixed(4).toString()} vertical />
+      <Text {delay} tertiary text={$store?.toFixed(4).toString()} vertical />
+      <Text {delay} secondary text={max.toFixed(4).toString()} vertical />
     </Layout>
     <Text {delay} {text} vertical />
   </Layout>

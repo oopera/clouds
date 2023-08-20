@@ -2,15 +2,17 @@ import {
   amount_of_points,
   atmo,
   cameraposition,
-  cloud_type,
+  light_type,
   scale,
   mb300,
   mb500,
   mb700,
   pitch,
   rotation_speed,
-  topology,
   yaw,
+  density,
+  sun_transmittance,
+  rayleigh_intensity,
 } from '$lib/stores/stores';
 import type { HasChanged, RenderOptions } from '$lib/types/types';
 import { quintOut } from 'svelte/easing';
@@ -34,11 +36,20 @@ export default function InitStores(
     }
   });
 
-  cloud_type.subscribe((value) => {
-    options.cloudType = value;
-    if (!isFirstInvocation) {
-      hasChanged.cloudType = true;
-    }
+  light_type.subscribe((value) => {
+    options.lightType = value;
+  });
+
+  density.subscribe((value) => {
+    options.density = value;
+  });
+
+  sun_transmittance.subscribe((value) => {
+    options.sunDensity = value;
+  });
+
+  rayleigh_intensity.subscribe((value) => {
+    options.rayleighIntensity = value;
   });
 
   cameraposition.subscribe((value) => {
@@ -121,13 +132,6 @@ export default function InitStores(
     options.rotationSpeed = value;
     if (!isFirstInvocation) {
       hasChanged.rotationSpeed = true;
-    }
-  });
-
-  topology.subscribe((value) => {
-    options.topology = value;
-    if (!isFirstInvocation) {
-      hasChanged.topology = true;
     }
   });
 

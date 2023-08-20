@@ -9,8 +9,8 @@ export const earthShader = /* wgsl */ `
 
     struct LightUniforms {
       lightPosition : vec3<f32>,
-      lightColor : vec3<f32>,
-      lightIntensity : f32,
+      rayleighIntensity : f32,
+      lightType : f32,
     };
     
     
@@ -25,11 +25,6 @@ export const earthShader = /* wgsl */ `
       @location(0) vPosition : vec4<f32>,
       @location(1) vNormal : vec4<f32>,
       @location(2) vUV : vec2<f32>,
-      @location(3) options : vec4<f32>,
-      @location(4) cameraPosition : vec4<f32>,
-      @location(5) lightPosition : vec3<f32>,
-      @location(6) lightColor : vec3<f32>,
-      @location(7) lightIntensity : f32,
     };
     
     @group(0) @binding(0) var<uniform> uni: Uniforms;
@@ -63,13 +58,6 @@ export const earthShader = /* wgsl */ `
       output.vPosition = uni.viewProjectionMatrix * (mPosition + vec4<f32>(displacement, 0.0));
       output.vNormal = mNormal;
       output.vUV = input.uv;
-      output.options = uni.options;
-      output.cameraPosition = uni.cameraPosition;
-      output.lightPosition = lightUni.lightPosition;
-      output.lightColor = lightUni.lightColor;
-      output.lightIntensity = lightUni.lightIntensity;
-
-
     
       return output;
     }
@@ -106,7 +94,7 @@ export const earthShader = /* wgsl */ `
       let heightColor: vec4<f32> = textureSample(heightTexture, textureSampler, output.vUV);
       let lightColor_01 = textureSample(lightTexture_01, textureSampler, vec2<f32>(output.vUV.x * 2.0, output.vUV.y));
       let lightColor_02 = textureSample(lightTexture_02, textureSampler, vec2<f32>((output.vUV.x - 0.5) * 2.0, output.vUV.y));
-      let normal: vec3<f32> = getNormal(vec2(output.options[2], output.options[3]));
+      let normal: vec3<f32> = getNormal(vec2(uni.options[2], uni.options[3]));
       var textureColor: vec4<f32>;
       var lightColor: vec4<f32>;
       var distance: f32 = length(output.vNormal.xyz - normal);
@@ -123,21 +111,30 @@ export const earthShader = /* wgsl */ `
           lightColor = lightColor_02;
       }
 
-      if(output.options[1] <= 0.5){
+      if(uni.options[1] <= 0.5){
         textureColor = heightColor;
       }
 
 // COMMON LIGHT CALCS
 
-      let dotProduct = dot(output.lightPosition, output.vNormal.xyz);
+      let dotProduct = dot(lightUni.lightPosition, output.vNormal.xyz);
       let scaledDotProduct: f32 = dotProduct * 10.0;
-      let lightness: f32 = 1.0 - (1.0 / (1.0 + exp(-scaledDotProduct)));
-      let edge = fwidth(lightness);
+      var lightness: f32 = 1.0 - (1.0 / (1.0 + exp(-scaledDotProduct)));
+
       let borderColor = vec4(1.0, 0.92, 0.95, 1.0);
       let blendRadius = 0.1; 
-      let mask = smoothstep(0.0, blendRadius, edge);
+      var mask: f32 = 0;
 
 // COMMON LIGHT CALCS
+
+      if(lightUni.lightType == 0.0){
+        lightness = 0.0;
+      }else if(lightUni.lightType == 1.0){
+        lightness = 1.0;
+      }else{
+        let edge = fwidth(lightness);
+         mask = smoothstep(0.0, blendRadius, edge);
+      }
 
       let resultColor = vec4(textureColor.rgb * pow(lightness, 1.2), 1) + 
                    vec4(lightColor.rgb  * pow(1.0 - lightness, 1.2) , 1.0) +

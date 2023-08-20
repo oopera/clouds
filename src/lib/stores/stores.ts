@@ -3,17 +3,20 @@ import { derived, writable, type Writable } from 'svelte/store';
 
 export const amount_of_points = writable(250);
 export const scale = writable(0.15);
-export const topology = writable<'triangle-list' | 'line-list' | 'point-list'>(
-  'triangle-list'
+export const density = writable(0.15);
+export const sun_transmittance = writable(0.025);
+export const rayleigh_intensity = writable(1.1575);
+export const light_type = writable<'day_cycle' | 'full_day' | 'full_night'>(
+  'day_cycle'
 );
-export const cloud_type = writable<'stratus' | 'cirrus' | 'cumulus'>('cumulus');
-export const rotation_speed = writable(0.5);
+export const rotation_speed = writable(2.0);
 export const use_texture = writable(true);
 export const wireframe = writable(false);
 export const mb300 = writable(1);
 export const mb500 = writable(1);
 export const mb700 = writable(1);
 export const atmo = writable(1);
+export const cloud = writable(1);
 export const pitch = writable(1);
 export const yaw = writable(1);
 export const zoom = writable(1);
@@ -53,7 +56,7 @@ export default {
   loading,
   pitch,
   rotation_speed,
-  topology,
+  light_type,
   mouse_interaction,
   use_texture,
   wireframe,

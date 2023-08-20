@@ -7,11 +7,13 @@ struct Uniforms {
 };
 
 
+
 struct LightUniforms {
   lightPosition : vec3<f32>,
-  lightColor : vec3<f32>,
-  lightIntensity : f32,
+  rayleighIntensity : f32,
+  lightType : f32,
 };
+
 
 struct AtmosphereUniforms {
   radius : f32,
@@ -31,10 +33,6 @@ struct Output {
   @builtin(position) Position : vec4<f32>,
   @location(0) vPosition : vec4<f32>,
   @location(1) vNormal : vec4<f32>,
-  @location(2) cameraPosition : vec4<f32>,
-  @location(3) lightPosition : vec3<f32>,
-  @location(4) lightColor : vec3<f32>,
-  @location(5) lightIntensity : f32,
 };
 
 @group(0) @binding(0) var<uniform> uni: Uniforms;
@@ -56,23 +54,29 @@ fn smoothstep(edge0: f32, edge1: f32, x: f32) -> f32 {
   output.Position = uni.viewProjectionMatrix * worldPosition;
   output.vPosition = worldPosition;
   output.vNormal = normalize(uni.normalMatrix * input.normal);
-  output.cameraPosition = uni.cameraPosition;
-  output.lightPosition = lightUni.lightPosition;
-  output.lightColor = lightUni.lightColor;
-  output.lightIntensity = lightUni.lightIntensity;
 
   return output;
 }
 
 @fragment fn fs(output: Output) -> @location(0) vec4<f32> {
 
-  let viewDirection: vec3<f32> = normalize(output.cameraPosition.xyz - output.vPosition.xyz);
+  let viewDirection: vec3<f32> = normalize(uni.cameraPosition.xyz - output.vPosition.xyz);
 
 // COMMON LIGHT CALCS
 
-  let dotProduct = dot(output.lightPosition, output.vNormal.xyz);
+
+
+  let dotProduct = dot(lightUni.lightPosition, output.vNormal.xyz);
   let scaledDotProduct: f32 = dotProduct * 10.0;
-  let lightness: f32 = 1.0 - (1.0 / (1.0 + exp(-scaledDotProduct)));
+  var lightness: f32 = 1.0 - (1.0 / (1.0 + exp(-scaledDotProduct)));
+  if(lightUni.lightType == 0.0){
+    lightness = 0.5;
+  }else if(lightUni.lightType == 1.0){
+    lightness = 1.0;
+  }
+
+
+
   let edge = fwidth(lightness);
   let borderColor = vec4(1.0, 0.92, 0.95, 1.0);
   let blendRadius = 0.1; 

@@ -14,6 +14,10 @@ export interface RenderOptions {
     mb700: number;
     atmo: number;
   };
+  lightType: 'day_cycle' | 'full_day' | 'full_night';
+  density: number;
+  sunDensity: number;
+  rayleighIntensity: number;
   scale: number;
   cloudType: 'cumulus' | 'stratus' | 'cirrus';
   cameraPosition: { x: number; y: number; z: number };
@@ -69,8 +73,10 @@ export interface LightUniforms {
 }
 export type Stores =
   | 'amount_of_points'
-  | 'displacement'
   | 'rotation_speed'
   | 'zoom'
   | 'scale'
-  | 'cloud_type';
+  | 'light_type'
+  | 'density'
+  | 'sun_transmittance'
+  | 'rayleigh_intensity';

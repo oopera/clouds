@@ -8,15 +8,15 @@ struct Uniforms {
 
 struct CloudUniforms {
   radius : f32,
-  dissapation : f32, 
-  visibility : f32,
-  noiseStrength : f32,
+  visibility : f32, 
+  density : f32,
+  sunDensity : f32,
 }
 
 struct LightUniforms {
   lightPosition : vec3<f32>,
-  lightColor : vec3<f32>,
-  lightIntensity : f32,
+  rayleighIntensity : f32,
+  lightType : f32,
 };
 
 struct Input {
@@ -82,10 +82,6 @@ fn clamp(x: f32, minVal: f32, maxVal: f32) -> f32 {
   return max(min(x, maxVal), minVal);
 }
 
-fn getDensity(molarAbsorptivity: f32, concentration: f32, pathLength: f32) -> f32 {
-  return molarAbsorptivity * concentration * pathLength;
-}
-
 fn computeNoise(coverage: f32, noise: vec4<f32>) -> f32 {
   let perlin = noise.r;
   let worley_l = noise.g;
@@ -121,14 +117,28 @@ fn getCoverage(p: vec3<f32>, paradepth: f32) -> f32 {
 
   // VISUAL CONFIRMATION: 
   // 0.0 | 0.1 - 0.2 | 0.3 - 0.9 | 1.0
-  
+
   var depth: f32 = paradepth;
 
+  // if(paradepth < 0.25){
+  //   depth = 0.0;
+  // } else if(paradepth < 0.5){
+  //   depth = smoothstep(0.1, 0.2, paradepth);
+  // } else if(paradepth < 0.75){
+  //   depth = smoothstep(0.3, 0.9, paradepth);
+  // } else if(paradepth < 1.0){
+  //   depth = 1.0;
+  // }
+  
   return textureSample(cloud_texture, cloud_sampler, vec3<f32>(longitude, latitude, depth)).r;
 }
 
 fn rayleighScattering(theta: f32) -> f32 {
     return  (3.0 / (16.0 * PI)) * (1.0 + cos(theta) * cos(theta)) ;
+}
+
+fn getDensity(molarAbsorptivity: f32, concentration: f32, pathLength: f32) -> f32 {
+  return molarAbsorptivity * concentration * pathLength;
 }
 
 @fragment fn fs(output: Output) -> @location(0) vec4<f32> {
@@ -137,7 +147,7 @@ fn rayleighScattering(theta: f32) -> f32 {
   var rayDirection: vec3<f32> = normalize(rayOrigin + cameraPosition);
   var sunRayDirection: vec3<f32> = normalize(rayOrigin + lightUni.lightPosition);
   
-  var sunDensity: f32 = 0.5;
+  var sunDensity: f32 = 0.0;
   var density: f32 = 0.0;
   var noise : vec4<f32>;
 
@@ -147,7 +157,7 @@ fn rayleighScattering(theta: f32) -> f32 {
   var light: f32 = 1.0;
   var caseNoise: f32;
 
-  let stepSize: f32 = 0.00001; 
+  let stepSize: f32 = 0.0001; 
   let startDepth: f32 =  cloudUniforms.radius; 
   let endDepth: f32 =  startDepth + (100  * stepSize); 
 
@@ -155,8 +165,7 @@ fn rayleighScattering(theta: f32) -> f32 {
   let highColor = vec3<f32>(0.89, 0.87, 0.90); 
 
   var outputDensity: f32;
-  var outputColor: vec3<f32>;
-  var rayleighIntensity: f32;
+  var outputColor = vec3<f32>(0.0, 0.0, 0.0);
 
   for (var depth: f32 = startDepth; depth < endDepth; depth += stepSize) {
     let texturePosition: vec3<f32> = rayOrigin + rayDirection * depth;
@@ -170,10 +179,10 @@ fn rayleighScattering(theta: f32) -> f32 {
     let sunCaseNoise = pow(computeNoise(coverage, sunNoise), 1);
 
     let theta: f32 = dot(normalize(rayDirection), normalize(sunRayDirection));
-    light = rayleighScattering(theta);
-    density += getDensity(0.05, caseNoise,  1 - depthFactor)  * pow(coverage, 2); 
-    sunDensity += getDensity(0.05, sunCaseNoise, depthFactor);
-    outputColor += clamp(density, 0.0, 0.01) * baseColor + clamp(sunDensity, 0.0, 0.05) * highColor * light;
+    light = rayleighScattering(theta) * lightUni.rayleighIntensity;
+    density += getDensity(cloudUniforms.density, caseNoise, depthFactor) ; 
+    sunDensity += getDensity(cloudUniforms.sunDensity, sunCaseNoise, depthFactor);
+    outputColor += clamp(density, 0.0, 0.25) * clamp(sunDensity, 0.0, 0.25) * highColor * light;
     outputDensity += clamp(density, 0.0, 0.5 * pow(caseNoise, 4));
     rayOrigin = texturePosition;
   }
@@ -186,6 +195,13 @@ fn rayleighScattering(theta: f32) -> f32 {
     lightness = 0.5;
   }
 
-  return vec4(clamp(outputColor.r, 0.65, 1) * lightness,clamp(outputColor.g, 0.65, 1) * lightness,clamp(outputColor.b, 0.65, 1) * lightness, outputDensity) * cloudUniforms.visibility;
+  if(lightUni.lightType == 0.0){
+    lightness = 0.5;
+  }else if(lightUni.lightType == 1.0){
+    lightness = 1.0;
+  }
+
+  outputColor += baseColor;
+  return vec4<f32>(outputColor, outputDensity) * cloudUniforms.visibility * lightness;
 }
 `;
