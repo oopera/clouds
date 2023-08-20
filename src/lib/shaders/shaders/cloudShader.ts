@@ -63,13 +63,8 @@ const PI: f32 = 3.141592653589793;
 const N: f32 = 2.545e25;  
 const n: f32 = 1.0003;    
 
-fn blend(baseColor: vec3<f32>, newColor: vec3<f32>, light: f32) -> vec3<f32> {
-  return baseColor + newColor * light;
-}
-
 fn getNoise(p: vec3<f32>, noiseScale: vec3<f32>) -> vec4<f32> {
-   let noise = textureSample(noise_texture, noise_sampler, p * noiseScale);
-   return noise;
+  return textureSample(noise_texture, noise_sampler, p * noiseScale);
   }
 
 

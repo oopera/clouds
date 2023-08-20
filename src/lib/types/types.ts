@@ -79,4 +79,6 @@ export type Stores =
   | 'light_type'
   | 'density'
   | 'sun_transmittance'
-  | 'rayleigh_intensity';
+  | 'rayleigh_intensity'
+  | 'clouds'
+  | 'atmo';

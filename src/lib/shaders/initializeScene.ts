@@ -17,13 +17,11 @@ import { cloudShader } from './shaders/cloudShader.js';
 
 import {
   GetTexture,
-  GetTextureFromGribData,
   GetPartitionedTexture,
   Get3DNoiseTexture,
   loadBinaryData,
   Create3DTextureFromData,
   Get3DTextureFromGribData,
-  downloadJSONData,
 } from './utils/getTexture.js';
 
 import { GetDepthTexture } from './utils/getTexture.js';
@@ -42,6 +40,7 @@ import { mb900 } from '$lib/assets/mb900.js';
 import { dev } from '$app/environment';
 import { tweened } from 'svelte/motion';
 import { quintIn, quintOut } from 'svelte/easing';
+import { fullScreenQuadShader } from './shaders/quadShader.js';
 
 let depthTexture: GPUTexture;
 
@@ -415,6 +414,17 @@ async function InitializeScene() {
     },
   ];
 
+  const offscreenBindings = [
+    {
+      binding: 0,
+      resource: undefined,
+    },
+    {
+      binding: 1,
+      resource: undefined,
+    },
+  ];
+
   pipeline[0] = CreatePipeline(
     device,
     device.createShaderModule({ code: earthShader }),
@@ -434,26 +444,6 @@ async function InitializeScene() {
 
   pipeline[2] = CreatePipeline(
     device,
-    device.createShaderModule({ code: cloudShader }),
-    {
-      ...options,
-      cullmode: 'none',
-    },
-    presentationFormat
-  );
-
-  pipeline[3] = CreatePipeline(
-    device,
-    device.createShaderModule({ code: cloudShader }),
-    {
-      ...options,
-      cullmode: 'none',
-    },
-    presentationFormat
-  );
-
-  pipeline[4] = CreatePipeline(
-    device,
     device.createShaderModule({ code: atmosphereShader }),
     {
       ...options,
@@ -461,11 +451,15 @@ async function InitializeScene() {
     presentationFormat
   );
 
-  bindGroup[0] = CreateBindGroup(device, pipeline[0], earthBindings);
-
-  bindGroup[1] = CreateBindGroup(device, pipeline[1], cloudBindings);
-
-  bindGroup[2] = CreateBindGroup(device, pipeline[4], atmosphereBindings);
+  pipeline[3] = CreatePipeline(
+    device,
+    device.createShaderModule({ code: fullScreenQuadShader }),
+    {
+      ...options,
+      cullmode: 'none',
+    },
+    presentationFormat
+  );
 
   let canvasTexture = context.getCurrentTexture();
 
@@ -475,10 +469,30 @@ async function InitializeScene() {
       height: canvasTexture.height || 0,
       depth: undefined,
     },
-    sampleCount: 4, // the same as your pipeline's sampleCount
+    sampleCount: 4,
     format: 'bgra8unorm',
     usage: GPUTextureUsage.RENDER_ATTACHMENT,
   });
+
+  let offscreenWidth = Math.floor(canvasTexture.width / 2);
+  let offscreenHeight = Math.floor(canvasTexture.height / 2 || 0);
+
+  var offscreenTexture = device.createTexture({
+    size: {
+      width: offscreenWidth,
+      height: offscreenHeight || 0,
+      depth: undefined,
+    },
+    sampleCount: 4,
+    format: 'bgra8unorm',
+    usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
+  });
+
+  var offscreenDepth = await GetDepthTexture(
+    device,
+    offscreenWidth,
+    offscreenHeight
+  );
 
   var depth = await GetDepthTexture(
     device,
@@ -505,7 +519,22 @@ async function InitializeScene() {
     },
   };
 
-  depthTexture.createView();
+  const offscreenPassDescriptor = {
+    colorAttachments: [
+      {
+        view: offscreenTexture.createView(),
+        loadOp: 'clear',
+        storeOp: 'store',
+      },
+    ],
+    depthStencilAttachment: {
+      view: offscreenDepth.texture.createView(),
+      depthLoadValue: 1.0,
+      depthStoreOp: 'store',
+      stencilLoadValue: 0,
+      stencilStoreOp: 'store',
+    },
+  };
 
   buffers[0] = CreateVertexBuffers(device, data);
   WriteVertexBuffers(device, buffers[0][0], buffers[0][1], buffers[0][2], data);
@@ -581,6 +610,8 @@ async function InitializeScene() {
       hasChanged.resolution = false;
       depthTexture.destroy();
       colorTexture.destroy();
+      offscreenTexture.destroy();
+      offscreenDepth.texture.destroy();
 
       colorTexture = device.createTexture({
         size: {
@@ -592,7 +623,24 @@ async function InitializeScene() {
         usage: GPUTextureUsage.RENDER_ATTACHMENT,
       });
 
-      var depth = await GetDepthTexture(
+      offscreenTexture = device.createTexture({
+        size: {
+          width: offscreenWidth,
+          height: offscreenHeight || 0,
+          depth: undefined,
+        },
+        sampleCount: 1,
+        format: 'bgra8unorm',
+        usage: GPUTextureUsage.RENDER_ATTACHMENT,
+      });
+
+      offscreenDepth = await GetDepthTexture(
+        device,
+        offscreenWidth,
+        offscreenHeight
+      );
+
+      depth = await GetDepthTexture(
         device,
         colorTexture.width,
         colorTexture.height
@@ -609,7 +657,6 @@ async function InitializeScene() {
         });
 
         tweenedDensity.subscribe((value) => {
-          console.log(value);
           cloudDensity = value;
         });
         tweenedDensity.set(0.0);
@@ -622,7 +669,6 @@ async function InitializeScene() {
         });
 
         tweenedDensity.subscribe((value) => {
-          console.log(value);
           cloudDensity = value;
         });
         tweenedDensity.set(1.0);
@@ -632,7 +678,7 @@ async function InitializeScene() {
 
     bindGroup[0] = CreateBindGroup(device, pipeline[0], earthBindings);
     bindGroup[1] = CreateBindGroup(device, pipeline[1], cloudBindings);
-    bindGroup[2] = CreateBindGroup(device, pipeline[4], atmosphereBindings);
+    bindGroup[2] = CreateBindGroup(device, pipeline[2], atmosphereBindings);
 
     const colorAttachments =
       renderPassDescriptor.colorAttachments as (GPURenderPassColorAttachment | null)[];
@@ -674,9 +720,39 @@ async function InitializeScene() {
       0,
       atmosphereUniValues as ArrayBuffer
     );
+    drawOffscreen();
 
+    const sampler = device.createSampler({
+      magFilter: 'linear',
+      minFilter: 'linear',
+      mipmapFilter: 'linear',
+      addressModeU: 'clamp-to-edge',
+      addressModeV: 'clamp-to-edge',
+    });
+
+    offscreenBindings[0].resource = offscreenTexture.createView();
+    offscreenBindings[1].resource = sampler;
+    bindGroup[3] = CreateBindGroup(device, pipeline[3], offscreenBindings);
     draw();
     requestAnimationFrame(frame);
+  }
+
+  function drawOffscreen() {
+    const commandEncoder = device.createCommandEncoder();
+    const passEncoder = commandEncoder.beginRenderPass(
+      offscreenPassDescriptor as GPURenderPassDescriptor
+    );
+    if (options.layer.mb300 > 0) {
+      passEncoder.setPipeline(pipeline[1]);
+      passEncoder.setVertexBuffer(0, buffers[0][0]);
+      passEncoder.setVertexBuffer(1, buffers[0][1]);
+      passEncoder.setVertexBuffer(2, buffers[0][2]);
+      passEncoder.setBindGroup(0, bindGroup[1]);
+
+      passEncoder.draw(options.amountOfVertices);
+    }
+
+    passEncoder.end();
   }
 
   function draw() {
@@ -692,25 +768,20 @@ async function InitializeScene() {
     renderPass.setBindGroup(0, bindGroup[0]);
 
     renderPass.draw(options.amountOfVertices);
-    if (options.layer.mb300 > 0) {
-      renderPass.setPipeline(pipeline[1]);
-      renderPass.setVertexBuffer(0, buffers[0][0]);
-      renderPass.setVertexBuffer(1, buffers[0][1]);
-      renderPass.setVertexBuffer(2, buffers[0][2]);
-      renderPass.setBindGroup(0, bindGroup[1]);
 
-      renderPass.draw(options.amountOfVertices);
-    }
+    renderPass.setPipeline(pipeline[3]);
+    renderPass.setBindGroup(0, bindGroup[3]);
+    renderPass.draw(4, 1, 0, 0); // Draw the quad
 
-    if (options.layer.atmo > 0) {
-      renderPass.setPipeline(pipeline[4]);
-      renderPass.setVertexBuffer(0, buffers[0][0]);
-      renderPass.setVertexBuffer(1, buffers[0][1]);
-      renderPass.setVertexBuffer(2, buffers[0][2]);
-      renderPass.setBindGroup(0, bindGroup[2]);
+    // if (options.layer.atmo > 0) {
+    //   renderPass.setPipeline(pipeline[2]);
+    //   renderPass.setVertexBuffer(0, buffers[0][0]);
+    //   renderPass.setVertexBuffer(1, buffers[0][1]);
+    //   renderPass.setVertexBuffer(2, buffers[0][2]);
+    //   renderPass.setBindGroup(0, bindGroup[2]);
 
-      renderPass.draw(options.amountOfVertices);
-    }
+    //   renderPass.draw(options.amountOfVertices);
+    // }
     renderPass.end();
 
     device.queue.submit([commandEncoder.finish()]);

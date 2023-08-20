@@ -107,7 +107,7 @@
           options={['day_cycle', 'full_day', 'full_night']}
         />
         <Layout align="end" gap="1" fit horizontal>
-          <Checkbox delay={5} title="clouds" />
+          <Checkbox delay={5} title="mb300" />
           <Checkbox delay={8} title="atmo" />
         </Layout>
 

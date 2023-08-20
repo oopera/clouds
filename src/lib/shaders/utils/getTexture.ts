@@ -74,8 +74,6 @@ export const Get3DTextureFromGribData = async (
     dimension: '3d',
   });
 
-  console.log(encodedRunsArray);
-
   for (let d = 0; d < depth; d++) {
     const encodedRuns = encodedRunsArray[d];
     let index = 0;
