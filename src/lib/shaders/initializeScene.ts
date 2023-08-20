@@ -43,6 +43,7 @@ import { quintIn, quintOut } from 'svelte/easing';
 import { fullScreenQuadShader } from './shaders/quadShader.js';
 
 let depthTexture: GPUTexture;
+let offscreenDepthTexture: GPUTexture;
 
 var hasChanged: HasChanged = {
   numFs: false,
@@ -331,7 +332,17 @@ async function InitializeScene() {
   let offscreenWidth = Math.floor(canvasTexture.width / 2);
   let offscreenHeight = Math.floor(canvasTexture.height / 2);
 
-  var offscreenTexture = device.createTexture({
+  let offscreenTexture = device.createTexture({
+    size: {
+      width: offscreenWidth,
+      height: offscreenHeight,
+    },
+    sampleCount: 4,
+    format: 'bgra8unorm',
+    usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
+  });
+
+  let offscreenTextureResolve = device.createTexture({
     size: {
       width: offscreenWidth,
       height: offscreenHeight,
@@ -341,7 +352,7 @@ async function InitializeScene() {
     usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
   });
 
-  var offscreenDepth = await GetDepthTexture(
+  let offscreenDepth = await GetDepthTexture(
     device,
     offscreenWidth,
     offscreenHeight
@@ -353,7 +364,7 @@ async function InitializeScene() {
     colorTexture.height
   );
 
-  var offscreenDepthTexture = offscreenDepth.texture;
+  offscreenDepthTexture = offscreenDepth.texture;
 
   depthTexture = depth.texture;
 
@@ -377,17 +388,17 @@ async function InitializeScene() {
   const offscreenPassDescriptor = {
     colorAttachments: [
       {
-        view: offscreenTexture.createView(),
         loadOp: 'clear',
         storeOp: 'store',
+        resolveTarget: offscreenTextureResolve.createView(),
+        view: offscreenTexture.createView(),
       },
     ],
     depthStencilAttachment: {
       view: offscreenDepthTexture.createView(),
-      depthLoadValue: 1.0, // or 'load' if you want to preserve the existing content
+      depthClearValue: 1,
+      depthLoadOp: 'clear',
       depthStoreOp: 'store',
-      stencilLoadValue: 0, // Only if you use stencil. Otherwise, omit.
-      stencilStoreOp: 'store', // Only if you use stencil. Otherwise, omit.
     },
   };
 
@@ -497,17 +508,6 @@ async function InitializeScene() {
     },
   ];
 
-  const offscreenBindings = [
-    {
-      binding: 0,
-      resource: offscreenTexture.createView(),
-    },
-    {
-      binding: 1,
-      resource: sampler,
-    },
-  ];
-
   pipeline[0] = CreatePipeline(
     device,
     device.createShaderModule({ code: earthShader }),
@@ -520,7 +520,7 @@ async function InitializeScene() {
     device.createShaderModule({ code: cloudShader }),
     {
       ...options,
-      cullmode: 'none',
+      cullmode: 'back',
     },
     presentationFormat
   );
@@ -534,60 +534,14 @@ async function InitializeScene() {
     presentationFormat
   );
 
-  pipeline[3] = device.createRenderPipeline({
-    layout: 'auto',
-    multisample: {
-      count: 4,
-      alphaToCoverageEnabled: false,
+  pipeline[3] = CreatePipeline(
+    device,
+    device.createShaderModule({ code: fullScreenQuadShader }),
+    {
+      ...options,
     },
-    vertex: {
-      module: device.createShaderModule({ code: fullScreenQuadShader }),
-      entryPoint: 'vs',
-      buffers: [
-        {
-          arrayStride: 12,
-          attributes: [
-            {
-              shaderLocation: 0,
-              format: 'float32x3',
-              offset: 0,
-            },
-          ],
-        },
-      ],
-    },
-    fragment: {
-      module: device.createShaderModule({ code: fullScreenQuadShader }),
-      entryPoint: 'fs',
-      targets: [
-        {
-          format: presentationFormat,
-          blend: {
-            color: {
-              srcFactor: 'src-alpha',
-              dstFactor: 'one-minus-src-alpha',
-              operation: 'add',
-            },
-            alpha: {
-              srcFactor: 'one',
-              dstFactor: 'one-minus-src-alpha',
-              operation: 'add',
-            },
-          },
-        },
-      ],
-    },
-
-    primitive: {
-      topology: options.topology,
-      cullMode: options.cullmode,
-    },
-    depthStencil: {
-      format: 'depth24plus',
-      depthWriteEnabled: options.depthWriteEnabled,
-      depthCompare: 'less',
-    },
-  });
+    presentationFormat
+  );
 
   buffers[0] = CreateVertexBuffers(device, data);
   WriteVertexBuffers(device, buffers[0][0], buffers[0][1], buffers[0][2], data);
@@ -658,14 +612,16 @@ async function InitializeScene() {
 
     if (!context) return;
     canvasTexture = context.getCurrentTexture();
+    offscreenWidth = Math.floor(canvasTexture.width / 2);
+    offscreenHeight = Math.floor(canvasTexture.height / 2);
 
     if (hasChanged.resolution) {
-      console.log('test');
       hasChanged.resolution = false;
       depthTexture.destroy();
       colorTexture.destroy();
       offscreenTexture.destroy();
       offscreenDepthTexture.destroy();
+      offscreenTextureResolve.destroy();
 
       colorTexture = device.createTexture({
         size: {
@@ -681,10 +637,23 @@ async function InitializeScene() {
         size: {
           width: offscreenWidth,
           height: offscreenHeight,
+          depthOrArrayLayers: 1,
+        },
+        sampleCount: 4,
+        format: 'bgra8unorm',
+        usage:
+          GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
+      });
+
+      offscreenTextureResolve = device.createTexture({
+        size: {
+          width: offscreenWidth,
+          height: offscreenHeight,
         },
         sampleCount: 1,
         format: 'bgra8unorm',
-        usage: GPUTextureUsage.RENDER_ATTACHMENT,
+        usage:
+          GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
       });
 
       offscreenDepth = await GetDepthTexture(
@@ -734,7 +703,16 @@ async function InitializeScene() {
     bindGroup[0] = CreateBindGroup(device, pipeline[0], earthBindings);
     bindGroup[1] = CreateBindGroup(device, pipeline[1], cloudBindings);
     bindGroup[2] = CreateBindGroup(device, pipeline[2], atmosphereBindings);
-    bindGroup[3] = CreateBindGroup(device, pipeline[3], offscreenBindings);
+    bindGroup[3] = CreateBindGroup(device, pipeline[3], [
+      {
+        binding: 0,
+        resource: offscreenTextureResolve.createView(),
+      },
+      {
+        binding: 1,
+        resource: sampler,
+      },
+    ]);
 
     const colorAttachments =
       renderPassDescriptor.colorAttachments as (GPURenderPassColorAttachment | null)[];
@@ -744,13 +722,12 @@ async function InitializeScene() {
     colorAttachment.view = colorTexture.createView();
     colorAttachment.resolveTarget = canvasTexture.createView();
 
-    const offscreenColorAttachments =
-      offscreenPassDescriptor.colorAttachments as (GPURenderPassColorAttachment | null)[];
-    const offscreenColorAttachment = offscreenColorAttachments[0]!;
-    const offscreenDepthAttachment =
-      offscreenPassDescriptor.depthStencilAttachment!;
-    offscreenDepthAttachment.view = offscreenDepthTexture.createView();
-    offscreenColorAttachment.view = offscreenTexture.createView();
+    offscreenPassDescriptor.colorAttachments[0]!.view =
+      offscreenTexture.createView();
+    offscreenPassDescriptor.depthStencilAttachment!.view =
+      offscreenDepthTexture.createView();
+    offscreenPassDescriptor.colorAttachments[0]!.resolveTarget =
+      offscreenTextureResolve.createView();
 
     const vpmatrix = CreateViewProjection(
       canvas.width / canvas.height,
@@ -783,14 +760,13 @@ async function InitializeScene() {
       atmosphereUniValues as ArrayBuffer
     );
 
-    drawOffscreen();
     draw();
     requestAnimationFrame(frame);
   }
 
-  function drawOffscreen() {
-    const commandEncoder = device.createCommandEncoder();
-    const passEncoder = commandEncoder.beginRenderPass(
+  function draw() {
+    const firstCommandEncoder = device.createCommandEncoder();
+    const passEncoder = firstCommandEncoder.beginRenderPass(
       offscreenPassDescriptor as GPURenderPassDescriptor
     );
     if (options.layer.mb300 > 0) {
@@ -804,9 +780,8 @@ async function InitializeScene() {
     }
 
     passEncoder.end();
-  }
+    device.queue.submit([firstCommandEncoder.finish()]);
 
-  function draw() {
     const commandEncoder = device.createCommandEncoder();
     const renderPass = commandEncoder.beginRenderPass(
       renderPassDescriptor as GPURenderPassDescriptor
@@ -820,9 +795,11 @@ async function InitializeScene() {
 
     renderPass.draw(options.amountOfVertices);
 
-    renderPass.setPipeline(pipeline[3]);
-    renderPass.setBindGroup(0, bindGroup[3]);
-    renderPass.draw(4, 1, 0, 0);
+    if (options.layer.mb300 > 0) {
+      renderPass.setPipeline(pipeline[3]);
+      renderPass.setBindGroup(0, bindGroup[3]);
+      renderPass.draw(6);
+    }
 
     if (options.layer.atmo > 0) {
       renderPass.setPipeline(pipeline[2]);

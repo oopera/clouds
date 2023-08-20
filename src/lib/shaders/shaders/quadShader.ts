@@ -14,16 +14,17 @@ struct Output {
 @vertex fn vs(input: Input, @builtin(vertex_index) vertexIndex: u32) -> Output {
     var output: Output;
 
-    // Directly output the full-screen quad vertices
-    let quad_positions: array<vec2<f32>, 4> = array<vec2<f32>, 4>(
-        vec2<f32>(-1.0, -1.0),
-        vec2<f32>(1.0, -1.0),
-        vec2<f32>(-1.0, 1.0),
-        vec2<f32>(1.0, 1.0)
+    let quad_positions: array<vec2<f32>, 6> = array<vec2<f32>, 6>(
+        vec2<f32>(-1.0, -1.0),  // 0
+        vec2<f32>(1.0, -1.0),   // 1
+        vec2<f32>(-1.0, 1.0),   // 2
+        vec2<f32>(-1.0, 1.0),   // 2 (repeated for second triangle)
+        vec2<f32>(1.0, -1.0),   // 1 (repeated for second triangle)
+        vec2<f32>(1.0, 1.0)     // 3
     );
 
     output.Position = vec4<f32>(quad_positions[vertexIndex], 0.0, 1.0);
-    output.uv = (quad_positions[vertexIndex] + vec2<f32>(1.0, 1.0)) * 0.5; // Convert to UV space (0.0 to 1.0)
+    output.uv = vec2((quad_positions[vertexIndex].x + 1.0) * 0.5, 1.0 - (quad_positions[vertexIndex].y + 1.0) * 0.5);
 
     return output;
 }
