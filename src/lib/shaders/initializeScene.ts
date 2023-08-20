@@ -316,6 +316,89 @@ async function InitializeScene() {
     // downloadJSONData(mb900R, 'mb900');
   }
 
+  let canvasTexture = context.getCurrentTexture();
+
+  let colorTexture = device.createTexture({
+    size: {
+      width: canvasTexture.width,
+      height: canvasTexture.height,
+    },
+    sampleCount: 4,
+    format: 'bgra8unorm',
+    usage: GPUTextureUsage.RENDER_ATTACHMENT,
+  });
+
+  let offscreenWidth = Math.floor(canvasTexture.width / 2);
+  let offscreenHeight = Math.floor(canvasTexture.height / 2);
+
+  var offscreenTexture = device.createTexture({
+    size: {
+      width: offscreenWidth,
+      height: offscreenHeight,
+    },
+    sampleCount: 1,
+    format: 'bgra8unorm',
+    usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
+  });
+
+  var offscreenDepth = await GetDepthTexture(
+    device,
+    offscreenWidth,
+    offscreenHeight
+  );
+
+  var depth = await GetDepthTexture(
+    device,
+    colorTexture.width,
+    colorTexture.height
+  );
+
+  var offscreenDepthTexture = offscreenDepth.texture;
+
+  depthTexture = depth.texture;
+
+  const renderPassDescriptor: GPURenderPassDescriptor = {
+    colorAttachments: [
+      {
+        view: colorTexture.createView(),
+        loadOp: 'clear',
+        storeOp: 'store',
+        resolveTarget: canvasTexture.createView(),
+      },
+    ],
+    depthStencilAttachment: {
+      view: depthTexture.createView(),
+      depthClearValue: 1,
+      depthLoadOp: 'clear',
+      depthStoreOp: 'store',
+    },
+  };
+
+  const offscreenPassDescriptor = {
+    colorAttachments: [
+      {
+        view: offscreenTexture.createView(),
+        loadOp: 'clear',
+        storeOp: 'store',
+      },
+    ],
+    depthStencilAttachment: {
+      view: offscreenDepthTexture.createView(),
+      depthLoadValue: 1.0, // or 'load' if you want to preserve the existing content
+      depthStoreOp: 'store',
+      stencilLoadValue: 0, // Only if you use stencil. Otherwise, omit.
+      stencilStoreOp: 'store', // Only if you use stencil. Otherwise, omit.
+    },
+  };
+
+  const sampler = device.createSampler({
+    magFilter: 'linear',
+    minFilter: 'linear',
+    mipmapFilter: 'linear',
+    addressModeU: 'clamp-to-edge',
+    addressModeV: 'clamp-to-edge',
+  });
+
   const earthBindings = [
     {
       binding: 0,
@@ -417,11 +500,11 @@ async function InitializeScene() {
   const offscreenBindings = [
     {
       binding: 0,
-      resource: undefined,
+      resource: offscreenTexture.createView(),
     },
     {
       binding: 1,
-      resource: undefined,
+      resource: sampler,
     },
   ];
 
@@ -451,90 +534,60 @@ async function InitializeScene() {
     presentationFormat
   );
 
-  pipeline[3] = CreatePipeline(
-    device,
-    device.createShaderModule({ code: fullScreenQuadShader }),
-    {
-      ...options,
-      cullmode: 'none',
+  pipeline[3] = device.createRenderPipeline({
+    layout: 'auto',
+    multisample: {
+      count: 4,
+      alphaToCoverageEnabled: false,
     },
-    presentationFormat
-  );
-
-  let canvasTexture = context.getCurrentTexture();
-
-  let colorTexture = device.createTexture({
-    size: {
-      width: canvasTexture.width,
-      height: canvasTexture.height || 0,
-      depth: undefined,
+    vertex: {
+      module: device.createShaderModule({ code: fullScreenQuadShader }),
+      entryPoint: 'vs',
+      buffers: [
+        {
+          arrayStride: 12,
+          attributes: [
+            {
+              shaderLocation: 0,
+              format: 'float32x3',
+              offset: 0,
+            },
+          ],
+        },
+      ],
     },
-    sampleCount: 4,
-    format: 'bgra8unorm',
-    usage: GPUTextureUsage.RENDER_ATTACHMENT,
+    fragment: {
+      module: device.createShaderModule({ code: fullScreenQuadShader }),
+      entryPoint: 'fs',
+      targets: [
+        {
+          format: presentationFormat,
+          blend: {
+            color: {
+              srcFactor: 'src-alpha',
+              dstFactor: 'one-minus-src-alpha',
+              operation: 'add',
+            },
+            alpha: {
+              srcFactor: 'one',
+              dstFactor: 'one-minus-src-alpha',
+              operation: 'add',
+            },
+          },
+        },
+      ],
+    },
+
+    primitive: {
+      topology: options.topology,
+      cullMode: options.cullmode,
+    },
+    depthStencil: {
+      format: 'depth24plus',
+      depthWriteEnabled: options.depthWriteEnabled,
+      depthCompare: 'less',
+    },
   });
-
-  let offscreenWidth = Math.floor(canvasTexture.width / 2);
-  let offscreenHeight = Math.floor(canvasTexture.height / 2 || 0);
-
-  var offscreenTexture = device.createTexture({
-    size: {
-      width: offscreenWidth,
-      height: offscreenHeight || 0,
-      depth: undefined,
-    },
-    sampleCount: 4,
-    format: 'bgra8unorm',
-    usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
-  });
-
-  var offscreenDepth = await GetDepthTexture(
-    device,
-    offscreenWidth,
-    offscreenHeight
-  );
-
-  var depth = await GetDepthTexture(
-    device,
-    colorTexture.width,
-    colorTexture.height
-  );
-
-  depthTexture = depth.texture;
-
-  const renderPassDescriptor: GPURenderPassDescriptor = {
-    colorAttachments: [
-      {
-        view: colorTexture.createView(),
-        loadOp: 'clear',
-        storeOp: 'store',
-        resolveTarget: canvasTexture.createView(),
-      },
-    ],
-    depthStencilAttachment: {
-      view: depthTexture.createView(),
-      depthClearValue: 1,
-      depthLoadOp: 'clear',
-      depthStoreOp: 'store',
-    },
-  };
-
-  const offscreenPassDescriptor = {
-    colorAttachments: [
-      {
-        view: offscreenTexture.createView(),
-        loadOp: 'clear',
-        storeOp: 'store',
-      },
-    ],
-    depthStencilAttachment: {
-      view: offscreenDepth.texture.createView(),
-      depthLoadValue: 1.0,
-      depthStoreOp: 'store',
-      stencilLoadValue: 0,
-      stencilStoreOp: 'store',
-    },
-  };
 
   buffers[0] = CreateVertexBuffers(device, data);
   WriteVertexBuffers(device, buffers[0][0], buffers[0][1], buffers[0][2], data);
@@ -607,11 +660,12 @@ async function InitializeScene() {
     canvasTexture = context.getCurrentTexture();
 
     if (hasChanged.resolution) {
+      console.log('test');
       hasChanged.resolution = false;
       depthTexture.destroy();
       colorTexture.destroy();
       offscreenTexture.destroy();
-      offscreenDepth.texture.destroy();
+      offscreenDepthTexture.destroy();
 
       colorTexture = device.createTexture({
         size: {
@@ -626,8 +680,7 @@ async function InitializeScene() {
       offscreenTexture = device.createTexture({
         size: {
           width: offscreenWidth,
-          height: offscreenHeight || 0,
-          depth: undefined,
+          height: offscreenHeight,
         },
         sampleCount: 1,
         format: 'bgra8unorm',
@@ -645,6 +698,8 @@ async function InitializeScene() {
         colorTexture.width,
         colorTexture.height
       );
+
+      offscreenDepthTexture = offscreenDepth.texture;
 
       depthTexture = depth.texture;
     }
@@ -679,6 +734,7 @@ async function InitializeScene() {
     bindGroup[0] = CreateBindGroup(device, pipeline[0], earthBindings);
     bindGroup[1] = CreateBindGroup(device, pipeline[1], cloudBindings);
     bindGroup[2] = CreateBindGroup(device, pipeline[2], atmosphereBindings);
+    bindGroup[3] = CreateBindGroup(device, pipeline[3], offscreenBindings);
 
     const colorAttachments =
       renderPassDescriptor.colorAttachments as (GPURenderPassColorAttachment | null)[];
@@ -687,6 +743,14 @@ async function InitializeScene() {
     depthAttachment.view = depthTexture.createView();
     colorAttachment.view = colorTexture.createView();
     colorAttachment.resolveTarget = canvasTexture.createView();
+
+    const offscreenColorAttachments =
+      offscreenPassDescriptor.colorAttachments as (GPURenderPassColorAttachment | null)[];
+    const offscreenColorAttachment = offscreenColorAttachments[0]!;
+    const offscreenDepthAttachment =
+      offscreenPassDescriptor.depthStencilAttachment!;
+    offscreenDepthAttachment.view = offscreenDepthTexture.createView();
+    offscreenColorAttachment.view = offscreenTexture.createView();
 
     const vpmatrix = CreateViewProjection(
       canvas.width / canvas.height,
@@ -712,27 +776,14 @@ async function InitializeScene() {
       earthUniValues as ArrayBuffer
     );
     device.queue.writeBuffer(cloudUniBuffer, 0, cloudUniValues as ArrayBuffer);
-
     device.queue.writeBuffer(lightUniBuffer, 0, lightUniValues as ArrayBuffer);
-
     device.queue.writeBuffer(
       atmosphereUniBuffer,
       0,
       atmosphereUniValues as ArrayBuffer
     );
+
     drawOffscreen();
-
-    const sampler = device.createSampler({
-      magFilter: 'linear',
-      minFilter: 'linear',
-      mipmapFilter: 'linear',
-      addressModeU: 'clamp-to-edge',
-      addressModeV: 'clamp-to-edge',
-    });
-
-    offscreenBindings[0].resource = offscreenTexture.createView();
-    offscreenBindings[1].resource = sampler;
-    bindGroup[3] = CreateBindGroup(device, pipeline[3], offscreenBindings);
     draw();
     requestAnimationFrame(frame);
   }
@@ -771,17 +822,17 @@ async function InitializeScene() {
 
     renderPass.setPipeline(pipeline[3]);
     renderPass.setBindGroup(0, bindGroup[3]);
-    renderPass.draw(4, 1, 0, 0); // Draw the quad
+    renderPass.draw(4, 1, 0, 0);
 
-    // if (options.layer.atmo > 0) {
-    //   renderPass.setPipeline(pipeline[2]);
-    //   renderPass.setVertexBuffer(0, buffers[0][0]);
-    //   renderPass.setVertexBuffer(1, buffers[0][1]);
-    //   renderPass.setVertexBuffer(2, buffers[0][2]);
-    //   renderPass.setBindGroup(0, bindGroup[2]);
+    if (options.layer.atmo > 0) {
+      renderPass.setPipeline(pipeline[2]);
+      renderPass.setVertexBuffer(0, buffers[0][0]);
+      renderPass.setVertexBuffer(1, buffers[0][1]);
+      renderPass.setVertexBuffer(2, buffers[0][2]);
+      renderPass.setBindGroup(0, bindGroup[2]);
 
-    //   renderPass.draw(options.amountOfVertices);
-    // }
+      renderPass.draw(options.amountOfVertices);
+    }
     renderPass.end();
 
     device.queue.submit([commandEncoder.finish()]);
