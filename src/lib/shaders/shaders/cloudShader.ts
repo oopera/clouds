@@ -11,6 +11,7 @@ struct CloudUniforms {
   visibility : f32, 
   density : f32,
   sunDensity : f32,
+  raymarchSteps : f32,
 }
 
 struct LightUniforms {
@@ -34,7 +35,7 @@ struct Output {
 
 @group(0) @binding(0) var<uniform> uni: Uniforms;
 @group(0) @binding(1) var<uniform> cloudUniforms: CloudUniforms;
-@group(0) @binding(2) var<uniform> lightUni: LightUniforms;
+@group(0) @binding(2) var<uniform> lightUniforms: LightUniforms;
 @group(0) @binding(3) var noise_texture: texture_3d<f32>;
 @group(0) @binding(4) var noise_sampler: sampler;
 
@@ -140,7 +141,7 @@ fn getDensity(molarAbsorptivity: f32, concentration: f32, pathLength: f32) -> f3
   let cameraPosition: vec3<f32> = uni.cameraPosition.rgb;
   var rayOrigin: vec3<f32> = output.vPosition.xyz - cloudUniforms.radius;
   var rayDirection: vec3<f32> = normalize(rayOrigin + cameraPosition);
-  var sunRayDirection: vec3<f32> = normalize(rayOrigin + lightUni.lightPosition);
+  var sunRayDirection: vec3<f32> = normalize(rayOrigin + lightUniforms.lightPosition);
   
   var sunDensity: f32 = 0.0;
   var density: f32 = 0.0;
@@ -154,7 +155,7 @@ fn getDensity(molarAbsorptivity: f32, concentration: f32, pathLength: f32) -> f3
 
   let stepSize: f32 = 0.000001; 
   let startDepth: f32 =  cloudUniforms.radius; 
-  let endDepth: f32 =  startDepth + (400  * stepSize); 
+  let endDepth: f32 =  startDepth + (cloudUniforms.raymarchSteps  * stepSize); 
 
   let baseColor = vec3<f32>(0.52, 0.53, 0.57);  
   let highColor = vec3<f32>(0.89, 0.87, 0.90); 
@@ -174,7 +175,7 @@ fn getDensity(molarAbsorptivity: f32, concentration: f32, pathLength: f32) -> f3
     let sunCaseNoise = pow(computeNoise(coverage, sunNoise), 1);
 
     let theta: f32 = dot(normalize(rayDirection), normalize(sunRayDirection));
-    light = rayleighScattering(theta) * lightUni.rayleighIntensity;
+    light = rayleighScattering(theta) * lightUniforms.rayleighIntensity;
     density += getDensity(cloudUniforms.density, caseNoise, depthFactor) ; 
     sunDensity += getDensity(cloudUniforms.sunDensity, sunCaseNoise, depthFactor);
     outputColor += clamp(density, 0.0, 0.25) * clamp(sunDensity, 0.0, 0.25) * highColor * light;
@@ -182,7 +183,7 @@ fn getDensity(molarAbsorptivity: f32, concentration: f32, pathLength: f32) -> f3
     rayOrigin = texturePosition;
   }
 
-  let dotProduct = dot(lightUni.lightPosition, output.vNormal.xyz);
+  let dotProduct = dot(lightUniforms.lightPosition, output.vNormal.xyz);
   let scaledDotProduct: f32 = dotProduct * 10.0;
   var lightness: f32 = 1.0 - (1.0 / (1.0 + exp(-scaledDotProduct)));
 
@@ -190,9 +191,9 @@ fn getDensity(molarAbsorptivity: f32, concentration: f32, pathLength: f32) -> f3
     lightness = 0.5;
   }
 
-  if(lightUni.lightType == 0.0){
+  if(lightUniforms.lightType == 0.0){
     lightness = 0.5;
-  }else if(lightUni.lightType == 1.0){
+  }else if(lightUniforms.lightType == 1.0){
     lightness = 1.0;
   }
 

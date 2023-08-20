@@ -1,34 +1,64 @@
 import type { vec3 } from 'gl-matrix';
 
+export type Stores =
+  // Rendering related
+  | 'amount_of_points'
+  | 'raymarch_steps'
+  | 'rotation_speed'
+  | 'zoom'
+  | 'scale'
+
+  // Light and atmosphere related
+  | 'light_type'
+  | 'density'
+  | 'sun_transmittance'
+  | 'rayleigh_intensity'
+  | 'atmo'
+  | 'mb300';
+
 export interface RenderOptions {
-  cullmode: 'none' | 'front' | 'back';
+  // Booleans
   useTexture: boolean;
+  depthWriteEnabled: boolean;
+
+  // Numbers
   numFs: number;
   rotationSpeed: number;
   zoom: number;
   pitch: number;
   yaw: number;
+  raymarchSteps: number;
+  density: number;
+  sunDensity: number;
+  rayleighIntensity: number;
+  scale: number;
+  amountOfVertices: number;
+
+  // Strings (enum types)
+  cullmode: 'none' | 'front' | 'back';
+  lightType: 'day_cycle' | 'full_day' | 'full_night';
+  cloudType: 'cumulus' | 'stratus' | 'cirrus';
+  topology: 'point-list' | 'line-list' | 'triangle-list';
+
+  // Nested Objects
   layer: {
     mb300: number;
     mb500: number;
     mb700: number;
     atmo: number;
   };
-  lightType: 'day_cycle' | 'full_day' | 'full_night';
-  density: number;
-  sunDensity: number;
-  rayleighIntensity: number;
-  scale: number;
-  cloudType: 'cumulus' | 'stratus' | 'cirrus';
-  cameraPosition: { x: number; y: number; z: number };
-  topology: 'point-list' | 'line-list' | 'triangle-list';
-  amountOfVertices: number;
-  depthWriteEnabled: boolean;
-  blend: any;
+  cameraPosition: {
+    x: number;
+    y: number;
+    z: number;
+  };
   coords: {
     lastX: number;
     lastY: number;
   };
+
+  // Others
+  blend: any;
 }
 export interface UniOptions {
   displacement: number;
@@ -71,14 +101,3 @@ export interface LightUniforms {
   lightColor: vec3;
   lightIntensity: number;
 }
-export type Stores =
-  | 'amount_of_points'
-  | 'rotation_speed'
-  | 'zoom'
-  | 'scale'
-  | 'light_type'
-  | 'density'
-  | 'sun_transmittance'
-  | 'rayleigh_intensity'
-  | 'clouds'
-  | 'atmo';

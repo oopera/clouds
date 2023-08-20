@@ -9,6 +9,7 @@ export const rayleigh_intensity = writable(1.1575);
 export const light_type = writable<'day_cycle' | 'full_day' | 'full_night'>(
   'day_cycle'
 );
+export const raymarch_steps = writable(500);
 export const rotation_speed = writable(2.0);
 export const use_texture = writable(true);
 export const wireframe = writable(false);

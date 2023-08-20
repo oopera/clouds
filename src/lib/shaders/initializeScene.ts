@@ -57,29 +57,41 @@ var hasChanged: HasChanged = {
 };
 
 var options: RenderOptions = {
-  cullmode: 'back',
+  // Booleans
   useTexture: true,
+  depthWriteEnabled: true,
+
+  // Numbers
   numFs: 0,
   rotationSpeed: 0.0025,
   zoom: 1,
   pitch: 0,
   yaw: 0,
+  raymarchSteps: 0,
   density: 0.15,
   sunDensity: 0.5,
   rayleighIntensity: 0.5,
+  scale: 0.0,
+  amountOfVertices: 0,
+
+  // Strings (enum types)
   lightType: 'day_cycle',
+  cloudType: 'cumulus',
+  cullmode: 'back',
+  topology: 'triangle-list',
+
+  // Nested Objects
   layer: {
     mb300: 1,
     mb500: 1,
     mb700: 1,
     atmo: 1,
   },
-  scale: 0.15,
-  cloudType: 'cumulus',
   cameraPosition: { x: 0, y: 0, z: 0 },
-  topology: 'triangle-list',
-  amountOfVertices: 0,
-  depthWriteEnabled: true,
+  coords: {
+    lastX: 0,
+    lastY: 0,
+  },
   blend: {
     color: {
       srcFactor: 'src-alpha',
@@ -92,12 +104,7 @@ var options: RenderOptions = {
       operation: 'add',
     },
   },
-  coords: {
-    lastX: 0,
-    lastY: 0,
-  },
 };
-
 var uniOptions: UniOptions = {
   displacement: 0.0,
   useTexture: true,
@@ -203,13 +210,20 @@ async function InitializeScene() {
   let noise = await executePromise(
     'noise',
     loadBinaryData('/textures/noise.bin'),
-    'noise texture'
+    '3d noise textures'
+  );
+
+  let blueNoise = await executePromise(
+    'blueNoise',
+    loadImage('/textures/BlueNoise64Tiled.jpg'),
+    'blue noise'
   );
 
   const heightMapV = await GetTexture(device, heightMap);
   const textureV = await GetPartitionedTexture(device, texture);
   const lightMapV = await GetPartitionedTexture(device, lightmap);
   const noiseV = Create3DTextureFromData(device, noise);
+  const blueNoiseV = await GetTexture(device, blueNoise);
 
   let data = await executePromise(
     'sphere',
@@ -539,6 +553,7 @@ async function InitializeScene() {
     device.createShaderModule({ code: fullScreenQuadShader }),
     {
       ...options,
+      depthWriteEnabled: false,
     },
     presentationFormat
   );
@@ -565,6 +580,7 @@ async function InitializeScene() {
       options.layer.mb300,
       options.density,
       options.sunDensity,
+      options.raymarchSteps,
     ]);
 
     const atmosphereUniValues = new Float32Array([
@@ -712,6 +728,14 @@ async function InitializeScene() {
         binding: 1,
         resource: sampler,
       },
+      {
+        binding: 2,
+        resource: blueNoiseV.texture.createView(),
+      },
+      {
+        binding: 3,
+        resource: blueNoiseV.sampler,
+      },
     ]);
 
     const colorAttachments =
@@ -800,7 +824,6 @@ async function InitializeScene() {
       renderPass.setBindGroup(0, bindGroup[3]);
       renderPass.draw(6);
     }
-
     if (options.layer.atmo > 0) {
       renderPass.setPipeline(pipeline[2]);
       renderPass.setVertexBuffer(0, buffers[0][0]);
