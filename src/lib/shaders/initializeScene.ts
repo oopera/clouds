@@ -23,6 +23,7 @@ import {
   loadBinaryData,
   Create3DTextureFromData,
   Get3DTextureFromGribData,
+  downloadJSONData,
 } from './utils/getTexture.js';
 
 import { GetDepthTexture } from './utils/getTexture.js';
@@ -33,9 +34,10 @@ import type {
 } from '$lib/types/types.js';
 import { atmosphereShader } from './shaders/atmosphereShader.js';
 import { executePromise, loadImage } from './utils/executeAndUpdate.js';
-import { mb300 } from '$lib/assets/mb300.js';
-import { mb500 } from '$lib/assets/mb500.js';
-import { mb700 } from '$lib/assets/mb700.js';
+import {mb300} from '$lib/assets/mb300.js';
+import {mb500} from '$lib/assets/mb500.js';
+import {mb700} from '$lib/assets/mb700.js';
+import {mb900} from '$lib/assets/mb900.js';
 
 import { dev } from '$app/environment';
 import { tweened } from 'svelte/motion';
@@ -261,10 +263,6 @@ async function InitializeScene() {
   const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
   const dateString = yesterday.toISOString().slice(0, 10).replace(/-/g, '');
 
-  var parsedGribTexture;
-  var parsedGribTexture_2;
-  var parsedGribTexture_3;
-
   var parsed3DGribTexture;
 
   const generateNewNoiseTexture = false;
@@ -278,14 +276,12 @@ async function InitializeScene() {
   }
 
   if (dev) {
-    parsedGribTexture = await GetTextureFromGribData(device, mb300);
-    parsedGribTexture_2 = await GetTextureFromGribData(device, mb500);
-    parsedGribTexture_3 = await GetTextureFromGribData(device, mb700);
 
     parsed3DGribTexture = await Get3DTextureFromGribData(device, [
       mb300,
       mb500,
       mb700,
+      mb900
     ]);
   } else {
     const mb300RD = await executePromise(
@@ -317,16 +313,17 @@ async function InitializeScene() {
     const mb700R = await mb700RD.json();
     const mb900R = await mb900RD.json();
 
-    parsedGribTexture = await GetTextureFromGribData(device, mb300R);
-    parsedGribTexture_2 = await GetTextureFromGribData(device, mb500R);
-    parsedGribTexture_3 = await GetTextureFromGribData(device, mb700R);
-
     parsed3DGribTexture = await Get3DTextureFromGribData(device, [
       mb300R,
       mb500R,
       mb700R,
       mb900R,
     ]);
+
+    // downloadJSONData(mb300R, 'mb300');
+    // downloadJSONData(mb500R, 'mb500');
+    // downloadJSONData(mb700R, 'mb700');
+    // downloadJSONData(mb900R, 'mb900');
   }
 
   const earthBindings = [

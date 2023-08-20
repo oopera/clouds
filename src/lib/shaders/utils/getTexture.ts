@@ -377,3 +377,21 @@ export const downloadData = async (data: Uint8Array, filename: string) => {
   window.URL.revokeObjectURL(url);
   document.body.removeChild(a);
 };
+export const downloadJSONData = async (jsonData: any, filename: string) => {
+  const jsonString = JSON.stringify(jsonData, null, 2);
+
+  const blob = new Blob([jsonString], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement('a');
+  a.style.display = 'none';
+  document.body.appendChild(a);
+
+  a.href = url;
+  a.download = filename;
+
+  a.click();
+
+  window.URL.revokeObjectURL(url);
+  document.body.removeChild(a);
+};

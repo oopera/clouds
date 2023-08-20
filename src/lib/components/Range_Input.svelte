@@ -32,26 +32,25 @@
 
 <div class="range-input-container">
   <Layout gap="1" align="end" justify="between">
-    <div class="slider_container">
-      {#each Array.from({ length: steps }, (_, i) => i + 1) as step}
-        <div
-          class="step {step % 2 === 0 ? 'even' : 'odd'}"
-          style="--i: {step}; --steps: {steps}"
-        />
-      {/each}
-      <input
-        data-interactable
-        {disabled}
-        {min}
-        {max}
-        {step}
-        {title}
-        value={$store}
-        on:input={handleInput}
-        type="range"
-        class="slider"
+    {#each Array.from({ length: steps }, (_, i) => i + 1) as step}
+      <div
+        class="step {step % 2 === 0 ? 'even' : 'odd'}"
+        style="--i: {step}; --steps: {steps}"
       />
-    </div>
+    {/each}
+    <input
+      data-interactable
+      {disabled}
+      {min}
+      {max}
+      {step}
+      {title}
+      value={$store}
+      on:input={handleInput}
+      type="range"
+      class="slider"
+    />
+
     <Layout horizontal gap="1" align="end" justify="between">
       <Text {delay} secondary text={min.toString()} vertical />
       <Text {delay} tertiary text={$store?.toString()} vertical />
@@ -68,13 +67,7 @@
     box-sizing: border-box;
     z-index: 2;
   }
-  .slider__container {
-    position: relative;
-    width: 128px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-  }
+
   .slider {
     appearance: none;
     -webkit-appearance: none;

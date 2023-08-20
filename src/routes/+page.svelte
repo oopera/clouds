@@ -108,8 +108,6 @@
         />
         <Layout align="end" gap="1" fit horizontal>
           <Checkbox delay={5} title="mb300" />
-          <Checkbox delay={6} title="mb500" />
-          <Checkbox delay={7} title="mb700" />
           <Checkbox delay={8} title="atmo" />
         </Layout>
 
@@ -140,14 +138,5 @@
     flex-direction: column;
     align-items: flex-start;
     justify-content: space-between;
-  }
-  .indicators {
-    position: absolute;
-    display: flex;
-    flex-direction: column;
-    right: gap(2);
-    top: 50%;
-    transform: translateY(-50%);
-    gap: gap(2);
   }
 </style>

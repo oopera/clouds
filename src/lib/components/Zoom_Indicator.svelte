@@ -12,15 +12,13 @@
   });
 </script>
 
-<div id="hud" class="viewfinder">
-  <div class="hud">
-    <div data-hud class="crosshair">
-      <div class="crosshair__horizontal" />
-      <div class="crosshair__vertical" />
-    </div>
-    <div data-hud class="circle" style="--z:{zoomValue}" />
-    <div data-hud class="circle" style="--z:{zoomValue}" />
+<div class="viewfinder">
+  <div data-hud class="crosshair">
+    <div class="crosshair__horizontal" />
+    <div class="crosshair__vertical" />
   </div>
+  <div data-hud class="circle" style="--z:{zoomValue}" />
+  <div data-hud class="circle" style="--z:{zoomValue}" />
   <Text
     tertiary
     mini
@@ -42,23 +40,6 @@
       rgba(33, 33, 39, 0.05) 30%,
       rgba(0, 0, 0, 0) 50%
     );
-  }
-  .hud {
-    width: 100%;
-    height: 100%;
-    position: relative;
-    overflow: hidden;
-    border-radius: 160px;
-  }
-
-  .indicator {
-    position: relative;
-    top: 75%;
-    left: 75%;
-    transform: translate(-50%, -50%);
-    color: rgb(196, 215, 255);
-    font-size: 10px;
-    font-weight: 200;
   }
 
   .crosshair {
