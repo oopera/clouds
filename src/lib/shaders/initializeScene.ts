@@ -499,6 +499,14 @@ async function InitializeScene() {
       binding: 6,
       resource: parsed3DGribTexture.sampler,
     },
+    {
+      binding: 7,
+      resource: blueNoiseV.texture.createView(),
+    },
+    {
+      binding: 8,
+      resource: blueNoiseV.sampler,
+    },
   ];
 
   const atmosphereBindings = [

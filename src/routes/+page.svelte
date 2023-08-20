@@ -106,14 +106,14 @@
           <Checkbox delay={8} title="atmo" />
         </Layout>
 
-        <Range_Input delay={8} title="density" min={0} max={0.1} step={0.001} />
+        <Range_Input delay={8} title="density" min={0} max={0.25} step={0.01} />
 
         <Range_Input
           delay={8}
           title="raymarch_steps"
-          min={0}
-          max={1000}
-          step={10}
+          min={1}
+          max={99}
+          step={1}
         />
         <Range_Input
           delay={8}

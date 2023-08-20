@@ -31,18 +31,17 @@ struct Output {
 
     return output;
 }
-
 @fragment fn fs(output: Output) -> @location(0) vec4<f32> {
     var color = textureSample(myTexture, mySampler, output.uv);
     
-    
-    let noiseUV = output.uv * 5;
+    // Control factors
+    let ditherIntensity: f32 = 0.025;  // Adjust this for stronger/weaker dithering
+    let threshold: f32 = 0.25;        // Adjust to make dithering more/less frequent
+
+    // Sample the blue noise texture
+    let noiseUV = output.uv ;
     let noise = textureSample(blue_noise, blue_noise_sampler, noiseUV).r;
 
-    color.r += noise * 0.05 - 0.025;
-    color.g += noise * 0.05 - 0.025;
-    color.b += noise * 0.05 - 0.025;
-    
-    return textureSample(myTexture, mySampler, output.uv);
+    return color;
 }
 `;
