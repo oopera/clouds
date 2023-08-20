@@ -1,0 +1,48 @@
+export const fullScreenQuadShader = /* wgsl */ `
+struct Input {
+    @location(0) position: vec4<f32>,
+};
+
+struct Output {
+    @builtin(position) Position: vec4<f32>,
+    @location(0) uv: vec2<f32>,
+};
+
+@group(0) @binding(0) var myTexture: texture_2d<f32>;
+@group(0) @binding(1) var mySampler: sampler;
+
+@group(0) @binding(2) var blue_noise: texture_2d<f32>;
+@group(0) @binding(3) var blue_noise_sampler: sampler;
+
+@vertex fn vs(input: Input, @builtin(vertex_index) vertexIndex: u32) -> Output {
+    var output: Output;
+
+    let quad_positions: array<vec2<f32>, 6> = array<vec2<f32>, 6>(
+        vec2<f32>(-1.0, -1.0),  // 0
+        vec2<f32>(1.0, -1.0),   // 1
+        vec2<f32>(-1.0, 1.0),   // 2
+        vec2<f32>(-1.0, 1.0),   // 2 (repeated for second triangle)
+        vec2<f32>(1.0, -1.0),   // 1 (repeated for second triangle)
+        vec2<f32>(1.0, 1.0)     // 3
+    );
+
+    output.Position = vec4<f32>(quad_positions[vertexIndex], 0.0, 1.0);
+    output.uv = vec2((quad_positions[vertexIndex].x + 1.0) * 0.5, 1.0 - (quad_positions[vertexIndex].y + 1.0) * 0.5);
+
+    return output;
+}
+
+@fragment fn fs(output: Output) -> @location(0) vec4<f32> {
+    var color = textureSample(myTexture, mySampler, output.uv);
+    
+    
+    let noiseUV = output.uv * 5;
+    let noise = textureSample(blue_noise, blue_noise_sampler, noiseUV).r;
+
+    color.r += noise * 0.05 - 0.025;
+    color.g += noise * 0.05 - 0.025;
+    color.b += noise * 0.05 - 0.025;
+    
+    return textureSample(myTexture, mySampler, output.uv);
+}
+`;

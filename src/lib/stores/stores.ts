@@ -2,13 +2,14 @@ import type { LoadingStore } from '$lib/types/types';
 import { derived, writable, type Writable } from 'svelte/store';
 
 export const amount_of_points = writable(250);
-export const scale = writable(0.15);
+export const scale = writable(0.3);
 export const density = writable(0.15);
 export const sun_transmittance = writable(0.025);
 export const rayleigh_intensity = writable(1.1575);
 export const light_type = writable<'day_cycle' | 'full_day' | 'full_night'>(
   'day_cycle'
 );
+export const raymarch_steps = writable(500);
 export const rotation_speed = writable(2.0);
 export const use_texture = writable(true);
 export const wireframe = writable(false);
@@ -62,4 +63,5 @@ export default {
   wireframe,
   yaw,
   zoom,
+  mb300,
 };

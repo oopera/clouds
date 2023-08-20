@@ -35,16 +35,17 @@ export async function CreateSphereData(options: RenderOptions): Promise<any> {
   return data;
 }
 
-export const CreatePipeline = (
+export function CreatePipeline(
   device: GPUDevice,
   module: GPUShaderModule,
   options: RenderOptions,
-  presentationFormat: GPUTextureFormat
-) => {
+  presentationFormat: GPUTextureFormat,
+  multisampleCount: number = 4
+) {
   const pipeline = device.createRenderPipeline({
     layout: 'auto',
     multisample: {
-      count: 4,
+      count: multisampleCount,
       alphaToCoverageEnabled: false,
     },
     vertex: {
@@ -89,18 +90,7 @@ export const CreatePipeline = (
       targets: [
         {
           format: presentationFormat,
-          blend: {
-            color: {
-              srcFactor: 'src-alpha',
-              dstFactor: 'one-minus-src-alpha',
-              operation: 'add',
-            },
-            alpha: {
-              srcFactor: 'one',
-              dstFactor: 'one-minus-src-alpha',
-              operation: 'add',
-            },
-          },
+          blend: options.blend,
         },
       ],
     },
@@ -116,7 +106,7 @@ export const CreatePipeline = (
     },
   });
   return pipeline;
-};
+}
 
 export const CreateBindGroup = (
   device: GPUDevice,
