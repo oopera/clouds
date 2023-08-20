@@ -1,15 +1,10 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-
   import Text from './Text.svelte';
   import Layout from './Layout.svelte';
-  export let title:
-    | 'use_texture'
-    | 'theme'
-    | 'mb300'
-    | 'mb500'
-    | 'mb700'
-    | 'atmo';
+  import type { Stores } from '$lib/types/types';
+
+  export let title: Stores;
   export let id: string = '';
   export let delay: number = 1;
 

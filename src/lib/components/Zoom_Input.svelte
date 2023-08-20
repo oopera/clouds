@@ -71,7 +71,7 @@
     tweenedZoom.set(finalZoom);
   };
 
-  const indicatorArray = Array.from({ length: 5 }, (_, i) => i + 1);
+  const indicatorArray = Array.from({ length: 10 }, (_, i) => i + 1);
 </script>
 
 <div class="zoom" style="--zoom: {$zoom};">
@@ -122,13 +122,14 @@
     position: relative;
     align-items: center;
     display: flex;
-    height: 224px;
+    height: fit-content;
     width: fit-content;
     z-index: 1;
 
     &__bar {
       display: flex;
       width: 16px;
+      gap: 10px;
       height: 100%;
       justify-content: space-between;
       flex-direction: column;
