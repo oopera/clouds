@@ -34,10 +34,10 @@ import type {
 } from '$lib/types/types.js';
 import { atmosphereShader } from './shaders/atmosphereShader.js';
 import { executePromise, loadImage } from './utils/executeAndUpdate.js';
-import {mb300} from '$lib/assets/mb300.js';
-import {mb500} from '$lib/assets/mb500.js';
-import {mb700} from '$lib/assets/mb700.js';
-import {mb900} from '$lib/assets/mb900.js';
+import { mb300 } from '$lib/assets/mb300.js';
+import { mb500 } from '$lib/assets/mb500.js';
+import { mb700 } from '$lib/assets/mb700.js';
+import { mb900 } from '$lib/assets/mb900.js';
 
 import { dev } from '$app/environment';
 import { tweened } from 'svelte/motion';
@@ -187,7 +187,7 @@ async function InitializeScene() {
   );
   let texture = await executePromise(
     'texture',
-    loadImage('/textures/nasa-texture.jpg'),
+    loadImage('/textures/earth-truecolor.jpg'),
     'texture map'
   );
   let lightmap = await executePromise(
@@ -233,18 +233,6 @@ async function InitializeScene() {
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
 
-  const cloudUniBuffer_02 = device.createBuffer({
-    label: 'cloud_02 uniform buffer',
-    size: 64,
-    usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-  });
-
-  const cloudUniBuffer_03 = device.createBuffer({
-    label: 'cloud_03 uniform buffer',
-    size: 64,
-    usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-  });
-
   const lightUniBuffer = device.createBuffer({
     label: 'light uniform buffer',
     size: 64,
@@ -276,12 +264,11 @@ async function InitializeScene() {
   }
 
   if (dev) {
-
     parsed3DGribTexture = await Get3DTextureFromGribData(device, [
       mb300,
       mb500,
       mb700,
-      mb900
+      mb900,
     ]);
   } else {
     const mb300RD = await executePromise(

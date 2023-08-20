@@ -123,20 +123,6 @@ fn getCoverage(p: vec3<f32>, paradepth: f32) -> f32 {
   // 0.0 | 0.1 - 0.2 | 0.3 - 0.9 | 1.0
   
   var depth: f32 = paradepth;
-  if(depth < 0.1){
-    depth = 0;
-  }
-  else if(depth < 0.25){
-    depth = smoothstep(0.0, 0.05, depth);
-  }else if(depth < 0.5){
-    depth = smoothstep(0.05, 0.5, depth);
-  }else if(depth < 0.75){
-    depth = smoothstep(0.5, 0.75, depth);
-  }else if(depth < 0.95){
-    depth = smoothstep(0.95, 1.0, depth);
-  }else{
-    depth = 1;
-  }
 
   return textureSample(cloud_texture, cloud_sampler, vec3<f32>(longitude, latitude, depth)).r;
 }
@@ -163,7 +149,7 @@ fn rayleighScattering(theta: f32) -> f32 {
 
   let stepSize: f32 = 0.00001; 
   let startDepth: f32 =  cloudUniforms.radius; 
-  let endDepth: f32 =  startDepth + (50  * stepSize); 
+  let endDepth: f32 =  startDepth + (100  * stepSize); 
 
   let baseColor = vec3<f32>(0.52, 0.53, 0.57);  
   let highColor = vec3<f32>(0.89, 0.87, 0.90); 
@@ -174,28 +160,21 @@ fn rayleighScattering(theta: f32) -> f32 {
 
   for (var depth: f32 = startDepth; depth < endDepth; depth += stepSize) {
     let texturePosition: vec3<f32> = rayOrigin + rayDirection * depth;
+    let sunTexturePosition: vec3<f32> = rayOrigin + sunRayDirection * depth;
     let depthFactor =  (depth - startDepth) / (endDepth - startDepth);
-    
+  
     coverage = getCoverage(texturePosition, depthFactor);
     noise = getNoise(texturePosition, vec3<f32>(1.0, 1.0, 1.0));
-
+    let sunNoise = getNoise(sunTexturePosition, vec3<f32>(1.0, 1.0, 1.0));
     caseNoise = pow(computeNoise(coverage, noise), 1);
+    let sunCaseNoise = pow(computeNoise(coverage, sunNoise), 1);
 
-    density += getDensity(0.05, caseNoise,  depthFactor * 4);
-    for (var depth: f32 = startDepth; depth < endDepth; depth += stepSize) {
-      let sunTexturePosition: vec3<f32> = rayOrigin + sunRayDirection * depth;
-      let depthFactor =  (depth - startDepth) / (endDepth - startDepth);
-
-      caseNoise = computeNoise(coverage, noise);
-
-      let theta: f32 = dot(normalize(rayDirection), normalize(sunRayDirection));
-
-      light = rayleighScattering(theta);
-      sunDensity += getDensity(0.05, caseNoise, depthFactor);
-    }
-
-    outputColor += clamp(density, 0.0, 1.0) * baseColor + clamp(sunDensity, 0.0, 1.0) * highColor * light * 0.005;
-    outputDensity += clamp(density, 0.0, 0.1 * pow(caseNoise, 1.25));
+    let theta: f32 = dot(normalize(rayDirection), normalize(sunRayDirection));
+    light = rayleighScattering(theta);
+    density += getDensity(0.05, caseNoise,  1 - depthFactor)  * pow(coverage, 2); 
+    sunDensity += getDensity(0.05, sunCaseNoise, depthFactor);
+    outputColor += clamp(density, 0.0, 0.01) * baseColor + clamp(sunDensity, 0.0, 0.05) * highColor * light;
+    outputDensity += clamp(density, 0.0, 0.5 * pow(caseNoise, 4));
     rayOrigin = texturePosition;
   }
 
