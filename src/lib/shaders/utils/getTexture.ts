@@ -74,8 +74,6 @@ export const Get3DTextureFromGribData = async (
     dimension: '3d',
   });
 
-  console.log(encodedRunsArray);
-
   for (let d = 0; d < depth; d++) {
     const encodedRuns = encodedRunsArray[d];
     let index = 0;
@@ -264,12 +262,13 @@ export const GetPartitionedTexture = async (
 export const GetDepthTexture = async (
   device: GPUDevice,
   width: number,
-  height: number
+  height: number,
+  sampleCount: number = 4
 ) => {
   const texture = device.createTexture({
-    size: [width, height],
+    size: [width, height, 1],
     format: 'depth24plus',
-    sampleCount: 4,
+    sampleCount: sampleCount,
     usage:
       GPUTextureUsage.TEXTURE_BINDING |
       GPUTextureUsage.COPY_DST |

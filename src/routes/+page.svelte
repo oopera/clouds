@@ -33,16 +33,7 @@
       <Text tertiary text={'Current Todos'} delay={10} />
       <Layout horizontal gap="1" justify="between">
         <Text secondary delay={6} text={'Improve'} />
-        <Text vertical delay={1} text={'Volumetric Cloud Rendering'} />
-      </Layout>
-      <Layout horizontal gap="1" justify="between">
-        <Text secondary delay={7} text={'Improve'} />
-        <Text vertical delay={2} text={' Dynamic Light and shimmer'} />
-      </Layout>
-
-      <Layout horizontal gap="1" justify="between">
-        <Text secondary delay={8} text={'add'} />
-        <Text vertical delay={3} text={' Cloud Dissapation animation'} />
+        <Text vertical delay={1} text={'...clouds'} />
       </Layout>
       <Layout horizontal gap="1" justify="between">
         <Text secondary delay={9} text={'add'} />
@@ -51,6 +42,10 @@
       <Layout horizontal gap="1" justify="between">
         <Text tertiary delay={10} text={'♡＼(￣▽￣)／♡'} />
         <Text vertical delay={5} text={'Make it cuter'} />
+      </Layout>
+      <Layout horizontal gap="1" justify="between">
+        <Text tertiary delay={10} text={'finished (was dfficult)'} />
+        <Text vertical delay={5} text={'half res clouds!!!'} />
       </Layout>
     </Layout>
   </Layout>
@@ -107,12 +102,19 @@
           options={['day_cycle', 'full_day', 'full_night']}
         />
         <Layout align="end" gap="1" fit horizontal>
-          <Checkbox delay={5} title="clouds" />
+          <Checkbox delay={5} title="mb300" />
           <Checkbox delay={8} title="atmo" />
         </Layout>
 
-        <Range_Input delay={8} title="density" min={0} max={0.1} step={0.005} />
+        <Range_Input delay={8} title="density" min={0} max={0.25} step={0.01} />
 
+        <Range_Input
+          delay={8}
+          title="raymarch_steps"
+          min={1}
+          max={99}
+          step={1}
+        />
         <Range_Input
           delay={8}
           title="rayleigh_intensity"
@@ -124,8 +126,8 @@
           delay={8}
           title="sun_transmittance"
           min={0}
-          max={0.05}
-          step={0.001}
+          max={0.0025}
+          step={0.0001}
         />
         <Range_Input
           delay={8}

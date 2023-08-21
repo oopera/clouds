@@ -17,13 +17,11 @@ import { cloudShader } from './shaders/cloudShader.js';
 
 import {
   GetTexture,
-  GetTextureFromGribData,
   GetPartitionedTexture,
   Get3DNoiseTexture,
   loadBinaryData,
   Create3DTextureFromData,
   Get3DTextureFromGribData,
-  downloadJSONData,
 } from './utils/getTexture.js';
 
 import { GetDepthTexture } from './utils/getTexture.js';
@@ -42,8 +40,10 @@ import { mb900 } from '$lib/assets/mb900.js';
 import { dev } from '$app/environment';
 import { tweened } from 'svelte/motion';
 import { quintIn, quintOut } from 'svelte/easing';
+import { fullScreenQuadShader } from './shaders/quadShader.js';
 
 let depthTexture: GPUTexture;
+let offscreenDepthTexture: GPUTexture;
 
 var hasChanged: HasChanged = {
   numFs: false,
@@ -57,29 +57,41 @@ var hasChanged: HasChanged = {
 };
 
 var options: RenderOptions = {
-  cullmode: 'back',
+  // Booleans
   useTexture: true,
+  depthWriteEnabled: true,
+
+  // Numbers
   numFs: 0,
   rotationSpeed: 0.0025,
   zoom: 1,
   pitch: 0,
   yaw: 0,
+  raymarchSteps: 0,
   density: 0.15,
   sunDensity: 0.5,
   rayleighIntensity: 0.5,
+  scale: 0.0,
+  amountOfVertices: 0,
+
+  // Strings (enum types)
   lightType: 'day_cycle',
+  cloudType: 'cumulus',
+  cullmode: 'back',
+  topology: 'triangle-list',
+
+  // Nested Objects
   layer: {
     mb300: 1,
     mb500: 1,
     mb700: 1,
     atmo: 1,
   },
-  scale: 0.15,
-  cloudType: 'cumulus',
   cameraPosition: { x: 0, y: 0, z: 0 },
-  topology: 'triangle-list',
-  amountOfVertices: 0,
-  depthWriteEnabled: true,
+  coords: {
+    lastX: 0,
+    lastY: 0,
+  },
   blend: {
     color: {
       srcFactor: 'src-alpha',
@@ -92,12 +104,7 @@ var options: RenderOptions = {
       operation: 'add',
     },
   },
-  coords: {
-    lastX: 0,
-    lastY: 0,
-  },
 };
-
 var uniOptions: UniOptions = {
   displacement: 0.0,
   useTexture: true,
@@ -191,7 +198,7 @@ async function InitializeScene() {
   );
   let texture = await executePromise(
     'texture',
-    loadImage('/textures/earth-truecolor.jpg'),
+    loadImage('/textures/nasa-texture.jpg'),
     'texture map'
   );
   let lightmap = await executePromise(
@@ -203,13 +210,20 @@ async function InitializeScene() {
   let noise = await executePromise(
     'noise',
     loadBinaryData('/textures/noise.bin'),
-    'noise texture'
+    '3d noise textures'
+  );
+
+  let blueNoise = await executePromise(
+    'blueNoise',
+    loadImage('/textures/BlueNoise64Tiled.jpg'),
+    'blue noise'
   );
 
   const heightMapV = await GetTexture(device, heightMap);
   const textureV = await GetPartitionedTexture(device, texture);
   const lightMapV = await GetPartitionedTexture(device, lightmap);
   const noiseV = Create3DTextureFromData(device, noise);
+  const blueNoiseV = await GetTexture(device, blueNoise);
 
   let data = await executePromise(
     'sphere',
@@ -317,6 +331,99 @@ async function InitializeScene() {
     // downloadJSONData(mb900R, 'mb900');
   }
 
+  let canvasTexture = context.getCurrentTexture();
+
+  let colorTexture = device.createTexture({
+    size: {
+      width: canvasTexture.width,
+      height: canvasTexture.height,
+    },
+    sampleCount: 4,
+    format: 'bgra8unorm',
+    usage: GPUTextureUsage.RENDER_ATTACHMENT,
+  });
+
+  let offscreenWidth = Math.floor(canvasTexture.width / 2);
+  let offscreenHeight = Math.floor(canvasTexture.height / 2);
+
+  let offscreenTexture = device.createTexture({
+    size: {
+      width: offscreenWidth,
+      height: offscreenHeight,
+    },
+    sampleCount: 4,
+    format: 'bgra8unorm',
+    usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
+  });
+
+  let offscreenTextureResolve = device.createTexture({
+    size: {
+      width: offscreenWidth,
+      height: offscreenHeight,
+    },
+    sampleCount: 1,
+    format: 'bgra8unorm',
+    usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
+  });
+
+  let offscreenDepth = await GetDepthTexture(
+    device,
+    offscreenWidth,
+    offscreenHeight
+  );
+
+  var depth = await GetDepthTexture(
+    device,
+    colorTexture.width,
+    colorTexture.height
+  );
+
+  offscreenDepthTexture = offscreenDepth.texture;
+
+  depthTexture = depth.texture;
+
+  const renderPassDescriptor: GPURenderPassDescriptor = {
+    colorAttachments: [
+      {
+        view: colorTexture.createView(),
+        loadOp: 'clear',
+        storeOp: 'store',
+        resolveTarget: canvasTexture.createView(),
+      },
+    ],
+    depthStencilAttachment: {
+      view: depthTexture.createView(),
+      depthClearValue: 1,
+      depthLoadOp: 'clear',
+      depthStoreOp: 'store',
+    },
+  };
+
+  const offscreenPassDescriptor = {
+    colorAttachments: [
+      {
+        loadOp: 'clear',
+        storeOp: 'store',
+        resolveTarget: offscreenTextureResolve.createView(),
+        view: offscreenTexture.createView(),
+      },
+    ],
+    depthStencilAttachment: {
+      view: offscreenDepthTexture.createView(),
+      depthClearValue: 1,
+      depthLoadOp: 'clear',
+      depthStoreOp: 'store',
+    },
+  };
+
+  const sampler = device.createSampler({
+    magFilter: 'linear',
+    minFilter: 'linear',
+    mipmapFilter: 'linear',
+    addressModeU: 'clamp-to-edge',
+    addressModeV: 'clamp-to-edge',
+  });
+
   const earthBindings = [
     {
       binding: 0,
@@ -392,6 +499,14 @@ async function InitializeScene() {
       binding: 6,
       resource: parsed3DGribTexture.sampler,
     },
+    {
+      binding: 7,
+      resource: blueNoiseV.texture.createView(),
+    },
+    {
+      binding: 8,
+      resource: blueNoiseV.sampler,
+    },
   ];
 
   const atmosphereBindings = [
@@ -427,32 +542,12 @@ async function InitializeScene() {
     device.createShaderModule({ code: cloudShader }),
     {
       ...options,
-      cullmode: 'none',
+      cullmode: 'back',
     },
     presentationFormat
   );
 
   pipeline[2] = CreatePipeline(
-    device,
-    device.createShaderModule({ code: cloudShader }),
-    {
-      ...options,
-      cullmode: 'none',
-    },
-    presentationFormat
-  );
-
-  pipeline[3] = CreatePipeline(
-    device,
-    device.createShaderModule({ code: cloudShader }),
-    {
-      ...options,
-      cullmode: 'none',
-    },
-    presentationFormat
-  );
-
-  pipeline[4] = CreatePipeline(
     device,
     device.createShaderModule({ code: atmosphereShader }),
     {
@@ -461,51 +556,15 @@ async function InitializeScene() {
     presentationFormat
   );
 
-  bindGroup[0] = CreateBindGroup(device, pipeline[0], earthBindings);
-
-  bindGroup[1] = CreateBindGroup(device, pipeline[1], cloudBindings);
-
-  bindGroup[2] = CreateBindGroup(device, pipeline[4], atmosphereBindings);
-
-  let canvasTexture = context.getCurrentTexture();
-
-  let colorTexture = device.createTexture({
-    size: {
-      width: canvasTexture.width,
-      height: canvasTexture.height || 0,
-      depth: undefined,
-    },
-    sampleCount: 4, // the same as your pipeline's sampleCount
-    format: 'bgra8unorm',
-    usage: GPUTextureUsage.RENDER_ATTACHMENT,
-  });
-
-  var depth = await GetDepthTexture(
+  pipeline[3] = CreatePipeline(
     device,
-    colorTexture.width,
-    colorTexture.height
-  );
-
-  depthTexture = depth.texture;
-
-  const renderPassDescriptor: GPURenderPassDescriptor = {
-    colorAttachments: [
-      {
-        view: colorTexture.createView(),
-        loadOp: 'clear',
-        storeOp: 'store',
-        resolveTarget: canvasTexture.createView(),
-      },
-    ],
-    depthStencilAttachment: {
-      view: depthTexture.createView(),
-      depthClearValue: 1,
-      depthLoadOp: 'clear',
-      depthStoreOp: 'store',
+    device.createShaderModule({ code: fullScreenQuadShader }),
+    {
+      ...options,
+      depthWriteEnabled: false,
     },
-  };
-
-  depthTexture.createView();
+    presentationFormat
+  );
 
   buffers[0] = CreateVertexBuffers(device, data);
   WriteVertexBuffers(device, buffers[0][0], buffers[0][1], buffers[0][2], data);
@@ -529,6 +588,7 @@ async function InitializeScene() {
       options.layer.mb300,
       options.density,
       options.sunDensity,
+      options.raymarchSteps,
     ]);
 
     const atmosphereUniValues = new Float32Array([
@@ -576,11 +636,16 @@ async function InitializeScene() {
 
     if (!context) return;
     canvasTexture = context.getCurrentTexture();
+    offscreenWidth = Math.floor(canvasTexture.width / 2);
+    offscreenHeight = Math.floor(canvasTexture.height / 2);
 
     if (hasChanged.resolution) {
       hasChanged.resolution = false;
       depthTexture.destroy();
       colorTexture.destroy();
+      offscreenTexture.destroy();
+      offscreenDepthTexture.destroy();
+      offscreenTextureResolve.destroy();
 
       colorTexture = device.createTexture({
         size: {
@@ -592,11 +657,42 @@ async function InitializeScene() {
         usage: GPUTextureUsage.RENDER_ATTACHMENT,
       });
 
-      var depth = await GetDepthTexture(
+      offscreenTexture = device.createTexture({
+        size: {
+          width: offscreenWidth,
+          height: offscreenHeight,
+          depthOrArrayLayers: 1,
+        },
+        sampleCount: 4,
+        format: 'bgra8unorm',
+        usage:
+          GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
+      });
+
+      offscreenTextureResolve = device.createTexture({
+        size: {
+          width: offscreenWidth,
+          height: offscreenHeight,
+        },
+        sampleCount: 1,
+        format: 'bgra8unorm',
+        usage:
+          GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
+      });
+
+      offscreenDepth = await GetDepthTexture(
+        device,
+        offscreenWidth,
+        offscreenHeight
+      );
+
+      depth = await GetDepthTexture(
         device,
         colorTexture.width,
         colorTexture.height
       );
+
+      offscreenDepthTexture = offscreenDepth.texture;
 
       depthTexture = depth.texture;
     }
@@ -609,7 +705,6 @@ async function InitializeScene() {
         });
 
         tweenedDensity.subscribe((value) => {
-          console.log(value);
           cloudDensity = value;
         });
         tweenedDensity.set(0.0);
@@ -622,7 +717,6 @@ async function InitializeScene() {
         });
 
         tweenedDensity.subscribe((value) => {
-          console.log(value);
           cloudDensity = value;
         });
         tweenedDensity.set(1.0);
@@ -632,7 +726,25 @@ async function InitializeScene() {
 
     bindGroup[0] = CreateBindGroup(device, pipeline[0], earthBindings);
     bindGroup[1] = CreateBindGroup(device, pipeline[1], cloudBindings);
-    bindGroup[2] = CreateBindGroup(device, pipeline[4], atmosphereBindings);
+    bindGroup[2] = CreateBindGroup(device, pipeline[2], atmosphereBindings);
+    bindGroup[3] = CreateBindGroup(device, pipeline[3], [
+      {
+        binding: 0,
+        resource: offscreenTextureResolve.createView(),
+      },
+      {
+        binding: 1,
+        resource: sampler,
+      },
+      {
+        binding: 2,
+        resource: blueNoiseV.texture.createView(),
+      },
+      {
+        binding: 3,
+        resource: blueNoiseV.sampler,
+      },
+    ]);
 
     const colorAttachments =
       renderPassDescriptor.colorAttachments as (GPURenderPassColorAttachment | null)[];
@@ -641,6 +753,13 @@ async function InitializeScene() {
     depthAttachment.view = depthTexture.createView();
     colorAttachment.view = colorTexture.createView();
     colorAttachment.resolveTarget = canvasTexture.createView();
+
+    offscreenPassDescriptor.colorAttachments[0]!.view =
+      offscreenTexture.createView();
+    offscreenPassDescriptor.depthStencilAttachment!.view =
+      offscreenDepthTexture.createView();
+    offscreenPassDescriptor.colorAttachments[0]!.resolveTarget =
+      offscreenTextureResolve.createView();
 
     const vpmatrix = CreateViewProjection(
       canvas.width / canvas.height,
@@ -666,9 +785,7 @@ async function InitializeScene() {
       earthUniValues as ArrayBuffer
     );
     device.queue.writeBuffer(cloudUniBuffer, 0, cloudUniValues as ArrayBuffer);
-
     device.queue.writeBuffer(lightUniBuffer, 0, lightUniValues as ArrayBuffer);
-
     device.queue.writeBuffer(
       atmosphereUniBuffer,
       0,
@@ -680,6 +797,23 @@ async function InitializeScene() {
   }
 
   function draw() {
+    const firstCommandEncoder = device.createCommandEncoder();
+    const passEncoder = firstCommandEncoder.beginRenderPass(
+      offscreenPassDescriptor as GPURenderPassDescriptor
+    );
+    if (options.layer.mb300 > 0) {
+      passEncoder.setPipeline(pipeline[1]);
+      passEncoder.setVertexBuffer(0, buffers[0][0]);
+      passEncoder.setVertexBuffer(1, buffers[0][1]);
+      passEncoder.setVertexBuffer(2, buffers[0][2]);
+      passEncoder.setBindGroup(0, bindGroup[1]);
+
+      passEncoder.draw(options.amountOfVertices);
+    }
+
+    passEncoder.end();
+    device.queue.submit([firstCommandEncoder.finish()]);
+
     const commandEncoder = device.createCommandEncoder();
     const renderPass = commandEncoder.beginRenderPass(
       renderPassDescriptor as GPURenderPassDescriptor
@@ -692,18 +826,14 @@ async function InitializeScene() {
     renderPass.setBindGroup(0, bindGroup[0]);
 
     renderPass.draw(options.amountOfVertices);
+
     if (options.layer.mb300 > 0) {
-      renderPass.setPipeline(pipeline[1]);
-      renderPass.setVertexBuffer(0, buffers[0][0]);
-      renderPass.setVertexBuffer(1, buffers[0][1]);
-      renderPass.setVertexBuffer(2, buffers[0][2]);
-      renderPass.setBindGroup(0, bindGroup[1]);
-
-      renderPass.draw(options.amountOfVertices);
+      renderPass.setPipeline(pipeline[3]);
+      renderPass.setBindGroup(0, bindGroup[3]);
+      renderPass.draw(6);
     }
-
     if (options.layer.atmo > 0) {
-      renderPass.setPipeline(pipeline[4]);
+      renderPass.setPipeline(pipeline[2]);
       renderPass.setVertexBuffer(0, buffers[0][0]);
       renderPass.setVertexBuffer(1, buffers[0][1]);
       renderPass.setVertexBuffer(2, buffers[0][2]);

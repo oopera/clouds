@@ -13,6 +13,7 @@ import {
   density,
   sun_transmittance,
   rayleigh_intensity,
+  raymarch_steps,
 } from '$lib/stores/stores';
 import type { HasChanged, RenderOptions } from '$lib/types/types';
 import { quintOut } from 'svelte/easing';
@@ -34,6 +35,10 @@ export default function InitStores(
     if (!isFirstInvocation) {
       hasChanged.numFs = true;
     }
+  });
+
+  raymarch_steps.subscribe((value) => {
+    options.raymarchSteps = value;
   });
 
   light_type.subscribe((value) => {
