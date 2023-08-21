@@ -198,7 +198,7 @@ async function InitializeScene() {
   );
   let texture = await executePromise(
     'texture',
-    loadImage('/textures/earth-truecolor.jpg'),
+    loadImage('/textures/nasa-texture.jpg'),
     'texture map'
   );
   let lightmap = await executePromise(
@@ -498,6 +498,14 @@ async function InitializeScene() {
     {
       binding: 6,
       resource: parsed3DGribTexture.sampler,
+    },
+    {
+      binding: 7,
+      resource: blueNoiseV.texture.createView(),
+    },
+    {
+      binding: 8,
+      resource: blueNoiseV.sampler,
     },
   ];
 
