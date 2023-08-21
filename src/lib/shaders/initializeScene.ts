@@ -198,7 +198,7 @@ async function InitializeScene() {
   );
   let texture = await executePromise(
     'texture',
-    loadImage('/textures/earth-truecolor.jpg'),
+    loadImage('/textures/nasa-texture.jpg'),
     'texture map'
   );
   let lightmap = await executePromise(

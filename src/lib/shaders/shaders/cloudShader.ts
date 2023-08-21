@@ -86,14 +86,14 @@ fn computeNoise(coverage: f32, noise: vec4<f32>) -> f32 {
   let worley_s = noise.b;
   let billowy = noise.a;
 
-  let bar1 = 0.1;
-  let bar2 = 0.2;
+  let bar1 = 0.2;
+  let bar2 = 0.3;
   let bar3 = 0.4;
   let bar4 = 0.6;
   let bar5 = 0.8;
 
   if coverage <= bar1 {
-      return 0.0;
+      return pow(smoothstep(0, 0.3, coverage),2);
   } else if coverage <= bar2 {
       return perlin * smoothstep(bar1, bar2, coverage);
   } else if coverage <= bar3 {
@@ -188,7 +188,7 @@ fn getDensity(molarAbsorptivity: f32, concentration: f32, pathLength: f32) -> f3
     light = mieScattering(theta) * lightUniforms.rayleighIntensity;
     sunDensity += getDensity(cloudUniforms.sunDensity, sunCaseNoise, depthFactor);
   }
-    outputColor += clamp(density, 0.0, 0.25 + 1 - coverage) * clamp(sunDensity, 0.0, 0.25) * highColor * light;
+    outputColor += clamp(density, 0.0, 0.25 + 1 - coverage) * clamp(sunDensity, 0.0, 0.25 + 1 - coverage) * highColor * light;
     outputDensity += clamp(density, 0.0, 0.5 * pow(caseNoise, 4));
     rayOrigin = texturePosition;
   }
