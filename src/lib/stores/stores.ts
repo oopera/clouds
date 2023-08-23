@@ -5,13 +5,13 @@ export const amount_of_points = writable(250);
 export const scale = writable(0.05);
 export const density = writable(0.15);
 export const sun_transmittance = writable(0.05);
-export const rayleigh_intensity = writable(0.05);
+export const rayleigh_intensity = writable(0.3);
 export const raymarch_length = writable(0.0001);
 export const light_type = writable<'day_cycle' | 'full_day' | 'full_night'>(
   'day_cycle'
 );
-export const raymarch_steps = writable(45);
-export const rotation_speed = writable(2.0);
+export const raymarch_steps = writable(60);
+export const rotation_speed = writable(0.0);
 export const use_texture = writable(true);
 export const wireframe = writable(false);
 export const mb300 = writable(1);

@@ -114,20 +114,9 @@ fn getCoverage(p: vec3<f32>, paradepth: f32) -> f32 {
   var longitude: f32 = atan2(position.z, position.x) / (2.0 *  PI);
   let latitude: f32 = acos(position.y / radius) / PI;
 
-  // VISUAL CONFIRMATION: 
-  // 0.0 | 0.1 - 0.2 | 0.3 - 0.9 | 1.0
 
   var depth: f32 = paradepth;
 
-  // if(paradepth < 0.25){
-  //   depth = 0.0;
-  // } else if(paradepth < 0.5){
-  //   depth = smoothstep(0.1, 0.2, paradepth);
-  // } else if(paradepth < 0.75){
-  //   depth = smoothstep(0.3, 0.9, paradepth);
-  // } else if(paradepth < 1.0){
-  //   depth = 1.0;
-  // }
   
   return textureSample(cloud_texture, cloud_sampler, vec3<f32>(longitude, latitude, depth)).r;
 }
@@ -153,6 +142,7 @@ fn getDensity(molarAbsorptivity: f32, concentration: f32, pathLength: f32) -> f3
   var sunDensity: f32 = 0.0;
   var density: f32 = 0.0;
   var noise : vec4<f32>;
+  var theta: f32;
 
   var coverage: f32;
 
@@ -174,23 +164,22 @@ fn getDensity(molarAbsorptivity: f32, concentration: f32, pathLength: f32) -> f3
     let texturePosition: vec3<f32> = rayOrigin + rayDirection * depth;
     let depthFactor =  (depth - startDepth) / (endDepth - startDepth);
 
-    let sunTexturePosition: vec3<f32> = texturePosition + sunRayDirection * depth;
-    let sunNoise = getNoise(sunTexturePosition, vec3<f32>(1.0, 1.0, 1.0));
-  
     coverage = getCoverage(texturePosition, depthFactor);
     noise = getNoise(texturePosition, vec3<f32>(1.0, 1.0, 1.0));
     caseNoise = pow(computeNoise(coverage, noise), 1);
     density += getDensity(cloudUniforms.density, caseNoise, depthFactor); 
 
-
-
-    let sunCaseNoise = pow(computeNoise(sunNoise.r, sunNoise), 1);
-    let theta: f32 = dot(normalize(rayDirection), normalize(sunRayDirection));
+    for(var i = 0.0; i < 5.0; i += 1.0){
+    let sunTexturePosition: vec3<f32> = texturePosition + sunRayDirection * i;
+    noise = getNoise(sunTexturePosition, vec3<f32>(1.0, 1.0, 1.0));
+    theta = dot(normalize(rayDirection), normalize(sunRayDirection));
     light = mieScattering(theta) * lightUniforms.rayleighIntensity;
-    sunDensity += getDensity(cloudUniforms.sunDensity, sunCaseNoise, depthFactor);
+    sunDensity += getDensity(cloudUniforms.sunDensity, noise.r, depthFactor);
+
+    }
   
-    outputColor += clamp(density, 0.0, 0.25 + 1 - coverage) * clamp(sunDensity, 0.0, 0.25 + 1 - coverage) * highColor * light;
-    outputDensity += clamp(density, 0.0, 0.5 * pow(caseNoise, 4));
+    outputColor += density * sunDensity * highColor * light;
+    outputDensity += density;
     rayOrigin = texturePosition;
   }
 
@@ -213,26 +202,3 @@ fn getDensity(molarAbsorptivity: f32, concentration: f32, pathLength: f32) -> f3
   return vec4<f32>(outputColor, outputDensity) * cloudUniforms.visibility * lightness;
 }
 `;
-
-// for (var depth: f32 = startDepth; depth < endDepth; depth += stepSize) {
-//   let texturePosition: vec3<f32> = rayOrigin + rayDirection * depth;
-//   let depthFactor =  (depth - startDepth) / (endDepth - startDepth);
-
-//   coverage = getCoverage(texturePosition, depthFactor);
-//   noise = getNoise(texturePosition, vec3<f32>(1.0, 1.0, 1.0));
-//   caseNoise = pow(computeNoise(coverage, noise), 1);
-//   density += getDensity(cloudUniforms.density, caseNoise, depthFactor);
-
-//   for (var depth: f32 = startDepth; depth < endDepth; depth += stepSize * cloudUniforms.raymarchSteps / 10) {
-//   let sunTexturePosition: vec3<f32> = rayOrigin + sunRayDirection * depth;
-//   let sunNoise = getNoise(sunTexturePosition, vec3<f32>(1.0, 1.0, 1.0));
-
-//   let sunCaseNoise = pow(computeNoise(sunNoise.r, sunNoise), 1);
-//   let theta: f32 = dot(normalize(rayDirection), normalize(sunRayDirection));
-//   light = mieScattering(theta) * lightUniforms.rayleighIntensity;
-//   sunDensity += getDensity(cloudUniforms.sunDensity, sunCaseNoise, depthFactor);
-// }
-//   outputColor += clamp(density, 0.0, 0.25 + 1 - coverage) * clamp(sunDensity, 0.0, 0.25 + 1 - coverage) * highColor * light;
-//   outputDensity += clamp(density, 0.0, 0.5 * pow(caseNoise, 4));
-//   rayOrigin = texturePosition;
-// }

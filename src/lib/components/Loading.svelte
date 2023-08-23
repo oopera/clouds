@@ -17,7 +17,7 @@
   {#each Object.values(loadedItems) as { id, status, message, progress }}
     <Layout horizontal align="center" justify="start" gap="2">
       <Layout horizontal align="start" justify="between" gap="2">
-        <Text vertical delay={id} type="p" text={message} />
+        <Text vertical delay={id} text={message} />
         <Text
           vertical
           text={progress + '%'}
