@@ -24,7 +24,6 @@
           secondary={progress !== 100}
           tertiary={progress === 100}
           delay={id + 1}
-          type="p"
         />
       </Layout>
       {#if status}

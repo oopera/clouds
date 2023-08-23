@@ -14,7 +14,8 @@ export type Stores =
   | 'sun_transmittance'
   | 'rayleigh_intensity'
   | 'atmo'
-  | 'mb300';
+  | 'mb300'
+  | 'raymarch_length';
 
 export interface RenderOptions {
   // Booleans
@@ -31,6 +32,7 @@ export interface RenderOptions {
   density: number;
   sunDensity: number;
   rayleighIntensity: number;
+  raymarchLength: number;
   scale: number;
   amountOfVertices: number;
 

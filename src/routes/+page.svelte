@@ -50,48 +50,47 @@
     </Layout>
   </Layout>
 
-  <Layout horizontal padding="m" justify="between">
-    <Zoom_Indicator />
-    <Axis_Indicator />
-  </Layout>
-
   <Layout padding="m" horizontal justify="between" align="end" gap="2">
-    <Layout align="start" gap="0" fit>
-      <Text tertiary text={'B.sc. Human Computer Interaction'} delay={10} />
-      <Layout horizontal gap="1" justify="start">
-        <Text nowrap secondary delay={11} text={'Frontend:'} />
-        <Text vertical delay={15} text={'Sveltekit'} />
-      </Layout>
-      <Layout horizontal gap="1" justify="start">
-        <Text nowrap secondary delay={12} text={'Backend:'} />
-        <Text vertical delay={16} text={' Vercel Serverless'} />
+    <Layout align="start" gap="10" fit>
+      <Zoom_Indicator />
+      <Axis_Indicator />
+      <Layout align="start" gap="0" fit>
+        <Text tertiary text={'B.sc. Human Computer Interaction'} delay={10} />
+        <Layout horizontal gap="1" justify="start">
+          <Text nowrap secondary delay={11} text={'Frontend:'} />
+          <Text vertical delay={15} text={'Sveltekit'} />
+        </Layout>
+        <Layout horizontal gap="1" justify="start">
+          <Text nowrap secondary delay={12} text={'Backend:'} />
+          <Text vertical delay={16} text={' Vercel Serverless'} />
 
-        <Link href="https://lucaslichner.de">
-          <Text tertiary vertical delay={19} text={'[go-grib2]'} /></Link
-        >
-      </Layout>
-      <Layout horizontal gap="1" justify="start">
-        <Text nowrap secondary delay={13} text={'Data:'} />
-        <Text vertical delay={17} text={'nomads.ncep.noaa.gov'} />
-        <Text vertical tertiary delay={20} text={'[0.25 hourly TCDC]'} />
-      </Layout>
-      <Layout horizontal gap="1" justify="start">
-        <Text nowrap secondary delay={14} text={'Render:'} />
-        <Text vertical delay={18} text={'Webgpu'} />
-      </Layout>
-      <Layout horizontal justify="start" gap="1">
-        <Link href="https://lucaslichner.de">
-          <Text
-            nowrap
-            accent
-            vertical
-            delay={25}
-            text={'Lucas Lichner.'}
-          /></Link
-        >
-        <Link href="https://github.com/oopera/clouds">
-          <Text nowrap accent vertical delay={28} text={'GitHub.'} /></Link
-        >
+          <Link href="https://lucaslichner.de">
+            <Text tertiary vertical delay={19} text={'[go-grib2]'} /></Link
+          >
+        </Layout>
+        <Layout horizontal gap="1" justify="start">
+          <Text nowrap secondary delay={13} text={'Data:'} />
+          <Text vertical delay={17} text={'nomads.ncep.noaa.gov'} />
+          <Text vertical tertiary delay={20} text={'[0.25 hourly TCDC]'} />
+        </Layout>
+        <Layout horizontal gap="1" justify="start">
+          <Text nowrap secondary delay={14} text={'Render:'} />
+          <Text vertical delay={18} text={'Webgpu'} />
+        </Layout>
+        <Layout horizontal justify="start" gap="1">
+          <Link href="https://lucaslichner.de">
+            <Text
+              nowrap
+              accent
+              vertical
+              delay={25}
+              text={'Lucas Lichner.'}
+            /></Link
+          >
+          <Link href="https://github.com/oopera/clouds">
+            <Text nowrap accent vertical delay={28} text={'GitHub.'} /></Link
+          >
+        </Layout>
       </Layout>
     </Layout>
     <Layout align="end" gap="2" fit horizontal>
@@ -106,8 +105,14 @@
           <Checkbox delay={8} title="atmo" />
         </Layout>
 
-        <Range_Input delay={8} title="density" min={0} max={0.25} step={0.01} />
-
+        <Range_Input delay={8} title="density" min={0} max={0.5} step={0.01} />
+        <Range_Input
+          delay={8}
+          title="raymarch_length"
+          min={0.00001}
+          max={0.005}
+          step={0.0001}
+        />
         <Range_Input
           delay={8}
           title="raymarch_steps"
@@ -136,7 +141,6 @@
           max={5}
           step={0.25}
         />
-        <Range_Input delay={9} title="scale" min={0.05} max={2.0} step={0.05} />
       </Layout>
 
       <Zoom_Input delay={10} />

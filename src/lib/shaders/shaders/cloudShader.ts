@@ -12,6 +12,7 @@ struct CloudUniforms {
   density : f32,
   sunDensity : f32,
   raymarchSteps : f32,
+  raymarchLength : f32,
 }
 
 struct LightUniforms {
@@ -159,7 +160,7 @@ fn getDensity(molarAbsorptivity: f32, concentration: f32, pathLength: f32) -> f3
   var light: f32 = 1.0;
   var caseNoise: f32;
 
-  let stepSize: f32 = 0.001; 
+  let stepSize: f32 = cloudUniforms.raymarchLength; 
   let startDepth: f32 =  cloudUniforms.radius; 
   let endDepth: f32 =  startDepth + (cloudUniforms.raymarchSteps  * stepSize); 
 

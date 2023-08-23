@@ -130,7 +130,7 @@
     </div>
     {#if mounted && !loaded}
       <span class="loading">
-        <Text vertical type="p" delay={4} secondary={true} text={'loading'} />
+        <Text vertical delay={4} secondary={true} text={'loading'} />
       </span>
     {/if}
   </span>
@@ -139,10 +139,9 @@
 {#if deviceFailed}
   <span class="error">
     <Layout>
-      <Text vertical type="p" delay={4} text={'Attaching to GPU Failed.'} />
+      <Text vertical delay={4} text={'Attaching to GPU Failed.'} />
       <Text
         vertical
-        type="p"
         tertiary
         delay={4}
         text={'You need to use Chrome 113 onwards.'}

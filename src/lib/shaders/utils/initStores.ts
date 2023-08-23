@@ -14,6 +14,7 @@ import {
   sun_transmittance,
   rayleigh_intensity,
   raymarch_steps,
+  raymarch_length,
 } from '$lib/stores/stores';
 import type { HasChanged, RenderOptions } from '$lib/types/types';
 import { quintOut } from 'svelte/easing';
@@ -55,6 +56,10 @@ export default function InitStores(
 
   rayleigh_intensity.subscribe((value) => {
     options.rayleighIntensity = value;
+  });
+
+  raymarch_length.subscribe((value) => {
+    options.raymarchLength = value;
   });
 
   cameraposition.subscribe((value) => {
