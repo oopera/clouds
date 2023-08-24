@@ -250,7 +250,7 @@
     left: 50%;
     z-index: 0;
     transform: translate(calc(-50%), calc(-50%));
-    transition: all 350ms ease;
+    transition: all 350ms var(--ease);
   }
   .crosshair__vertical {
     width: 1px;
@@ -266,7 +266,7 @@
     left: 50%;
     z-index: 0;
     transform: translate(calc(-50%), calc(-50%));
-    transition: all 350ms ease;
+    transition: all 350ms var(--ease);
   }
 
   .loaded_hor {
@@ -305,7 +305,7 @@
     height: fit-content;
     width: fit-content;
     top: 50%;
-    transition: 350ms ease;
+    transition: 350ms var(--ease);
     transform: translateY(-50%);
     font-family: 'Cirka';
     font-size: 36px;

@@ -7,14 +7,18 @@
   export let short: boolean = false;
   export let fit: boolean = false;
   export let marginTop: boolean = false;
+  export let stretch: boolean = false;
+  export let swap: boolean = false;
 </script>
 
 <div
-  class="layout gap-{gap} align-{align} justify-{justify} pad-{padding}"
+  class="gap-{gap} align-{align} justify-{justify} pad-{padding}"
   class:horizontal
   class:short
   class:fit
   class:margin-top={marginTop}
+  class:stretch
+  class:swap
 >
   <slot />
 </div>
@@ -22,7 +26,7 @@
 <style lang="scss">
   @import '$lib/styles/mixins.scss';
 
-  .layout {
+  div {
     position: relative;
     display: flex;
     flex-direction: column;
@@ -40,7 +44,19 @@
   }
 
   .short {
-    max-width: 512px;
+    max-width: 256px;
+  }
+
+  .swap {
+    flex-direction: column;
+    @include m {
+      flex-direction: row;
+    }
+  }
+
+  .stretch {
+    align-self: stretch;
+    flex: 2;
   }
 
   .pad-0 {

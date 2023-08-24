@@ -7,10 +7,10 @@
   });
 </script>
 
-<canvas class="canvas" id="canvas" />
+<canvas id="canvas" />
 
 <style>
-  .canvas {
+  canvas {
     position: fixed;
     left: 0;
     top: 0;

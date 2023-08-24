@@ -108,7 +108,7 @@ $gap: 8px;
   text-decoration: none;
   color: var(--c-accent);
   accent-color: var(--c-accent);
-  transition: color 0.2s ease-in-out;
+  transition: color 0.2s var(--ease);
   z-index: 1;
 
   &:hover {

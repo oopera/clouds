@@ -35,6 +35,7 @@
       rgba(33, 33, 39, 0.05) 30%,
       rgba(0, 0, 0, 0) 50%
     );
+    backdrop-filter: blur(24px);
   }
 
   .crosshair {
@@ -86,7 +87,7 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    /* transition: 150ms ease-in-out; */
+    /* transition: 150ms var(--ease); */
   }
   .circle:nth-child(2) {
     width: calc(100% - (32px * var(--z)));

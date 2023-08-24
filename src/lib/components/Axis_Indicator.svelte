@@ -1,10 +1,8 @@
 <script lang="ts">
-  import Text from '$lib/components/Text.svelte';
   import { zoom, pitch, yaw } from '$lib/stores/stores';
-  import Layout from './Layout.svelte';
 </script>
 
-<div id="hud" class="viewfinder">
+<div class="viewfinder">
   <div class="hud">
     <div class="crosshair">
       <div style="--z:{$yaw + 'deg'}" class="crosshair__horizontal" />
@@ -32,6 +30,7 @@
       rgba(0, 0, 0, 0) 50%
     );
     display: flex;
+    backdrop-filter: blur(24px);
   }
   .hud {
     width: 100%;

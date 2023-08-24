@@ -54,13 +54,13 @@
     height: 1px;
     background-color: white;
     --offset: 4px;
-    transition: 150ms ease;
+    transition: 150ms var(--ease);
   }
   .crosshair-edge {
     position: absolute;
     width: 4px;
     height: 4px;
-    transition: 150ms ease;
+    transition: 150ms var(--ease);
   }
 
   .crosshair-line:nth-child(1) {

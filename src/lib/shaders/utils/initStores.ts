@@ -10,7 +10,7 @@ import {
   pitch,
   rotation_speed,
   yaw,
-  density,
+  cloud_density,
   sun_transmittance,
   rayleigh_intensity,
   raymarch_steps,
@@ -46,8 +46,8 @@ export default function InitStores(
     options.lightType = value;
   });
 
-  density.subscribe((value) => {
-    options.density = value;
+  cloud_density.subscribe((value) => {
+    options.cloudDensity = value;
   });
 
   sun_transmittance.subscribe((value) => {

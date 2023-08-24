@@ -3,8 +3,8 @@ import { derived, writable, type Writable } from 'svelte/store';
 
 export const amount_of_points = writable(250);
 export const scale = writable(0.05);
-export const density = writable(0.15);
-export const sun_transmittance = writable(0.05);
+export const cloud_density = writable(0.15);
+export const sun_transmittance = writable(0.015);
 export const rayleigh_intensity = writable(0.3);
 export const raymarch_length = writable(0.0001);
 export const light_type = writable<'day_cycle' | 'full_day' | 'full_night'>(

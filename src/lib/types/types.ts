@@ -10,7 +10,7 @@ export type Stores =
 
   // Light and atmosphere related
   | 'light_type'
-  | 'density'
+  | 'cloud_density'
   | 'sun_transmittance'
   | 'rayleigh_intensity'
   | 'atmo'
@@ -29,7 +29,7 @@ export interface RenderOptions {
   pitch: number;
   yaw: number;
   raymarchSteps: number;
-  density: number;
+  cloudDensity: number;
   sunDensity: number;
   rayleighIntensity: number;
   raymarchLength: number;

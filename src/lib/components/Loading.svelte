@@ -5,11 +5,16 @@
   import Layout from './Layout.svelte';
   import { quintOut } from 'svelte/easing';
   import { fly } from 'svelte/transition';
+  import { onMount } from 'svelte';
 
   let loadedItems: LoadingStore;
-
+  let mounted: boolean = false;
   loading.subscribe((value: LoadingStore) => {
     loadedItems = value;
+  });
+
+  onMount(() => {
+    mounted = true;
   });
 </script>
 
@@ -26,8 +31,8 @@
           delay={id + 1}
         />
       </Layout>
-      {#if status}
-        <div
+      {#if status && mounted}
+        <span
           in:fly={{
             delay: id + 2 * 125,
             duration: 350,
@@ -40,7 +45,6 @@
             x: 15,
             easing: quintOut,
           }}
-          class="indicator"
         />
       {/if}
     </Layout>
@@ -49,14 +53,15 @@
 
 <style lang="scss">
   @import '$lib/styles/mixins.scss';
-  .indicator {
+
+  span {
     right: calc(gap(1) * -1);
     position: absolute;
     width: gap(0.5);
     height: gap(0.5);
     border-radius: 50%;
     background-color: var(--c-accent);
-    animation: blink 350ms ease infinite;
+    animation: blink 350ms var(--ease) infinite;
   }
 
   @keyframes blink {
