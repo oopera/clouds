@@ -141,7 +141,7 @@ fn getDensity(molarAbsorptivity: f32, concentration: f32, pathLength: f32) -> f3
   
   var sunDensity: f32 = 0.0;
   var density: f32 = 0.0;
-  var noise : vec4<f32>;
+  var noise : vec4<f32> =  getNoise(rayOrigin, vec3<f32>(1.0, 1.0, 1.0));;
   var theta: f32;
 
   var coverage: f32;
@@ -169,10 +169,9 @@ fn getDensity(molarAbsorptivity: f32, concentration: f32, pathLength: f32) -> f3
     caseNoise = pow(computeNoise(coverage, noise), 1);
     density += getDensity(cloudUniforms.density, caseNoise, depthFactor); 
 
-    for(var i = 0.0; i < 5.0; i += 1.0){
+    for(var i = 0.0; i < 1.0; i += 0.2){
     let sunTexturePosition: vec3<f32> = texturePosition + sunRayDirection * i;
-    noise = getNoise(sunTexturePosition, vec3<f32>(1.0, 1.0, 1.0));
-    theta = dot(normalize(rayDirection), normalize(sunRayDirection));
+    theta = dot(normalize(texturePosition), normalize(sunRayDirection));
     light = mieScattering(theta) * lightUniforms.rayleighIntensity;
     sunDensity += getDensity(cloudUniforms.sunDensity, noise.r, depthFactor);
 
