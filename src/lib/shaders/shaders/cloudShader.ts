@@ -109,6 +109,7 @@ fn computeNoise(coverage: f32, noise: vec4<f32>) -> f32 {
   }
 }
 
+
 fn getCoverage(p: vec3<f32>, depth: f32) -> f32 {
   let radius: f32 = 1 + cloudUniforms.radius;
   let position = normalize(p) * radius;
@@ -170,15 +171,16 @@ fn ReMap(value: f32, old_low: f32, old_high: f32, new_low: f32, new_high: f32) -
 
     density += getDensity(cloudUniforms.density, noisedcoverage, ReMap(depth, startDepth, endDepth, .0, 1.0)); 
     
-    for(var i = 0.0; i < 1.0; i += 0.2){
+    for(var i = 0.0; i < 0.5; i += 0.1){
     let sunTexturePosition: vec3<f32> = texturePosition + sunRayDirection * i;
 
     coverage = getCoverage(texturePosition, ReMap(depth, startDepth, endDepth, 0.0, 1.0));
     noise = getNoise(texturePosition, vec3<f32>(1.0, 1.0, 1.0));
     noisedcoverage = computeNoise(coverage, noise);
+
     theta = dot(normalize(texturePosition), normalize(sunRayDirection));
 
-    light = rayleighScattering(theta) * lightUniforms.rayleighIntensity;
+    light = mieScattering(theta) * lightUniforms.rayleighIntensity;
     sunDensity += getDensity(cloudUniforms.sunDensity,noisedcoverage, ReMap(depth, startDepth, endDepth, .0, 1.0));
     }
   

@@ -110,8 +110,8 @@
           delay={8}
           title="raymarch_length"
           min={0.00001}
-          max={0.005}
-          step={0.0001}
+          max={0.0025}
+          step={0.00005}
         />
         <Range_Input
           delay={8}
@@ -131,8 +131,8 @@
           delay={8}
           title="sun_transmittance"
           min={0}
-          max={0.005}
-          step={0.0001}
+          max={0.05}
+          step={0.001}
         />
         <Range_Input
           delay={8}
