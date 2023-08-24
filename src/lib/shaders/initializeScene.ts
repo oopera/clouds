@@ -590,6 +590,7 @@ async function InitializeScene() {
       options.sunDensity,
       options.raymarchSteps,
       options.raymarchLength,
+      elapsed,
     ]);
 
     const atmosphereUniValues = new Float32Array([
