@@ -15,6 +15,7 @@
   import Radio_Button from '$lib/components/Radio_Button.svelte';
   import Link from '$lib/components/Link.svelte';
   import Tag from '$lib/components/Tag.svelte';
+  import DateInput from '$lib/components/Date_Input.svelte';
 
   inject({ mode: dev ? 'development' : 'production' });
 </script>
@@ -34,8 +35,9 @@
         <Text text="all systems operational" />
         <span data-indicator />
       </Tag>
-      <Text tertiary text={new Date().toISOString()} delay={10} />
 
+      <Text tertiary text={new Date().toISOString()} delay={10} />
+      <DateInput />
       <Radio_Button
         delay={5}
         title="light_type"
@@ -166,5 +168,8 @@
     flex-direction: column;
     align-items: flex-start;
     justify-content: space-between;
+  }
+  span {
+    background-color: var(--c-g);
   }
 </style>

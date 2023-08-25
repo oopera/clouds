@@ -19,9 +19,11 @@
   onMount(async () => {
     store = await import(`../stores/stores.js`).then((m) => m[title]);
     if (!store) return;
-    mounted = true;
   });
 
+  onMount(() => {
+    mounted = true;
+  });
   const handleInput = (e: Event) => {
     if (!store) return;
     store.set(Number((e.target as HTMLInputElement).value));
@@ -89,7 +91,7 @@
     background-color: var(--c-tertiary);
     left: calc(var(--i) * (100% / var(--steps)));
 
-    transition: height 350ms var(--ease);
+    transition: 350ms var(--ease);
   }
   .even {
     background-color: var(--c-tertiary);
