@@ -55,13 +55,7 @@
   @import '$lib/styles/mixins.scss';
 
   span {
-    right: calc(gap(1) * -1);
-    position: absolute;
-    width: gap(0.5);
-    height: gap(0.5);
-    border-radius: 50%;
-    background-color: var(--c-accent);
-    animation: blink 350ms var(--ease) infinite;
+    @include indicator;
   }
 
   @keyframes blink {

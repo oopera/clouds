@@ -102,9 +102,6 @@
     class="slider"
     id="zoom-input"
   />
-  <span class="rotate">
-    <Text delay={delay + indicatorArray.length} text={`zoom`} />
-  </span>
 </div>
 
 <style lang="scss">
@@ -119,8 +116,7 @@
     display: flex;
     height: fit-content;
     z-index: 1;
-    width: 45px;
-    border-right: 1pt dashed white;
+    width: 15px;
 
     &__bar {
       display: flex;

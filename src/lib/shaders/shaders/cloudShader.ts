@@ -181,10 +181,10 @@ fn ReMap(value: f32, old_low: f32, old_high: f32, new_low: f32, new_high: f32) -
     theta = dot(normalize(texturePosition), normalize(sunRayDirection));
 
     light = mieScattering(theta) * lightUniforms.rayleighIntensity;
-    sunDensity += getDensity(cloudUniforms.sunDensity,noisedcoverage, ReMap(depth, startDepth, endDepth, .0, 1.0));
+    sunDensity += getDensity(cloudUniforms.sunDensity,noisedcoverage, ReMap(depth, startDepth, endDepth, .0, 1.0))  * light;
     }
   
-    outputColor += density * sunDensity * highColor * light * acos(cloudUniforms.elapsedTime / 100); 
+    outputColor += density * sunDensity * highColor; 
     outputDensity += density;
     rayOrigin = texturePosition;
   }

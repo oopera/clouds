@@ -1,20 +1,20 @@
 <script lang="ts">
+  import '$lib/styles/style.scss';
+  import { dev } from '$app/environment';
+  import { inject } from '@vercel/analytics';
+
   import Canvas from '$lib/components/Canvas.svelte';
   import Range_Input from '$lib/components/Range_Input.svelte';
-  import '$lib/styles/style.scss';
   import Cursor from '$lib/components/Cursor.svelte';
   import Zoom_Input from '$lib/components/Zoom_Input.svelte';
-  import Zoom_Indicator from '$lib/components/Zoom_Indicator.svelte';
   import Loading from '$lib/components/Loading.svelte';
   import Axis_Indicator from '$lib/components/Axis_Indicator.svelte';
   import Logo from '$lib/components/Logo.svelte';
-  import { dev } from '$app/environment';
-  import { inject } from '@vercel/analytics';
   import Layout from '$lib/components/Layout.svelte';
   import Text from '$lib/components/Text.svelte';
   import Radio_Button from '$lib/components/Radio_Button.svelte';
   import Link from '$lib/components/Link.svelte';
-  import Checkbox from '$lib/components/Checkbox.svelte';
+  import Tag from '$lib/components/Tag.svelte';
 
   inject({ mode: dev ? 'development' : 'production' });
 </script>
@@ -29,15 +29,23 @@
 <main>
   <Layout padding="m" horizontal justify="between" align="start" gap="2">
     <Loading />
-    <Layout align="end" gap="0" fit>
+    <Layout align="end" gap="1" fit>
+      <Tag>
+        <Text text="all systems operational" />
+        <span data-indicator />
+      </Tag>
       <Text tertiary text={new Date().toISOString()} delay={10} />
+
+      <Radio_Button
+        delay={5}
+        title="light_type"
+        options={['day_cycle', 'full_day', 'full_night']}
+      />
     </Layout>
   </Layout>
 
   <Layout padding="m" horizontal justify="between" align="end" gap="2">
-    <Layout align="start" gap="10" fit>
-      <Zoom_Indicator />
-      <Axis_Indicator />
+    <Layout align="start" gap="6" fit>
       <Layout align="start" gap="0" fit>
         <Text tertiary text={'B.sc. Human Computer Interaction'} delay={10} />
         <Layout horizontal gap="1" justify="start">
@@ -85,6 +93,7 @@
         </Layout>
       </Layout>
     </Layout>
+    <Axis_Indicator />
     <Layout align="end" gap="2" fit horizontal>
       <!-- <Layout align="end" gap="1" fit horizontal>
           <Checkbox delay={5} title="mb300" />
@@ -92,11 +101,6 @@
         </Layout> -->
 
       <Layout align="end" gap="1" fit>
-        <Radio_Button
-          delay={5}
-          title="light_type"
-          options={['day_cycle', 'full_day', 'full_night']}
-        />
         <Range_Input
           delay={8}
           title="cloud_density"
@@ -118,7 +122,7 @@
           max={99}
           step={1}
         />
-        <Text tertiary vertical delay={9} text={'FORM'} />
+        <Text accent vertical delay={9} text={'FORM'} />
 
         <Range_Input
           delay={8}
@@ -134,7 +138,7 @@
           max={0.025}
           step={0.0005}
         />
-        <Text tertiary vertical delay={9} text={'LIGHT'} />
+        <Text accent vertical delay={9} text={'LIGHT'} />
         <Range_Input
           delay={8}
           title="rotation_speed"
@@ -142,7 +146,7 @@
           max={5}
           step={0.25}
         />
-        <Text tertiary vertical delay={9} text={'CAMERA'} />
+        <Text accent vertical delay={9} text={'CAMERA'} />
       </Layout>
 
       <Zoom_Input delay={10} />

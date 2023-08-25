@@ -44,6 +44,7 @@ body {
   --c-blue: #00215f;
   --c-mint: #65c6b3;
   --c-accent: #dbf75f;
+  --c-accent-dark: #718129;
   --c-accent-hover: var(--c-tertiary);
   --font-size-xs: 12px;
   --font-size-xl: 76px;
@@ -121,6 +122,10 @@ h1 {
 p {
   @include type-xs;
   text-transform: capitalize;
+}
+
+[data-indicator] {
+  @include indicator;
 }
 
 button {
