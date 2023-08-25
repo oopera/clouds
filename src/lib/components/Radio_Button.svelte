@@ -25,26 +25,31 @@
   };
 </script>
 
-<Layout fit align="center" justify="between" gap="0">
-  {#each options as text, i}
-    <Layout horizontal align="center" justify="between" gap="2">
-      <input
-        data-interactable
-        id={text}
-        title={text}
-        value={text}
-        checked={value === text}
-        on:input={handleInput}
-        type="radio"
-        class="radio"
-      />
-      <Text tertiary={value === text} delay={delay + i} {text} />
-    </Layout>
-  {/each}
-</Layout>
+<div>
+  <Layout fit align="center" justify="between" gap="0">
+    {#each options as text, i}
+      <Layout horizontal align="center" justify="between" gap="2">
+        <input
+          data-interactable
+          id={text}
+          title={text}
+          value={text}
+          checked={value === text}
+          on:input={handleInput}
+          type="radio"
+          class="radio"
+        />
+        <Text tertiary={value === text} delay={delay + i} {text} />
+      </Layout>
+    {/each}
+  </Layout>
+</div>
 
 <style>
-  .radio {
+  div {
+    z-index: 1;
+  }
+  input {
     height: 24px;
     width: 24px;
     background: radial-gradient(
@@ -61,7 +66,7 @@
     position: relative;
     border: 1pt solid var(--c-g);
   }
-  .radio::before {
+  input::before {
     transition: 350ms all;
     content: '';
     width: 1px;
@@ -77,7 +82,7 @@
     left: 50%;
     transform: translate(-50%, -50%);
   }
-  .radio::after {
+  input::after {
     transition: 350ms all;
     content: '';
     width: 80%;
@@ -94,12 +99,12 @@
     transform: translate(-50%, -50%);
   }
 
-  .radio:checked::before {
+  input:checked::before {
     width: 16px;
     height: 16px;
   }
 
-  .radio:checked::after {
+  input:checked::after {
     width: 20px;
     height: 20px;
     border-radius: 40px;

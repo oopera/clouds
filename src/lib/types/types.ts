@@ -10,11 +10,12 @@ export type Stores =
 
   // Light and atmosphere related
   | 'light_type'
-  | 'density'
+  | 'cloud_density'
   | 'sun_transmittance'
   | 'rayleigh_intensity'
   | 'atmo'
-  | 'mb300';
+  | 'mb300'
+  | 'raymarch_length';
 
 export interface RenderOptions {
   // Booleans
@@ -28,9 +29,10 @@ export interface RenderOptions {
   pitch: number;
   yaw: number;
   raymarchSteps: number;
-  density: number;
+  cloudDensity: number;
   sunDensity: number;
   rayleighIntensity: number;
+  raymarchLength: number;
   scale: number;
   amountOfVertices: number;
 

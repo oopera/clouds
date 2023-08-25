@@ -77,14 +77,9 @@
 <div class="zoom" style="--zoom: {$zoom};">
   <div class="zoom__bar">
     {#each indicatorArray as i}
-      <div
-        style="--i: {i}; "
-        class="zoom__indicator {$zoom - 1.25 >= i && $zoom - 1.25 <= i + 1
-          ? 'current'
-          : ''}"
-      >
+      <div style="--i: {i}; " class="zoom__indicator">
         <Text
-          tertiary={$zoom - 1.25 >= i && $zoom - 1.25 <= i + 1}
+          tertiary={($zoom - 2.25) * 2 >= i && ($zoom - 2.25) * 2 <= i + 1}
           text={`${i.toFixed(4)}`}
           delay={i + delay}
           mini
@@ -107,9 +102,6 @@
     class="slider"
     id="zoom-input"
   />
-  <span class="rotate">
-    <Text delay={delay + indicatorArray.length} text={`zoom`} />
-  </span>
 </div>
 
 <style lang="scss">
@@ -123,8 +115,8 @@
     align-items: center;
     display: flex;
     height: fit-content;
-    width: fit-content;
     z-index: 1;
+    width: 15px;
 
     &__bar {
       display: flex;
@@ -137,7 +129,6 @@
       pointer-events: none;
       overflow: hidden;
       outline: none;
-      backdrop-filter: blur(24px);
     }
     &__indicator {
       position: relative;

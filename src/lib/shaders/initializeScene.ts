@@ -68,8 +68,9 @@ var options: RenderOptions = {
   pitch: 0,
   yaw: 0,
   raymarchSteps: 0,
-  density: 0.15,
+  cloudDensity: 0.15,
   sunDensity: 0.5,
+  raymarchLength: 0.0001,
   rayleighIntensity: 0.5,
   scale: 0.0,
   amountOfVertices: 0,
@@ -586,9 +587,11 @@ async function InitializeScene() {
     const cloudUniValues = new Float32Array([
       0.02 * options.scale,
       options.layer.mb300,
-      options.density,
+      options.cloudDensity,
       options.sunDensity,
       options.raymarchSteps,
+      options.raymarchLength,
+      elapsed,
     ]);
 
     const atmosphereUniValues = new Float32Array([
@@ -797,22 +800,22 @@ async function InitializeScene() {
   }
 
   function draw() {
-    const firstCommandEncoder = device.createCommandEncoder();
-    const passEncoder = firstCommandEncoder.beginRenderPass(
-      offscreenPassDescriptor as GPURenderPassDescriptor
-    );
-    if (options.layer.mb300 > 0) {
-      passEncoder.setPipeline(pipeline[1]);
-      passEncoder.setVertexBuffer(0, buffers[0][0]);
-      passEncoder.setVertexBuffer(1, buffers[0][1]);
-      passEncoder.setVertexBuffer(2, buffers[0][2]);
-      passEncoder.setBindGroup(0, bindGroup[1]);
+    // const firstCommandEncoder = device.createCommandEncoder();
+    // const passEncoder = firstCommandEncoder.beginRenderPass(
+    //   offscreenPassDescriptor as GPURenderPassDescriptor
+    // );
+    // if (options.layer.mb300 > 0) {
+    //   passEncoder.setPipeline(pipeline[1]);
+    //   passEncoder.setVertexBuffer(0, buffers[0][0]);
+    //   passEncoder.setVertexBuffer(1, buffers[0][1]);
+    //   passEncoder.setVertexBuffer(2, buffers[0][2]);
+    //   passEncoder.setBindGroup(0, bindGroup[1]);
 
-      passEncoder.draw(options.amountOfVertices);
-    }
+    //   passEncoder.draw(options.amountOfVertices);
+    // }
 
-    passEncoder.end();
-    device.queue.submit([firstCommandEncoder.finish()]);
+    // passEncoder.end();
+    // device.queue.submit([firstCommandEncoder.finish()]);
 
     const commandEncoder = device.createCommandEncoder();
     const renderPass = commandEncoder.beginRenderPass(
@@ -828,9 +831,13 @@ async function InitializeScene() {
     renderPass.draw(options.amountOfVertices);
 
     if (options.layer.mb300 > 0) {
-      renderPass.setPipeline(pipeline[3]);
-      renderPass.setBindGroup(0, bindGroup[3]);
-      renderPass.draw(6);
+      renderPass.setPipeline(pipeline[1]);
+      renderPass.setVertexBuffer(0, buffers[0][0]);
+      renderPass.setVertexBuffer(1, buffers[0][1]);
+      renderPass.setVertexBuffer(2, buffers[0][2]);
+      renderPass.setBindGroup(0, bindGroup[1]);
+
+      renderPass.draw(options.amountOfVertices);
     }
     if (options.layer.atmo > 0) {
       renderPass.setPipeline(pipeline[2]);

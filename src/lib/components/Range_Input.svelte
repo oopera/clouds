@@ -14,10 +14,12 @@
   let steps: number = (max - min) / step;
   let text: Stores = title;
   let store: any;
+  let mounted: boolean = false;
 
   onMount(async () => {
     store = await import(`../stores/stores.js`).then((m) => m[title]);
     if (!store) return;
+    mounted = true;
   });
 
   const handleInput = (e: Event) => {
@@ -30,14 +32,17 @@
   }
 </script>
 
-<div class="range-input-container">
+<div class="range-input">
   <Layout gap="1" align="end" justify="between">
-    {#each Array.from({ length: steps }, (_, i) => i + 1) as step}
-      <div
-        class="step {step % 2 === 0 ? 'even' : 'odd'}"
-        style="--i: {step}; --steps: {steps}"
-      />
-    {/each}
+    {#if mounted}
+      {#each Array.from({ length: steps }, (_, i) => i + 1) as step}
+        <div
+          class="step {step % 2 === 0 ? 'even' : 'odd'}"
+          style="--i: {step}; --steps: {steps}"
+          class:mounted
+        />
+      {/each}
+    {/if}
     <input
       data-interactable
       {disabled}
@@ -48,7 +53,6 @@
       value={$store}
       on:input={handleInput}
       type="range"
-      class="slider"
     />
 
     <Layout horizontal gap="1" align="end" justify="between">
@@ -61,14 +65,14 @@
 </div>
 
 <style lang="scss">
-  .range-input-container {
+  .range-input {
     min-width: 144px;
     white-space: nowrap;
     box-sizing: border-box;
     z-index: 2;
   }
 
-  .slider {
+  input {
     appearance: none;
     -webkit-appearance: none;
     height: 100%;
@@ -79,35 +83,44 @@
 
   .step {
     position: absolute;
-    height: 16px;
+    height: 0px;
     width: 1px;
-    top: 8px;
+    top: 13px;
     background-color: var(--c-tertiary);
     left: calc(var(--i) * (100% / var(--steps)));
+
+    transition: height 350ms var(--ease);
   }
   .even {
     background-color: var(--c-tertiary);
-    height: 8px;
-    top: 12px;
+    height: 0px;
+    top: 10px;
   }
-  .slider:focus {
+  .mounted.even {
+    height: 8px;
+  }
+
+  .mounted.odd {
+    height: 4px;
+  }
+  input:focus {
     outline: none;
   }
 
-  .slider::-webkit-slider-runnable-track {
+  input::-webkit-slider-runnable-track {
     width: 100%;
     height: 24px;
     // padding: 0 8px 0 8px;
   }
-  .slider::-webkit-slider-thumb {
-    animation: blink2 1.5s ease-in-out infinite alternate;
+  input::-webkit-slider-thumb {
+    animation: blink2 1.5s var(--ease) infinite alternate;
     height: 24px;
     width: 24px;
     border-radius: 15px;
     border: 1pt solid var(--c-g);
     -webkit-appearance: none;
     margin-top: 4px;
-    transition: 100ms ease-in;
+    transition: 100ms var(--ease);
     transform-origin: center;
     backdrop-filter: blur(8px);
     background: radial-gradient(
@@ -117,8 +130,8 @@
       rgba(0, 0, 0, 0) 100%
     );
   }
-  .slider:hover::-webkit-slider-thumb,
-  .slider:focus-visible::-webkit-slider-thumb {
+  input:hover::-webkit-slider-thumb,
+  input:focus-visible::-webkit-slider-thumb {
     height: 24px;
     width: 24px;
     margin-top: 4px;

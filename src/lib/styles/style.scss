@@ -44,11 +44,14 @@ body {
   --c-blue: #00215f;
   --c-mint: #65c6b3;
   --c-accent: #dbf75f;
+  --c-accent-dark: #718129;
   --c-accent-hover: var(--c-tertiary);
   --font-size-xs: 12px;
   --font-size-xl: 76px;
 
   --font-family-mono: 'Supply', monospace;
+
+  --ease: cubic-bezier(0.215, 0.61, 0.355, 1);
 
   padding: 0;
   margin: 0;
@@ -119,6 +122,10 @@ h1 {
 p {
   @include type-xs;
   text-transform: capitalize;
+}
+
+[data-indicator] {
+  @include indicator;
 }
 
 button {

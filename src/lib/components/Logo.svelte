@@ -130,7 +130,7 @@
     </div>
     {#if mounted && !loaded}
       <span class="loading">
-        <Text vertical type="p" delay={4} secondary={true} text={'loading'} />
+        <Text vertical delay={4} secondary={true} text={'loading'} />
       </span>
     {/if}
   </span>
@@ -139,10 +139,9 @@
 {#if deviceFailed}
   <span class="error">
     <Layout>
-      <Text vertical type="p" delay={4} text={'Attaching to GPU Failed.'} />
+      <Text vertical delay={4} text={'Attaching to GPU Failed.'} />
       <Text
         vertical
-        type="p"
         tertiary
         delay={4}
         text={'You need to use Chrome 113 onwards.'}
@@ -251,7 +250,7 @@
     left: 50%;
     z-index: 0;
     transform: translate(calc(-50%), calc(-50%));
-    transition: all 350ms ease;
+    transition: all 350ms var(--ease);
   }
   .crosshair__vertical {
     width: 1px;
@@ -267,7 +266,7 @@
     left: 50%;
     z-index: 0;
     transform: translate(calc(-50%), calc(-50%));
-    transition: all 350ms ease;
+    transition: all 350ms var(--ease);
   }
 
   .loaded_hor {
@@ -306,7 +305,7 @@
     height: fit-content;
     width: fit-content;
     top: 50%;
-    transition: 350ms ease;
+    transition: 350ms var(--ease);
     transform: translateY(-50%);
     font-family: 'Cirka';
     font-size: 36px;

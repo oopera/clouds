@@ -25,22 +25,27 @@
   };
 </script>
 
-<Layout gap="1">
-  <input
-    data-interactable
-    class="checkbox"
-    checked={$store}
-    type="checkbox"
-    {title}
-    {id}
-    on:input={handleInput}
-  />
+<div>
+  <Layout gap="1">
+    <input
+      data-interactable
+      class="checkbox"
+      checked={$store}
+      type="checkbox"
+      {title}
+      {id}
+      on:input={handleInput}
+    />
 
-  <Text secondary={!$store} vertical {delay} text={title} nowrap />
-</Layout>
+    <Text secondary={!$store} vertical {delay} text={title} nowrap />
+  </Layout>
+</div>
 
 <style>
-  .checkbox {
+  div {
+    z-index: 1;
+  }
+  input {
     position: relative;
     -webkit-appearance: none;
     appearance: none;
@@ -64,7 +69,7 @@
     border: 1pt solid var(--c-g);
   }
 
-  .checkbox::before {
+  input::before {
     transition: 350ms all;
     content: '';
     width: 1px;
@@ -80,7 +85,7 @@
     left: 50%;
     transform: translate(-50%, -50%);
   }
-  .checkbox::after {
+  input::after {
     transition: 350ms all;
     content: '';
     width: 80%;
@@ -97,13 +102,13 @@
     transform: translate(-50%, -50%);
   }
 
-  .checkbox:checked::before {
+  input:checked::before {
     width: 22px;
     height: 22px;
     border-radius: 24px;
   }
 
-  .checkbox:checked::after {
+  input:checked::after {
     width: 22px;
     height: 22px;
     border-radius: 40px;

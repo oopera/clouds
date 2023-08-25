@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { quintOut } from 'svelte/easing';
   import { fly } from 'svelte/transition';
+  import { cubicBezier } from '$lib/stores/easing';
 
   export let delay: number = 0;
   export let secondary = false;
@@ -34,14 +34,14 @@
           duration: 350,
           x: vertical ? -15 : 0,
           y: !vertical ? -15 : 0,
-          easing: quintOut,
+          easing: cubicBezier,
         }}
         out:fly={{
           delay: 1 * 125 + i * 25,
           duration: 350,
           x: vertical ? 15 : 0,
           y: !vertical ? 15 : 0,
-          easing: quintOut,
+          easing: cubicBezier,
         }}
       >
         {letter === ' ' ? '\u00A0' : letter}
@@ -68,7 +68,7 @@
     max-width: 16px;
   }
   span {
-    transition: color 128ms ease-in-out;
+    transition: color 128ms var(--ease);
     will-change: color;
   }
   .nowrap {

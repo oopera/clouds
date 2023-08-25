@@ -1,14 +1,13 @@
 <script lang="ts">
-  export let href: string = '/';
 </script>
 
-<a data-interactable target="_blank" {href}>
+<span>
   <slot />
-</a>
+</span>
 
 <style lang="scss">
   @import '$lib/styles/mixins.scss';
-  a {
-    @include link;
+  span {
+    @include tag;
   }
 </style>

@@ -1,20 +1,20 @@
 <script lang="ts">
+  import '$lib/styles/style.scss';
+  import { dev } from '$app/environment';
+  import { inject } from '@vercel/analytics';
+
   import Canvas from '$lib/components/Canvas.svelte';
   import Range_Input from '$lib/components/Range_Input.svelte';
-  import '$lib/styles/style.scss';
   import Cursor from '$lib/components/Cursor.svelte';
   import Zoom_Input from '$lib/components/Zoom_Input.svelte';
-  import Zoom_Indicator from '$lib/components/Zoom_Indicator.svelte';
   import Loading from '$lib/components/Loading.svelte';
   import Axis_Indicator from '$lib/components/Axis_Indicator.svelte';
   import Logo from '$lib/components/Logo.svelte';
-  import { dev } from '$app/environment';
-  import { inject } from '@vercel/analytics';
   import Layout from '$lib/components/Layout.svelte';
   import Text from '$lib/components/Text.svelte';
   import Radio_Button from '$lib/components/Radio_Button.svelte';
   import Link from '$lib/components/Link.svelte';
-  import Checkbox from '$lib/components/Checkbox.svelte';
+  import Tag from '$lib/components/Tag.svelte';
 
   inject({ mode: dev ? 'development' : 'production' });
 </script>
@@ -26,88 +26,95 @@
 <Cursor />
 <Logo />
 
-<main class="main">
+<main>
   <Layout padding="m" horizontal justify="between" align="start" gap="2">
     <Loading />
-    <Layout align="end" gap="0" fit>
-      <Text tertiary text={'Current Todos'} delay={10} />
-      <Layout horizontal gap="1" justify="between">
-        <Text secondary delay={6} text={'Improve'} />
-        <Text vertical delay={1} text={'...clouds'} />
-      </Layout>
-      <Layout horizontal gap="1" justify="between">
-        <Text secondary delay={9} text={'add'} />
-        <Text vertical delay={4} text={'User Date Input'} />
-      </Layout>
-      <Layout horizontal gap="1" justify="between">
-        <Text tertiary delay={10} text={'♡＼(￣▽￣)／♡'} />
-        <Text vertical delay={5} text={'Make it cuter'} />
-      </Layout>
-      <Layout horizontal gap="1" justify="between">
-        <Text tertiary delay={10} text={'finished (was dfficult)'} />
-        <Text vertical delay={5} text={'half res clouds!!!'} />
-      </Layout>
-    </Layout>
-  </Layout>
+    <Layout align="end" gap="1" fit>
+      <Tag>
+        <Text text="all systems operational" />
+        <span data-indicator />
+      </Tag>
+      <Text tertiary text={new Date().toISOString()} delay={10} />
 
-  <Layout horizontal padding="m" justify="between">
-    <Zoom_Indicator />
-    <Axis_Indicator />
+      <Radio_Button
+        delay={5}
+        title="light_type"
+        options={['day_cycle', 'full_day', 'full_night']}
+      />
+    </Layout>
   </Layout>
 
   <Layout padding="m" horizontal justify="between" align="end" gap="2">
-    <Layout align="start" gap="0" fit>
-      <Text tertiary text={'B.sc. Human Computer Interaction'} delay={10} />
-      <Layout horizontal gap="1" justify="start">
-        <Text nowrap secondary delay={11} text={'Frontend:'} />
-        <Text vertical delay={15} text={'Sveltekit'} />
-      </Layout>
-      <Layout horizontal gap="1" justify="start">
-        <Text nowrap secondary delay={12} text={'Backend:'} />
-        <Text vertical delay={16} text={' Vercel Serverless'} />
+    <Layout align="start" gap="6" fit>
+      <Layout align="start" gap="0" fit>
+        <Text tertiary text={'B.sc. Human Computer Interaction'} delay={10} />
+        <Layout horizontal gap="1" justify="start">
+          <Text nowrap secondary delay={11} text={'Frontend:'} />
+          <Text vertical delay={15} text={'Sveltekit'} />
+        </Layout>
+        <Layout horizontal gap="1" justify="start">
+          <Text nowrap secondary delay={12} text={'Backend:'} />
+          <Text vertical delay={16} text={' Vercel Serverless'} />
 
-        <Link href="https://lucaslichner.de">
-          <Text tertiary vertical delay={19} text={'[go-grib2]'} /></Link
-        >
-      </Layout>
-      <Layout horizontal gap="1" justify="start">
-        <Text nowrap secondary delay={13} text={'Data:'} />
-        <Text vertical delay={17} text={'nomads.ncep.noaa.gov'} />
-        <Text vertical tertiary delay={20} text={'[0.25 hourly TCDC]'} />
-      </Layout>
-      <Layout horizontal gap="1" justify="start">
-        <Text nowrap secondary delay={14} text={'Render:'} />
-        <Text vertical delay={18} text={'Webgpu'} />
-      </Layout>
-      <Layout horizontal justify="start" gap="1">
-        <Link href="https://lucaslichner.de">
-          <Text
-            nowrap
-            accent
-            vertical
-            delay={25}
-            text={'Lucas Lichner.'}
-          /></Link
-        >
-        <Link href="https://github.com/oopera/clouds">
-          <Text nowrap accent vertical delay={28} text={'GitHub.'} /></Link
-        >
+          <Link href="https://github.com/amsokol/go-grib2">
+            <Text tertiary vertical delay={19} text={'[go-grib2]'} /></Link
+          >
+        </Layout>
+        <Layout horizontal gap="1" justify="start">
+          <Text nowrap secondary delay={13} text={'Data:'} />
+          <Text vertical delay={17} text={'nomads.ncep.noaa.gov'} />
+
+          <Link href="https://nomads.ncep.noaa.gov/gribfilter.php?ds=gdas_0p25">
+            <Text
+              vertical
+              tertiary
+              delay={20}
+              text={'[0.25 hourly TCDC]'}
+            /></Link
+          >
+        </Layout>
+        <Layout horizontal gap="1" justify="start">
+          <Text nowrap secondary delay={14} text={'Render:'} />
+          <Text vertical delay={18} text={'Webgpu'} />
+        </Layout>
+        <Layout horizontal justify="start" gap="1">
+          <Link href="https://lucaslichner.de">
+            <Text
+              nowrap
+              accent
+              vertical
+              delay={25}
+              text={'Lucas Lichner.'}
+            /></Link
+          >
+          <Link href="https://github.com/oopera/clouds">
+            <Text nowrap accent vertical delay={28} text={'GitHub.'} /></Link
+          >
+        </Layout>
       </Layout>
     </Layout>
+    <Axis_Indicator />
     <Layout align="end" gap="2" fit horizontal>
-      <Layout align="end" gap="1" fit>
-        <Radio_Button
-          delay={5}
-          title="light_type"
-          options={['day_cycle', 'full_day', 'full_night']}
-        />
-        <Layout align="end" gap="1" fit horizontal>
+      <!-- <Layout align="end" gap="1" fit horizontal>
           <Checkbox delay={5} title="mb300" />
           <Checkbox delay={8} title="atmo" />
-        </Layout>
+        </Layout> -->
 
-        <Range_Input delay={8} title="density" min={0} max={0.25} step={0.01} />
-
+      <Layout align="end" gap="1" fit>
+        <Range_Input
+          delay={8}
+          title="cloud_density"
+          min={0}
+          max={0.5}
+          step={0.01}
+        />
+        <Range_Input
+          delay={8}
+          title="raymarch_length"
+          min={0.00001}
+          max={0.0025}
+          step={0.00005}
+        />
         <Range_Input
           delay={8}
           title="raymarch_steps"
@@ -115,6 +122,8 @@
           max={99}
           step={1}
         />
+        <Text accent vertical delay={9} text={'FORM'} />
+
         <Range_Input
           delay={8}
           title="rayleigh_intensity"
@@ -126,9 +135,10 @@
           delay={8}
           title="sun_transmittance"
           min={0}
-          max={0.0025}
-          step={0.0001}
+          max={0.025}
+          step={0.0005}
         />
+        <Text accent vertical delay={9} text={'LIGHT'} />
         <Range_Input
           delay={8}
           title="rotation_speed"
@@ -136,7 +146,7 @@
           max={5}
           step={0.25}
         />
-        <Range_Input delay={9} title="scale" min={0.05} max={2.0} step={0.05} />
+        <Text accent vertical delay={9} text={'CAMERA'} />
       </Layout>
 
       <Zoom_Input delay={10} />
@@ -148,7 +158,7 @@
 
 <style lang="scss">
   @import '$lib/styles/mixins.scss';
-  .main {
+  main {
     overflow: hidden;
     position: relative;
     display: flex;

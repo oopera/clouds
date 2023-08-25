@@ -1,10 +1,15 @@
 <script lang="ts">
-  import Text from '$lib/components/Text.svelte';
   import { zoom, pitch, yaw } from '$lib/stores/stores';
-  import Layout from './Layout.svelte';
 </script>
 
-<div id="hud" class="viewfinder">
+<div class="viewfinder">
+  {#each Array.from(Array(181)) as _, i}
+    <div class={`viewfinder__tick ${i % 10 === 0 ? 'even' : 'odd'}`}>
+      {#if i % 10 === 0}
+        <div class="viewfinder__tick__text">{i}</div>
+      {/if}
+    </div>
+  {/each}
   <div class="hud">
     <div class="crosshair">
       <div style="--z:{$yaw + 'deg'}" class="crosshair__horizontal" />
@@ -19,12 +24,13 @@
 
 <style lang="scss">
   .viewfinder {
+    margin-bottom: 24px;
     width: 160px;
     height: 160px;
     aspect-ratio: 1/1;
     border-radius: 150px;
     z-index: 1;
-    position: relative;
+    position: absolute;
     background: radial-gradient(
       circle,
       rgba(0, 33, 95, 0.25) 0%,
@@ -32,6 +38,48 @@
       rgba(0, 0, 0, 0) 50%
     );
     display: flex;
+    backdrop-filter: blur(24px);
+    pointer-events: all;
+    left: 50%;
+    transform: translateX(-50%);
+
+    transition: box-shadow 350ms var(--ease);
+    &:hover {
+      .viewfinder__tick__text {
+        opacity: 1;
+      }
+    }
+  }
+
+  .viewfinder__tick {
+    width: 12px;
+    height: 1px;
+    background: var(--c-tertiary);
+    position: absolute;
+    top: 50%; /* Center vertically */
+    left: 50%; /* Center horizontally */
+    transform-origin: top left;
+  }
+  .viewfinder__tick__text {
+    color: var(--c-tertiary);
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    font-size: 10px;
+    transform: translateX(8px) translateY(-15px) rotate(0deg);
+    font-family: var(--font-family-mono);
+    opacity: 0.5;
+    transition: opacity var(--ease) 350ms;
+  }
+  .odd {
+    width: 8px;
+    background: var(--c-secondary);
+  }
+
+  @for $i from 1 through 360 {
+    .viewfinder__tick:nth-of-type(#{$i}) {
+      transform: rotate(calc(1deg * #{$i})) translateX(80px);
+    }
   }
   .hud {
     width: 100%;
@@ -113,18 +161,18 @@
   }
 
   .circle:nth-child(2) {
-    border: 1.25pt solid var(--c-g);
+    border: 1pt solid var(--c-tertiary);
     transform: translate(-50%, -50%) rotate3d(0, 1, 0, calc(var(--z)))
       scale(calc(2 - (var(--zo) / 5)));
   }
 
   .circle:nth-child(3) {
-    border: 1.25pt solid var(--c-g);
+    border: 1pt solid var(--c-tertiary);
     transform: translate(-50%, -50%) rotate3d(0, 0, 1, var(--z))
       scale(calc(2 - (var(--zo) / 5)));
   }
   .circle:nth-child(4) {
-    border: 1.25pt solid var(--c-g);
+    border: 1pt solid var(--c-tertiary);
     transform: translate(-50%, -50%) rotate3d(1, 1, 1, calc(var(--z)))
       scale(calc(2 - (var(--zo) / 5)));
   }

@@ -108,14 +108,45 @@ $gap: 8px;
   text-decoration: none;
   color: var(--c-accent);
   accent-color: var(--c-accent);
-  transition: color 0.2s ease-in-out;
+  transition: color 0.2s var(--ease);
   z-index: 1;
 
   &:hover {
     color: var(--c-accent-hover);
   }
   &::visited {
-    color: var(--c-accent);
-    accent-color: var(--c-accent);
+    color: var(--c-accent-dark);
+    accent-color: var(--c-accent-dark);
+  }
+}
+
+@mixin tag {
+  display: flex;
+  align-items: center;
+  background-color: var(--c-accent);
+  color: var(--c-g);
+  padding: gap(0.5) gap(1);
+  border-radius: 24px;
+}
+
+@mixin indicator {
+  right: calc(gap(1) * -1);
+  position: absolute;
+  width: gap(0.5);
+  height: gap(0.5);
+  border-radius: 50%;
+  background-color: var(--c-accent);
+  animation: blink 350ms var(--ease) infinite;
+}
+
+@keyframes blink {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
   }
 }
