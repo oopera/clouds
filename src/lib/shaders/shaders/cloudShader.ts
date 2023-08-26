@@ -208,10 +208,6 @@ fn convertUVToNormal(uv: vec2<f32>) -> vec3<f32> {
     rayOrigin = texturePosition;
   }
 
-
-
-
-
   let dotProduct = dot(lightUniforms.lightPosition, output.vNormal.xyz);
   let scaledDotProduct: f32 = dotProduct * 10.0;
   var lightness: f32 = 1.0 - (1.0 / (1.0 + exp(-scaledDotProduct)));
@@ -230,7 +226,7 @@ fn convertUVToNormal(uv: vec2<f32>) -> vec3<f32> {
   let normal: vec3<f32> = getNormal(cloudUniforms.interactionx, cloudUniforms.interactiony);
   var distance: f32 = length(output.vNormal.xyz - normal);
 
-  if (distance < 0.5) {
+  if (distance < 0.15) {
     return vec4(0,0,0,0);
   }
 

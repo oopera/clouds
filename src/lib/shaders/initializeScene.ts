@@ -611,7 +611,6 @@ async function InitializeScene() {
     if (!device) return;
     var lightPosition = vec3.create();
     vec3.set(lightPosition, 2 * Math.cos(elapsed), 0.0, 2 * Math.sin(elapsed));
-
     const cloudUniValues = new Float32Array([
       0.02 * options.scale,
       options.layer.mb300,
@@ -619,8 +618,8 @@ async function InitializeScene() {
       options.sunDensity,
       options.raymarchSteps,
       options.raymarchLength,
-      uniOptions.intersection.x,
-      uniOptions.intersection.y,
+      options.coords.x,
+      options.coords.y,
     ]);
 
     const atmosphereUniValues = new Float32Array([

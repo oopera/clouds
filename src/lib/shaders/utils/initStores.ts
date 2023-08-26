@@ -132,6 +132,11 @@ export default function InitStores(
     options.zoom = value;
   });
 
+  mouse_interaction.subscribe((value) => {
+    options.coords.x = -value.u;
+    options.coords.y = value.v;
+  });
+
   const handleScroll = (e: WheelEvent) => {
     e.preventDefault();
 
@@ -145,9 +150,49 @@ export default function InitStores(
     zoom.set(finalZoom);
   };
 
-  window.addEventListener('wheel', handleScroll, { passive: false });
+  const handleTouch = (e: TouchEvent) => {
+    e.preventDefault();
 
-  canvas.addEventListener('mousedown', (e) => {
+    let newZoom = options.zoom + e.touches[0].clientY * 0.0025;
+    if (newZoom > 2.25 && newZoom < 7.25) {
+      newZoom =
+        options.zoom + e.touches[0].clientY * 0.0025 * (options.zoom / 7.25);
+    }
+
+    let finalZoom = Math.max(2.25, Math.min(newZoom, 7.25));
+
+    zoom.set(finalZoom);
+  };
+
+  window.addEventListener('wheel', handleScroll, { passive: false });
+  window.addEventListener('touchmove', handleTouch, { passive: false });
+
+  const handlemouseup = (e: MouseEvent) => {
+    isDragging = false;
+    options.coords.lastX = 0;
+    options.coords.lastY = 0;
+  };
+
+  const handlemousemove = (e: MouseEvent) => {
+    if (isDragging) {
+      var changeX = e.clientX - options.coords.lastX;
+      var changeY = e.clientY - options.coords.lastY;
+
+      var newPitch = options.pitch + 0.1 * changeY * Math.pow(options.zoom, 3);
+      newPitch = Math.max(-89, Math.min(89, newPitch));
+
+      var newYaw = options.yaw - 0.1 * changeX * Math.pow(options.zoom, 3);
+      newYaw = newYaw % 360;
+
+      options.coords.lastX = e.clientX;
+      options.coords.lastY = e.clientY;
+
+      pitch.set(newPitch);
+      yaw.set(newYaw);
+    }
+  };
+
+  const handlemousedown = (e: MouseEvent) => {
     isDragging = true;
     options.coords.lastX = e.clientX;
     options.coords.lastY = e.clientY;
@@ -159,8 +204,6 @@ export default function InitStores(
     );
 
     if (intersection_coords.discriminant > 0) {
-      options.coords.x = -intersection_coords.u;
-      options.coords.y = intersection_coords.v;
       mouse_interaction.set({
         intersected: true,
         x: intersection_coords.u,
@@ -177,30 +220,11 @@ export default function InitStores(
         latitude: 0,
       });
     }
-  });
-  canvas.addEventListener('mouseup', (e) => {
-    isDragging = false;
-    options.coords.lastX = 0;
-    options.coords.lastY = 0;
-  });
-  canvas.addEventListener('mousemove', (e) => {
-    if (isDragging) {
-      var changeX = e.clientX - options.coords.lastX;
-      var changeY = e.clientY - options.coords.lastY;
+  };
 
-      var newPitch = options.pitch + 0.1 * changeY * Math.pow(options.zoom, 2);
-      newPitch = Math.max(-89, Math.min(89, newPitch));
-
-      var newYaw = options.yaw - 0.1 * changeX * Math.pow(options.zoom, 2);
-
-      newYaw = newYaw % 360;
-
-      pitch.set(newPitch);
-      yaw.set(newYaw);
-      options.coords.lastX = e.clientX;
-      options.coords.lastY = e.clientY;
-    }
-  });
+  canvas.addEventListener('mousedown', handlemousedown);
+  canvas.addEventListener('mouseup', handlemouseup);
+  canvas.addEventListener('mousemove', handlemousemove);
 
   isFirstInvocation = false;
 }

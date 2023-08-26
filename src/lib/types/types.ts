@@ -66,6 +66,8 @@ export interface RenderOptions {
   coords: {
     x: number;
     y: number;
+    lastX: number;
+    lastY: number;
   };
 
   // Others
