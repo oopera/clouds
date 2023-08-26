@@ -12,7 +12,7 @@ import {
   CreateTransforms,
 } from './utils/helper/matrixHelper.js';
 import { earthShader } from './shaders/earthShader.js';
-import { yaw, loading } from '$lib/stores/stores.js';
+import { yaw, loading, zoom, pitch } from '$lib/stores/stores.js';
 import { cloudShader } from './shaders/cloudShader.js';
 
 import {
@@ -39,8 +39,9 @@ import { mb900 } from '$lib/assets/mb900.js';
 
 import { dev } from '$app/environment';
 import { tweened } from 'svelte/motion';
-import { quintIn, quintOut } from 'svelte/easing';
+import { quintOut } from 'svelte/easing';
 import { fullScreenQuadShader } from './shaders/quadShader.js';
+import { cubicBezier } from '$lib/stores/easing.js';
 
 let depthTexture: GPUTexture;
 let offscreenDepthTexture: GPUTexture;
@@ -54,6 +55,7 @@ var hasChanged: HasChanged = {
   topology: false,
   cloudType: false,
   resolution: false,
+  projectionDate: false,
 };
 
 var options: RenderOptions = {
@@ -68,12 +70,20 @@ var options: RenderOptions = {
   pitch: 0,
   yaw: 0,
   raymarchSteps: 0,
-  cloudDensity: 0.15,
+  cloudDensity: 1,
   sunDensity: 0.5,
   raymarchLength: 0.0001,
   rayleighIntensity: 0.5,
   scale: 0.0,
   amountOfVertices: 0,
+  halfRes: false,
+  isDragging: false,
+
+  projectionDate: {
+    day: '0',
+    month: '0',
+    year: '0',
+  },
 
   // Strings (enum types)
   lightType: 'day_cycle',
@@ -92,6 +102,8 @@ var options: RenderOptions = {
   coords: {
     lastX: 0,
     lastY: 0,
+    x: 0,
+    y: 0,
   },
   blend: {
     color: {
@@ -118,8 +130,6 @@ var uniOptions: UniOptions = {
 const pipeline: GPURenderPipeline[] = [];
 const bindGroup: GPUBindGroup[] = [];
 const buffers: GPUBuffer[][] = [];
-
-var cloudDensity = 1.0;
 
 var elapsed = -1;
 
@@ -267,10 +277,10 @@ async function InitializeScene() {
   const normalMatrix = mat4.create();
   const modelMatrix = mat4.create();
 
-  const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
-  const dateString = yesterday.toISOString().slice(0, 10).replace(/-/g, '');
-
-  var parsed3DGribTexture;
+  var parsed3DGribTexture: {
+    texture: GPUTexture;
+    sampler: GPUSampler;
+  };
 
   const generateNewNoiseTexture = false;
   var worleyNoiseTexture = noiseV;
@@ -282,14 +292,12 @@ async function InitializeScene() {
     );
   }
 
-  if (dev) {
-    parsed3DGribTexture = await Get3DTextureFromGribData(device, [
-      mb300,
-      mb500,
-      mb700,
-      mb900,
-    ]);
-  } else {
+  const fetchTextures = async () => {
+    const dateString =
+      options.projectionDate.year +
+      options.projectionDate.month +
+      options.projectionDate.day;
+
     const mb300RD = await executePromise(
       'mb300RD',
       fetch(`/api/cloud-texture?level_mb=300_mb&date=${dateString}`),
@@ -325,6 +333,27 @@ async function InitializeScene() {
       mb700R,
       mb900R,
     ]);
+
+    const tweenedDensity = tweened(0.0, {
+      duration: 3500,
+      easing: quintOut,
+    });
+
+    tweenedDensity.subscribe((value) => {
+      options.cloudDensity = value;
+    });
+    tweenedDensity.set(1.0);
+  };
+
+  if (dev) {
+    parsed3DGribTexture = await Get3DTextureFromGribData(device, [
+      mb300,
+      mb500,
+      mb700,
+      mb900,
+    ]);
+  } else {
+    fetchTextures();
 
     // downloadJSONData(mb300R, 'mb300');
     // downloadJSONData(mb500R, 'mb500');
@@ -579,11 +608,14 @@ async function InitializeScene() {
     },
   }));
 
+  zoom.set(2.5);
+  yaw.set(360);
+  pitch.set(45);
+
   async function frame() {
     if (!device) return;
     var lightPosition = vec3.create();
     vec3.set(lightPosition, 2 * Math.cos(elapsed), 0.0, 2 * Math.sin(elapsed));
-
     const cloudUniValues = new Float32Array([
       0.02 * options.scale,
       options.layer.mb300,
@@ -591,12 +623,13 @@ async function InitializeScene() {
       options.sunDensity,
       options.raymarchSteps,
       options.raymarchLength,
-      elapsed,
+      options.coords.x,
+      options.coords.y,
     ]);
 
     const atmosphereUniValues = new Float32Array([
       0.035 * options.scale,
-      cloudDensity,
+      options.cloudDensity,
       options.layer.atmo,
       0.0,
     ]);
@@ -624,11 +657,12 @@ async function InitializeScene() {
 
     elapsed += 0.0005;
 
-    var newYaw = options.yaw + options.rotationSpeed / 250;
-    newYaw = newYaw % 360;
+    if (!options.isDragging) {
+      var newYaw = options.yaw + options.rotationSpeed / 10;
+      newYaw = newYaw % 360;
 
-    yaw.update((n) => (n = newYaw));
-
+      yaw.update((n) => (n = newYaw));
+    }
     const cameraPosition = vec3.create();
     vec3.set(
       cameraPosition,
@@ -700,33 +734,6 @@ async function InitializeScene() {
       depthTexture = depth.texture;
     }
 
-    if (hasChanged.cloudType) {
-      if (cloudDensity === 1.0) {
-        const tweenedDensity = tweened(1.0, {
-          duration: 3500,
-          easing: quintOut,
-        });
-
-        tweenedDensity.subscribe((value) => {
-          cloudDensity = value;
-        });
-        tweenedDensity.set(0.0);
-
-        hasChanged.cloudType = false;
-      } else if (cloudDensity === 0) {
-        const tweenedDensity = tweened(0.0, {
-          duration: 3500,
-          easing: quintIn,
-        });
-
-        tweenedDensity.subscribe((value) => {
-          cloudDensity = value;
-        });
-        tweenedDensity.set(1.0);
-        hasChanged.cloudType = false;
-      }
-    }
-
     bindGroup[0] = CreateBindGroup(device, pipeline[0], earthBindings);
     bindGroup[1] = CreateBindGroup(device, pipeline[1], cloudBindings);
     bindGroup[2] = CreateBindGroup(device, pipeline[2], atmosphereBindings);
@@ -748,6 +755,26 @@ async function InitializeScene() {
         resource: blueNoiseV.sampler,
       },
     ]);
+
+    cloudBindings[5].resource = parsed3DGribTexture.texture.createView({
+      dimension: '3d',
+    });
+
+    if (hasChanged.projectionDate) {
+      hasChanged.projectionDate = false;
+      const tweenedDensity = tweened(options.cloudDensity, {
+        duration: 3500,
+        easing: cubicBezier,
+      });
+
+      tweenedDensity.subscribe((value) => {
+        options.cloudDensity = value;
+      });
+
+      tweenedDensity.set(0.0);
+
+      fetchTextures();
+    }
 
     const colorAttachments =
       renderPassDescriptor.colorAttachments as (GPURenderPassColorAttachment | null)[];
@@ -800,22 +827,24 @@ async function InitializeScene() {
   }
 
   function draw() {
-    // const firstCommandEncoder = device.createCommandEncoder();
-    // const passEncoder = firstCommandEncoder.beginRenderPass(
-    //   offscreenPassDescriptor as GPURenderPassDescriptor
-    // );
-    // if (options.layer.mb300 > 0) {
-    //   passEncoder.setPipeline(pipeline[1]);
-    //   passEncoder.setVertexBuffer(0, buffers[0][0]);
-    //   passEncoder.setVertexBuffer(1, buffers[0][1]);
-    //   passEncoder.setVertexBuffer(2, buffers[0][2]);
-    //   passEncoder.setBindGroup(0, bindGroup[1]);
+    if (options.halfRes) {
+      const firstCommandEncoder = device.createCommandEncoder();
+      const passEncoder = firstCommandEncoder.beginRenderPass(
+        offscreenPassDescriptor as GPURenderPassDescriptor
+      );
+      if (options.layer.mb300 > 0) {
+        passEncoder.setPipeline(pipeline[1]);
+        passEncoder.setVertexBuffer(0, buffers[0][0]);
+        passEncoder.setVertexBuffer(1, buffers[0][1]);
+        passEncoder.setVertexBuffer(2, buffers[0][2]);
+        passEncoder.setBindGroup(0, bindGroup[1]);
 
-    //   passEncoder.draw(options.amountOfVertices);
-    // }
+        passEncoder.draw(options.amountOfVertices);
+      }
 
-    // passEncoder.end();
-    // device.queue.submit([firstCommandEncoder.finish()]);
+      passEncoder.end();
+      device.queue.submit([firstCommandEncoder.finish()]);
+    }
 
     const commandEncoder = device.createCommandEncoder();
     const renderPass = commandEncoder.beginRenderPass(
@@ -831,13 +860,20 @@ async function InitializeScene() {
     renderPass.draw(options.amountOfVertices);
 
     if (options.layer.mb300 > 0) {
-      renderPass.setPipeline(pipeline[1]);
-      renderPass.setVertexBuffer(0, buffers[0][0]);
-      renderPass.setVertexBuffer(1, buffers[0][1]);
-      renderPass.setVertexBuffer(2, buffers[0][2]);
-      renderPass.setBindGroup(0, bindGroup[1]);
+      if (options.halfRes) {
+        renderPass.setPipeline(pipeline[3]);
+        renderPass.setBindGroup(0, bindGroup[3]);
 
-      renderPass.draw(options.amountOfVertices);
+        renderPass.draw(6);
+      } else {
+        renderPass.setPipeline(pipeline[1]);
+        renderPass.setVertexBuffer(0, buffers[0][0]);
+        renderPass.setVertexBuffer(1, buffers[0][1]);
+        renderPass.setVertexBuffer(2, buffers[0][2]);
+        renderPass.setBindGroup(0, bindGroup[1]);
+
+        renderPass.draw(options.amountOfVertices);
+      }
     }
     if (options.layer.atmo > 0) {
       renderPass.setPipeline(pipeline[2]);

@@ -56,6 +56,8 @@
 
   span {
     @include indicator;
+    background-color: var(--c-accent);
+    position: absolute;
   }
 
   @keyframes blink {

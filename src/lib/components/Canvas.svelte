@@ -2,7 +2,10 @@
   import { onMount } from 'svelte';
   import InitializeScene from '$lib/shaders/initializeScene';
 
+  let hasInitialized = false;
   onMount(() => {
+    if (hasInitialized) return;
+    hasInitialized = true;
     InitializeScene();
   });
 </script>

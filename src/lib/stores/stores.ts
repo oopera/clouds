@@ -1,5 +1,7 @@
 import type { LoadingStore } from '$lib/types/types';
 import { derived, writable, type Writable } from 'svelte/store';
+import { cubicBezier } from './easing';
+import { tweened } from 'svelte/motion';
 
 export const amount_of_points = writable(250);
 export const scale = writable(0.05);
@@ -10,20 +12,35 @@ export const raymarch_length = writable(0.0001);
 export const light_type = writable<'day_cycle' | 'full_day' | 'full_night'>(
   'day_cycle'
 );
+export const projection_date = writable({ day: '0', month: '0', year: '0' });
 export const raymarch_steps = writable(60);
 export const rotation_speed = writable(0.0);
 export const use_texture = writable(true);
 export const wireframe = writable(false);
+export const half_res = writable(false);
 export const mb300 = writable(1);
 export const mb500 = writable(1);
 export const mb700 = writable(1);
 export const atmo = writable(1);
 export const cloud = writable(1);
 export const pitch = writable(1);
+export const tweenedPitch = tweened(100, {
+  duration: 250,
+  easing: cubicBezier,
+});
 export const yaw = writable(1);
-export const zoom = writable(1);
+export const tweenedYaw = tweened(100, {
+  duration: 250,
+  easing: cubicBezier,
+});
+export const zoom = writable(25);
+export const tweenedZoom = tweened(25, {
+  duration: 1250,
+  easing: cubicBezier,
+});
+
 export const cameraposition = derived(
-  [pitch, yaw, zoom],
+  [tweenedPitch, tweenedYaw, tweenedZoom],
   ([$pitch, $yaw, $zoom]) => {
     const pitchRadian = ($pitch * Math.PI) / 180;
     const yawRadian = ($yaw * Math.PI) / 180;
@@ -31,7 +48,6 @@ export const cameraposition = derived(
     const x = $zoom * Math.cos(pitchRadian) * Math.sin(yawRadian);
     const y = $zoom * Math.sin(pitchRadian);
     const z = $zoom * Math.cos(pitchRadian) * Math.cos(yawRadian);
-
     return { x, y, z };
   }
 );

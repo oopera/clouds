@@ -42,6 +42,7 @@
     pointer-events: all;
     left: 50%;
     transform: translateX(-50%);
+    box-shadow: inset 0 0 10px 2px var(--c-tertiary);
 
     transition: box-shadow 350ms var(--ease);
     &:hover {
@@ -78,7 +79,8 @@
 
   @for $i from 1 through 360 {
     .viewfinder__tick:nth-of-type(#{$i}) {
-      transform: rotate(calc(1deg * #{$i})) translateX(80px);
+      transform: rotate(calc(0.99447513812154696132596685082873deg * #{$i}))
+        translateX(80px);
     }
   }
   .hud {

@@ -61,7 +61,7 @@ $gap: 8px;
   font-family: var(--font-family-mono);
   font-size: var(--font-size-xs);
   letter-spacing: 0em;
-  line-height: 1em;
+  line-height: 0.9em;
 }
 
 @mixin type-s {
@@ -122,20 +122,22 @@ $gap: 8px;
 
 @mixin tag {
   display: flex;
+
   align-items: center;
   background-color: var(--c-accent);
   color: var(--c-g);
-  padding: gap(0.5) gap(1);
+  padding: 4px 8px;
+  text-align: center;
+  margin: 0;
+  gap: gap(0.5);
   border-radius: 24px;
 }
 
 @mixin indicator {
   right: calc(gap(1) * -1);
-  position: absolute;
   width: gap(0.5);
   height: gap(0.5);
   border-radius: 50%;
-  background-color: var(--c-accent);
   animation: blink 350ms var(--ease) infinite;
 }
 

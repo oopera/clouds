@@ -15,7 +15,9 @@ export type Stores =
   | 'rayleigh_intensity'
   | 'atmo'
   | 'mb300'
-  | 'raymarch_length';
+  | 'raymarch_length'
+  | 'projection_date'
+  | 'half_res';
 
 export interface RenderOptions {
   // Booleans
@@ -35,6 +37,14 @@ export interface RenderOptions {
   raymarchLength: number;
   scale: number;
   amountOfVertices: number;
+  halfRes: boolean;
+  isDragging: boolean;
+
+  projectionDate: {
+    day: string;
+    month: string;
+    year: string;
+  };
 
   // Strings (enum types)
   cullmode: 'none' | 'front' | 'back';
@@ -55,6 +65,8 @@ export interface RenderOptions {
     z: number;
   };
   coords: {
+    x: number;
+    y: number;
     lastX: number;
     lastY: number;
   };
@@ -79,6 +91,7 @@ export interface HasChanged {
   topology: boolean;
   cloudType: boolean;
   resolution: boolean;
+  projectionDate: boolean;
 }
 
 export interface SphereData {

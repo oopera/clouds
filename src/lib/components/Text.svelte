@@ -51,9 +51,19 @@
 </p>
 
 <style lang="scss">
+  p {
+    vertical-align: middle;
+  }
   span {
     display: inline-block;
     position: relative;
+    vertical-align: middle;
+    text-align: center;
+    will-change: transform;
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    transform: translateY(2px);
   }
   .secondary {
     color: var(--c-secondary);
