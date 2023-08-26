@@ -34,7 +34,6 @@ export default function InitStores(
   if (!document) return;
 
   let isFirstInvocation = true;
-  var isDragging = false;
 
   amount_of_points.subscribe((value) => {
     options.numFs = value;
@@ -133,8 +132,8 @@ export default function InitStores(
   });
 
   mouse_interaction.subscribe((value) => {
-    options.coords.x = -value.u;
-    options.coords.y = value.v;
+    options.coords.x = -value.x;
+    options.coords.y = value.y;
   });
 
   const handleScroll = (e: WheelEvent) => {
@@ -168,13 +167,13 @@ export default function InitStores(
   window.addEventListener('touchmove', handleTouch, { passive: false });
 
   const handlemouseup = (e: MouseEvent) => {
-    isDragging = false;
+    options.isDragging = false;
     options.coords.lastX = 0;
     options.coords.lastY = 0;
   };
 
   const handlemousemove = (e: MouseEvent) => {
-    if (isDragging) {
+    if (options.isDragging) {
       var changeX = e.clientX - options.coords.lastX;
       var changeY = e.clientY - options.coords.lastY;
 
@@ -193,7 +192,7 @@ export default function InitStores(
   };
 
   const handlemousedown = (e: MouseEvent) => {
-    isDragging = true;
+    options.isDragging = true;
     options.coords.lastX = e.clientX;
     options.coords.lastY = e.clientY;
 

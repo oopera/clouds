@@ -38,6 +38,7 @@ export interface RenderOptions {
   scale: number;
   amountOfVertices: number;
   halfRes: boolean;
+  isDragging: boolean;
 
   projectionDate: {
     day: string;

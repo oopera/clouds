@@ -55,6 +55,7 @@ var hasChanged: HasChanged = {
   topology: false,
   cloudType: false,
   resolution: false,
+  projectionDate: false,
 };
 
 var options: RenderOptions = {
@@ -75,6 +76,8 @@ var options: RenderOptions = {
   rayleighIntensity: 0.5,
   scale: 0.0,
   amountOfVertices: 0,
+  halfRes: false,
+  isDragging: false,
 
   projectionDate: {
     day: '0',
@@ -99,6 +102,8 @@ var options: RenderOptions = {
   coords: {
     lastX: 0,
     lastY: 0,
+    x: 0,
+    y: 0,
   },
   blend: {
     color: {
@@ -652,11 +657,12 @@ async function InitializeScene() {
 
     elapsed += 0.0005;
 
-    var newYaw = options.yaw + options.rotationSpeed / 50;
-    newYaw = newYaw % 360;
+    if (!options.isDragging) {
+      var newYaw = options.yaw + options.rotationSpeed / 10;
+      newYaw = newYaw % 360;
 
-    yaw.update((n) => (n = newYaw));
-
+      yaw.update((n) => (n = newYaw));
+    }
     const cameraPosition = vec3.create();
     vec3.set(
       cameraPosition,
