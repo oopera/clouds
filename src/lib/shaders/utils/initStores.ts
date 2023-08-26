@@ -10,15 +10,21 @@ import {
   pitch,
   rotation_speed,
   yaw,
+  zoom,
   cloud_density,
   sun_transmittance,
   rayleigh_intensity,
   raymarch_steps,
   raymarch_length,
+  projection_date,
+  half_res,
+  tweenedZoom,
+  tweenedYaw,
+  tweenedPitch,
+  mouse_interaction,
 } from '$lib/stores/stores';
 import type { HasChanged, RenderOptions } from '$lib/types/types';
-import { quintOut } from 'svelte/easing';
-import { tweened } from 'svelte/motion';
+import CalculateIntersection from './calculateIntersection';
 
 export default function InitStores(
   options: RenderOptions,
@@ -28,7 +34,6 @@ export default function InitStores(
   if (!document) return;
 
   let isFirstInvocation = true;
-
   var isDragging = false;
 
   amount_of_points.subscribe((value) => {
@@ -36,6 +41,10 @@ export default function InitStores(
     if (!isFirstInvocation) {
       hasChanged.numFs = true;
     }
+  });
+
+  half_res.subscribe((value) => {
+    options.halfRes = value;
   });
 
   raymarch_steps.subscribe((value) => {
@@ -66,76 +75,30 @@ export default function InitStores(
     options.cameraPosition = value;
   });
 
-  yaw.subscribe((value) => {
-    options.yaw = value;
-  });
-
-  pitch.subscribe((value) => {
-    options.pitch = value;
-  });
-
-  const tweenedmb300 = tweened<number>(1, {
-    duration: 1000,
-    easing: quintOut,
+  projection_date.subscribe((value) => {
+    options.projectionDate = value;
+    if (isFirstInvocation) return;
+    hasChanged.projectionDate = true;
   });
 
   mb300.subscribe((value) => {
-    tweenedmb300.set(value);
-  });
-
-  tweenedmb300.subscribe((value) => {
     options.layer.mb300 = value;
   });
 
-  const tweenedmb500 = tweened<number>(1, {
-    duration: 1000,
-    easing: quintOut,
-  });
-
   mb500.subscribe((value) => {
-    tweenedmb500.set(value);
-  });
-
-  tweenedmb500.subscribe((value) => {
     options.layer.mb500 = value;
   });
 
-  const tweenedmb700 = tweened<number>(1, {
-    duration: 1000,
-    easing: quintOut,
-  });
-
   mb700.subscribe((value) => {
-    tweenedmb700.set(value);
-  });
-
-  tweenedmb700.subscribe((value) => {
     options.layer.mb700 = value;
   });
 
-  const tweenedAtmo = tweened<number>(1, {
-    duration: 1000,
-    easing: quintOut,
-  });
-
-  tweenedAtmo.subscribe((value) => {
+  atmo.subscribe((value) => {
     options.layer.atmo = value;
   });
 
-  atmo.subscribe((value) => {
-    tweenedAtmo.set(value);
-  });
-
-  const tweenedscale = tweened<number>(0, {
-    duration: 1000,
-    easing: quintOut,
-  });
-  tweenedscale.subscribe((value) => {
-    options.scale = value;
-  });
-
   scale.subscribe((value) => {
-    tweenedscale.set(value);
+    options.scale = value;
   });
 
   rotation_speed.subscribe((value) => {
@@ -145,35 +108,75 @@ export default function InitStores(
     }
   });
 
+  yaw.subscribe((value) => {
+    tweenedYaw.update((n) => (n = value));
+  });
+
+  tweenedYaw.subscribe((value) => {
+    options.yaw = value;
+  });
+
+  pitch.subscribe((value) => {
+    tweenedPitch.update((n) => (n = value));
+  });
+
+  tweenedPitch.subscribe((value) => {
+    options.pitch = value;
+  });
+
+  zoom.subscribe((value) => {
+    tweenedZoom.update((n) => (n = value));
+  });
+
+  tweenedZoom.subscribe((value) => {
+    options.zoom = value;
+  });
+
+  const handleScroll = (e: WheelEvent) => {
+    e.preventDefault();
+
+    let newZoom = options.zoom + e.deltaY * 0.0025;
+    if (newZoom > 2.25 && newZoom < 7.25) {
+      newZoom = options.zoom + e.deltaY * 0.0025 * (options.zoom / 7.25);
+    }
+
+    let finalZoom = Math.max(2.25, Math.min(newZoom, 7.25));
+
+    zoom.set(finalZoom);
+  };
+
+  window.addEventListener('wheel', handleScroll, { passive: false });
+
   canvas.addEventListener('mousedown', (e) => {
     isDragging = true;
     options.coords.lastX = e.clientX;
     options.coords.lastY = e.clientY;
 
-    // const intersection_coords = CalculateIntersection(
-    //   e.clientX,
-    //   e.clientY,
-    //   options
-    // );
-    // if (intersection_coords.discriminant > 0) {
-    //   uniOptions.intersection.x = -intersection_coords.u;
-    //   uniOptions.intersection.y = intersection_coords.v;
-    //   mouse_interaction.set({
-    //     intersected: true,
-    //     x: intersection_coords.u,
-    //     y: intersection_coords.v,
-    //     longitude: intersection_coords.longitude || 0,
-    //     latitude: intersection_coords.latitude || 0,
-    //   });
-    // } else {
-    //   mouse_interaction.set({
-    //     intersected: false,
-    //     x: 0,
-    //     y: 0,
-    //     longitude: 0,
-    //     latitude: 0,
-    //   });
-    // }
+    const intersection_coords = CalculateIntersection(
+      e.clientX,
+      e.clientY,
+      options
+    );
+
+    if (intersection_coords.discriminant > 0) {
+      options.coords.x = -intersection_coords.u;
+      options.coords.y = intersection_coords.v;
+      mouse_interaction.set({
+        intersected: true,
+        x: intersection_coords.u,
+        y: intersection_coords.v,
+        longitude: intersection_coords.longitude || 0,
+        latitude: intersection_coords.latitude || 0,
+      });
+    } else {
+      mouse_interaction.set({
+        intersected: false,
+        x: 0,
+        y: 0,
+        longitude: 0,
+        latitude: 0,
+      });
+    }
   });
   canvas.addEventListener('mouseup', (e) => {
     isDragging = false;

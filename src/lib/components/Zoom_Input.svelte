@@ -1,7 +1,6 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
   import { tweened } from 'svelte/motion';
-  import { zoom, loading, yaw, pitch } from '../stores/stores.js';
+  import { zoom } from '../stores/stores.js';
   import { quintOut } from 'svelte/easing';
   import Text from './Text.svelte';
 
@@ -10,65 +9,12 @@
   export let max: number = 7.25;
   export let delay: number = 0;
 
-  const tweenedZoom = tweened(100, {
-    duration: 2500,
-    easing: quintOut,
-  });
-
-  const tweenedYaw = tweened(1, {
-    duration: 2500,
-    easing: quintOut,
-  });
-
-  const tweenedPitch = tweened(1, {
-    duration: 2500,
-    easing: quintOut,
-  });
-
-  tweenedZoom.subscribe((value) => {
-    zoom.update((n) => (n = value));
-  });
-
-  tweenedYaw.subscribe((value) => {
-    yaw.update((n) => (n = value));
-  });
-
-  tweenedPitch.subscribe((value) => {
-    pitch.update((n) => (n = value));
-  });
-
-  onMount(() => {
-    window.addEventListener('wheel', handleScroll, { passive: false });
-  });
-
-  $: {
-    if (!$loading.welcome.status) {
-      tweenedZoom.set(3.0);
-      tweenedYaw.set(720);
-      tweenedPitch.set(45);
-    }
-  }
-
-  const handleScroll = (e: WheelEvent) => {
-    e.preventDefault();
-
-    let newZoom = $zoom + e.deltaY * 0.0025;
-    if (newZoom > 2.25 && newZoom < 7.25) {
-      newZoom = $zoom + e.deltaY * 0.0025 * ($zoom / 7.25);
-    }
-
-    let finalZoom = Math.max(2.25, Math.min(newZoom, 7.25));
-
-    tweenedZoom.set(finalZoom);
-  };
-
   const handleInput = (e: Event) => {
-    if (!tweenedZoom) return;
     let finalZoom = Math.max(
       2.25,
       Math.min(Number((e.target as HTMLInputElement).value), 7.25)
     );
-    tweenedZoom.set(finalZoom);
+    zoom.set(finalZoom);
   };
 
   const indicatorArray = Array.from({ length: 10 }, (_, i) => i + 1);

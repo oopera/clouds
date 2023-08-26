@@ -14,6 +14,8 @@ struct CloudUniforms {
   raymarchSteps : f32,
   raymarchLength : f32,
   elapsedTime : f32,
+  interactionx: f32,
+  interactiony: f32,
 }
 
 struct LightUniforms {
@@ -135,6 +137,23 @@ fn ReMap(value: f32, old_low: f32, old_high: f32, new_low: f32, new_high: f32) -
   return ret_val;
 }
 
+fn getNormal(x: f32, y: f32) -> vec3<f32> {
+  let normal: vec3<f32> = convertUVToNormal(vec2<f32>(x, y));
+  return normal;
+}
+
+fn convertUVToNormal(uv: vec2<f32>) -> vec3<f32> {
+  let u: f32 = uv.x * 2.0 * 3.14159265359; // Convert U coordinate to radians
+  let v: f32 = uv.y * 3.14159265359; // Convert V coordinate to radians
+
+  let x: f32 = sin(v) * cos(u);
+  let y: f32 = sin(v) * sin(u);
+  let z: f32 = cos(v);
+
+  return normalize(vec3<f32>(x, z, -y));
+}
+
+
 @fragment fn fs(output: Output) -> @location(0) vec4<f32> {
   let cameraPosition: vec3<f32> = uni.cameraPosition.rgb;
   var rayOrigin: vec3<f32> = output.vPosition.xyz - cloudUniforms.radius;
@@ -189,6 +208,10 @@ fn ReMap(value: f32, old_low: f32, old_high: f32, new_low: f32, new_high: f32) -
     rayOrigin = texturePosition;
   }
 
+
+
+
+
   let dotProduct = dot(lightUniforms.lightPosition, output.vNormal.xyz);
   let scaledDotProduct: f32 = dotProduct * 10.0;
   var lightness: f32 = 1.0 - (1.0 / (1.0 + exp(-scaledDotProduct)));
@@ -203,6 +226,14 @@ fn ReMap(value: f32, old_low: f32, old_high: f32, new_low: f32, new_high: f32) -
     lightness = 1.0;
   }
   let bnoise = textureSample(blue_noise, blue_noise_sampler, output.vUV).r;
+
+  let normal: vec3<f32> = getNormal(cloudUniforms.interactionx, cloudUniforms.interactiony);
+  var distance: f32 = length(output.vNormal.xyz - normal);
+
+  if (distance < 0.5) {
+    return vec4(0,0,0,0);
+  }
+
 
   outputColor += baseColor;
   return vec4<f32>(outputColor, outputDensity) * cloudUniforms.visibility * lightness;

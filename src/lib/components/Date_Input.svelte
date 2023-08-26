@@ -1,18 +1,65 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import Text from './Text.svelte';
-  import type { Stores } from '$lib/types/types';
   import Layout from './Layout.svelte';
+  import { projection_date } from '$lib/stores/stores';
+  import { dev } from '$app/environment';
   let mounted: boolean = false;
 
-  onMount(async () => {
+  let yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+  const getDateValues = (date: Date) => {
+    var day = ('0' + date.getDate()).slice(-2);
+    var month = ('0' + (date.getMonth() + 1)).slice(-2);
+    var year = date.getFullYear().toString();
+
+    return { day, month, year };
+  };
+
+  const getDateString = (date: {
+    day: string;
+    month: string;
+    year: string;
+  }) => {
+    return `${date.year}-${date.month}-${date.day}`;
+  };
+
+  let current_date = getDateValues(yesterday);
+  let max_date = getDateValues(yesterday);
+
+  onMount(() => {
     mounted = true;
+    if (!dev) {
+      projection_date.set({
+        day: current_date.day,
+        month: current_date.month,
+        year: current_date.year,
+      });
+    }
   });
 </script>
 
 <div class="date-input">
   <Layout gap="1" align="end" justify="between">
-    <input data-interactable type="date" />
+    <input
+      on:input={(e) => {
+        const date = new Date(e.target.value);
+        if (getDateValues(date) === $projection_date) return;
+        current_date = getDateValues(date);
+        projection_date.set({
+          day: current_date.day,
+          month: current_date.month,
+          year: current_date.year,
+        });
+      }}
+      value={getDateString(current_date)}
+      max={getDateString(max_date)}
+      min={getDateString({
+        day: '01',
+        month: '01',
+        year: (Number(current_date.year) - 1).toString(),
+      })}
+      type="date"
+    />
   </Layout>
 </div>
 

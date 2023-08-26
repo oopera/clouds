@@ -16,6 +16,7 @@
   import Link from '$lib/components/Link.svelte';
   import Tag from '$lib/components/Tag.svelte';
   import DateInput from '$lib/components/Date_Input.svelte';
+  import Checkbox from '$lib/components/Checkbox.svelte';
 
   inject({ mode: dev ? 'development' : 'production' });
 </script>
@@ -43,6 +44,7 @@
         title="light_type"
         options={['day_cycle', 'full_day', 'full_night']}
       />
+      <Checkbox delay={5} title="half_res" />
     </Layout>
   </Layout>
 

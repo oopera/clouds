@@ -122,9 +122,6 @@ const SphereData = (
   };
 };
 
-onerror = function (event) {
-  console.log('WORKER ERROR', event);
-};
 onmessage = function (event: any) {
   var numFs = event.data.numFs;
   var sphereData = SphereData(2, numFs, numFs);
