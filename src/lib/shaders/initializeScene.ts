@@ -353,7 +353,46 @@ async function InitializeScene() {
       mb900,
     ]);
   } else {
-    fetchTextures();
+    const dateString =
+      options.projectionDate.year +
+      options.projectionDate.month +
+      options.projectionDate.day;
+
+    const mb300RD = await executePromise(
+      'mb300RD',
+      fetch(`/api/cloud-texture?level_mb=300_mb&date=${dateString}`),
+      '300 millibar cloud-data'
+    );
+
+    const mb500RD = await executePromise(
+      'mb500RD',
+      fetch(`/api/cloud-texture?level_mb=500_mb&date=${dateString}`),
+      '500 millibar cloud-data'
+    );
+
+    const mb700RD = await executePromise(
+      'mb700RD',
+      fetch(`/api/cloud-texture?level_mb=700_mb&date=${dateString}`),
+      '700 millibar cloud-data'
+    );
+
+    const mb900RD = await executePromise(
+      'mb800RD',
+      fetch(`/api/cloud-texture?level_mb=900_mb&date=${dateString}`),
+      '900 millibar cloud-data'
+    );
+
+    const mb300R = await mb300RD.json();
+    const mb500R = await mb500RD.json();
+    const mb700R = await mb700RD.json();
+    const mb900R = await mb900RD.json();
+
+    parsed3DGribTexture = await Get3DTextureFromGribData(device, [
+      mb300R,
+      mb500R,
+      mb700R,
+      mb900R,
+    ]);
 
     // downloadJSONData(mb300R, 'mb300');
     // downloadJSONData(mb500R, 'mb500');
