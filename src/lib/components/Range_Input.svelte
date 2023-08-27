@@ -125,12 +125,7 @@
     transition: 100ms var(--ease);
     transform-origin: center;
     backdrop-filter: blur(8px);
-    background: radial-gradient(
-      circle,
-      rgb(255, 255, 255) 0%,
-      rgba(33, 33, 39, 1) 30%,
-      rgba(0, 0, 0, 0) 100%
-    );
+    background: var(--blue-gradient);
   }
   input:hover::-webkit-slider-thumb,
   input:focus-visible::-webkit-slider-thumb {

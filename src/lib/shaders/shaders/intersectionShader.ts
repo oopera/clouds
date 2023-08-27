@@ -26,8 +26,8 @@ struct Output {
 fn convertUVTo3D(uv: vec2<f32>) -> vec3<f32> {
   let radius: f32 = 1.0;
 
-  let u: f32 = uv.x * 2.0 * 3.14159265359; // Convert U coordinate to radians
-  let v: f32 = uv.y * 1.0 * 3.14159265359; // Convert V coordinate to radians
+  let u: f32 = uv.x * 2.0 * 3.14159265359; 
+  let v: f32 = uv.y * 1.0 * 3.14159265359; 
 
   let x: f32 = radius * sin(v) * cos(u) * 4;
   let z: f32 = radius * sin(v) * sin(u) * 4;

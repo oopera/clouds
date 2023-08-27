@@ -106,32 +106,7 @@ export function CalculateIntersection(
     const v = normalizedLatitude;
     return { u, v, discriminant, longitude, latitude };
   } else {
-    return { u: 0, v: 0, discriminant };
+    return { u: 0, v: 0, discriminant, longitude: 0, latitude: 0 };
   }
 }
 export default CalculateIntersection;
-// const intersection_coords = CalculateIntersection(
-//   e.clientX,
-//   e.clientY,
-//   options
-// );
-// if (intersection_coords.discriminant > 0) {
-//   uniOptions.intersection.x = -intersection_coords.u;
-//   uniOptions.intersection.y = intersection_coords.v;
-//   mouse_interaction.set({
-//     intersected: true,
-//     x: intersection_coords.u,
-//     y: intersection_coords.v,
-//     longitude: intersection_coords.longitude || 0,
-//     latitude: intersection_coords.latitude || 0,
-//   });
-// } else {
-//   mouse_interaction.set({
-//     intersected: false,
-//     x: 0,
-//     y: 0,
-//     longitude: 0,
-//     latitude: 0,
-//   });
-// }
-// });

@@ -6,14 +6,11 @@ struct Uniforms {
   cameraPosition : vec4<f32>,
 };
 
-
-
 struct LightUniforms {
   lightPosition : vec3<f32>,
   rayleighIntensity : f32,
   lightType : f32,
 };
-
 
 struct AtmosphereUniforms {
   radius : f32,
@@ -22,11 +19,9 @@ struct AtmosphereUniforms {
   noiseStrength : f32,
 }
 
-
 struct Input {
   @location(0) position : vec4<f32>,
   @location(1) normal : vec4<f32>,
-
 };
 
 struct Output {
@@ -36,8 +31,10 @@ struct Output {
 };
 
 @group(0) @binding(0) var<uniform> uni: Uniforms;
-@group(0) @binding(1) var<uniform> lightUni: LightUniforms;
-@group(0) @binding(2) var<uniform> atmopshereUniforms: AtmosphereUniforms;
+@group(0) @binding(1) var<uniform> atmopshereUniforms: AtmosphereUniforms;
+@group(0) @binding(2) var<uniform> lightUni: LightUniforms;
+
+const radius = 0.01;
 
 fn smoothstep(edge0: f32, edge1: f32, x: f32) -> f32 {
   let t = clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);
@@ -48,7 +45,7 @@ fn smoothstep(edge0: f32, edge1: f32, x: f32) -> f32 {
   var output: Output;
 
   let mPosition: vec4<f32> = uni.modelMatrix * input.position;
-  let displacement: vec4<f32> = vec4<f32>(normalize(mPosition.xyz) * (atmopshereUniforms.radius ), 0.0);
+  let displacement: vec4<f32> = vec4<f32>(normalize(mPosition.xyz) * radius, 0.0);
   let worldPosition: vec4<f32> = mPosition + displacement;
   
   output.Position = uni.viewProjectionMatrix * worldPosition;
@@ -59,11 +56,8 @@ fn smoothstep(edge0: f32, edge1: f32, x: f32) -> f32 {
 }
 
 @fragment fn fs(output: Output) -> @location(0) vec4<f32> {
-
   let viewDirection: vec3<f32> = normalize(uni.cameraPosition.xyz - output.vPosition.xyz);
-
-// COMMON LIGHT CALCS
-
+  let visibility = atmopshereUniforms.visibility;
 
 
   let dotProduct = dot(lightUni.lightPosition, output.vNormal.xyz);
@@ -74,8 +68,6 @@ fn smoothstep(edge0: f32, edge1: f32, x: f32) -> f32 {
   }else if(lightUni.lightType == 1.0){
     lightness = 1.0;
   }
-
-
 
   let edge = fwidth(lightness);
   let borderColor = vec4(1.0, 0.92, 0.95, 1.0);
@@ -93,6 +85,6 @@ fn smoothstep(edge0: f32, edge1: f32, x: f32) -> f32 {
   let color: vec4<f32> = mix(orangeColor, blueColor, lightness);
   let resultColor =   mask * borderColor;
 
-  return (color + resultColor) * atmopshereUniforms.visibility;
+  return (color + resultColor);
 }
 `;

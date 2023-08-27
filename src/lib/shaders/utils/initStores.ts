@@ -22,6 +22,9 @@ import {
   tweenedYaw,
   tweenedPitch,
   mouse_interaction,
+  setZoom,
+  setPitch,
+  setYaw,
 } from '$lib/stores/stores';
 import type { HasChanged, RenderOptions } from '$lib/types/types';
 import CalculateIntersection from './calculateIntersection';
@@ -107,27 +110,27 @@ export default function InitStores(
     }
   });
 
-  yaw.subscribe((value) => {
-    tweenedYaw.update((n) => (n = value));
+  tweenedYaw.subscribe((value) => {
+    yaw.set(value);
   });
 
-  tweenedYaw.subscribe((value) => {
+  yaw.subscribe((value) => {
     options.yaw = value;
   });
 
-  pitch.subscribe((value) => {
-    tweenedPitch.update((n) => (n = value));
+  tweenedPitch.subscribe((value) => {
+    pitch.set(value);
   });
 
-  tweenedPitch.subscribe((value) => {
+  pitch.subscribe((value) => {
     options.pitch = value;
   });
 
-  zoom.subscribe((value) => {
-    tweenedZoom.update((n) => (n = value));
+  tweenedZoom.subscribe((value) => {
+    zoom.set(value);
   });
 
-  tweenedZoom.subscribe((value) => {
+  zoom.subscribe((value) => {
     options.zoom = value;
   });
 
@@ -146,7 +149,7 @@ export default function InitStores(
 
     let finalZoom = Math.max(2.25, Math.min(newZoom, 7.25));
 
-    zoom.set(finalZoom);
+    setZoom(finalZoom, true);
   };
 
   const handleTouch = (e: TouchEvent) => {
@@ -160,7 +163,7 @@ export default function InitStores(
 
     let finalZoom = Math.max(2.25, Math.min(newZoom, 7.25));
 
-    zoom.set(finalZoom);
+    setZoom(finalZoom, true);
   };
 
   window.addEventListener('wheel', handleScroll, { passive: false });
@@ -177,17 +180,16 @@ export default function InitStores(
       var changeX = e.clientX - options.coords.lastX;
       var changeY = e.clientY - options.coords.lastY;
 
-      var newPitch = options.pitch + 0.1 * changeY * Math.pow(options.zoom, 3);
+      var newPitch =
+        options.pitch + 0.1 * changeY * Math.pow(options.zoom, 0.25);
       newPitch = Math.max(-89, Math.min(89, newPitch));
 
-      var newYaw = options.yaw - 0.1 * changeX * Math.pow(options.zoom, 3);
-      newYaw = newYaw % 360;
-
+      var newYaw = options.yaw - 0.1 * changeX * Math.pow(options.zoom, 0.25);
       options.coords.lastX = e.clientX;
       options.coords.lastY = e.clientY;
 
-      pitch.set(newPitch);
-      yaw.set(newYaw);
+      setPitch(newPitch, false);
+      setYaw(newYaw, false);
     }
   };
 

@@ -52,12 +52,7 @@
   input {
     height: 24px;
     width: 24px;
-    background: radial-gradient(
-      circle,
-      rgb(11, 17, 26) 0%,
-      rgb(16, 21, 24) 30%,
-      rgba(0, 0, 0) 100%
-    );
+    background: var(--dark-gradient);
     background: rgb(8, 9, 15);
     accent-color: rgb(55, 120, 240);
     margin: 0;
@@ -71,12 +66,7 @@
     content: '';
     width: 1px;
     height: 80%;
-    background: radial-gradient(
-      circle,
-      rgb(225, 225, 225) 0%,
-      rgb(36, 85, 76) 30%,
-      rgba(11, 17, 17, 0) 100%
-    );
+    background: var(--star-gradient);
     position: absolute;
     top: 50%;
     left: 50%;
@@ -87,12 +77,7 @@
     content: '';
     width: 80%;
     height: 1px;
-    background: radial-gradient(
-      circle,
-      rgb(225, 225, 225) 0%,
-      rgb(36, 85, 76) 30%,
-      rgba(11, 17, 17, 0) 100%
-    );
+    background: var(--star-gradient);
     position: absolute;
     top: 50%;
     left: 50%;
@@ -109,11 +94,6 @@
     height: 20px;
     border-radius: 40px;
     border: 1pt solid white;
-    background: radial-gradient(
-      circle,
-      rgb(225, 225, 225) 0%,
-      rgb(0, 34, 76) 30%,
-      rgba(11, 17, 17, 0) 100%
-    );
+    background: var(--blue-gradient);
   }
 </style>

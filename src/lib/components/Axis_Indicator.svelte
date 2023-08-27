@@ -23,22 +23,18 @@
 </div>
 
 <style lang="scss">
+  @import '$lib/styles/mixins.scss';
   .viewfinder {
-    margin-bottom: 24px;
+    margin-bottom: gap(3);
     width: 160px;
     height: 160px;
     aspect-ratio: 1/1;
     border-radius: 150px;
     z-index: 1;
     position: absolute;
-    background: radial-gradient(
-      circle,
-      rgba(0, 33, 95, 0.25) 0%,
-      rgba(33, 33, 39, 0.05) 30%,
-      rgba(0, 0, 0, 0) 50%
-    );
+    background: var(--dark-gradient);
     display: flex;
-    backdrop-filter: blur(24px);
+    backdrop-filter: blur(gap(3));
     pointer-events: all;
     left: 50%;
     transform: translateX(-50%);
@@ -53,7 +49,7 @@
   }
 
   .viewfinder__tick {
-    width: 12px;
+    width: gap(2);
     height: 1px;
     background: var(--c-tertiary);
     position: absolute;
@@ -64,16 +60,16 @@
   .viewfinder__tick__text {
     color: var(--c-tertiary);
     position: absolute;
-    top: 8px;
-    left: 8px;
+    top: gap(1);
+    left: gap(1);
     font-size: 10px;
-    transform: translateX(8px) translateY(-15px) rotate(0deg);
+    transform: translateX(gap(1)) translateY(gap(-2)) rotate(0deg);
     font-family: var(--font-family-mono);
     opacity: 0.5;
     transition: opacity var(--ease) 350ms;
   }
   .odd {
-    width: 8px;
+    width: gap(1);
     background: var(--c-secondary);
   }
 
@@ -104,12 +100,7 @@
   .crosshair__horizontal {
     width: 80%;
     height: 1px;
-    background: radial-gradient(
-      circle,
-      rgb(225, 225, 225) 0%,
-      rgb(36, 85, 76) 30%,
-      rgba(11, 17, 17, 0) 100%
-    );
+    background: var(--star-gradient);
     position: absolute;
     top: 50%;
     left: 50%;
@@ -119,12 +110,7 @@
   .crosshair__vertical {
     width: 1px;
     height: 80%;
-    background: radial-gradient(
-      circle,
-      rgb(225, 225, 225) 0%,
-      rgb(36, 85, 76) 30%,
-      rgba(11, 17, 17, 0) 100%
-    );
+    background: var(--star-gradient);
     position: absolute;
     top: 50%;
     left: 50%;
@@ -133,12 +119,7 @@
   .crosshair__depth {
     width: 1px;
     height: 80%;
-    background: radial-gradient(
-      circle,
-      rgb(225, 225, 225) 0%,
-      rgb(36, 85, 76) 30%,
-      rgba(11, 17, 17, 0) 100%
-    );
+    background: var(--star-gradient);
     position: absolute;
     top: 50%;
     left: 50%;

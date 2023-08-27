@@ -12,7 +12,7 @@ import {
   CreateTransforms,
 } from './utils/helper/matrixHelper.js';
 import { earthShader } from './shaders/earthShader.js';
-import { yaw, loading, zoom, pitch } from '$lib/stores/stores.js';
+import { loading, setZoom, setPitch, setYaw } from '$lib/stores/stores.js';
 import { cloudShader } from './shaders/cloudShader.js';
 
 import {
@@ -22,16 +22,14 @@ import {
   loadBinaryData,
   Create3DTextureFromData,
   Get3DTextureFromGribData,
+  parseEncodedToFlattened,
 } from './utils/getTexture.js';
 
 import { GetDepthTexture } from './utils/getTexture.js';
-import type {
-  RenderOptions,
-  HasChanged,
-  UniOptions,
-} from '$lib/types/types.js';
+import type { RenderOptions, HasChanged } from '$lib/types/types.js';
 import { atmosphereShader } from './shaders/atmosphereShader.js';
 import { executePromise, loadImage } from './utils/executeAndUpdate.js';
+
 import { mb300 } from '$lib/assets/mb300.js';
 import { mb500 } from '$lib/assets/mb500.js';
 import { mb700 } from '$lib/assets/mb700.js';
@@ -39,9 +37,8 @@ import { mb900 } from '$lib/assets/mb900.js';
 
 import { dev } from '$app/environment';
 import { tweened } from 'svelte/motion';
-import { quintOut } from 'svelte/easing';
 import { fullScreenQuadShader } from './shaders/quadShader.js';
-import { cubicBezier } from '$lib/stores/easing.js';
+import { cubicBezier } from '$lib/shaders/utils/cubicBezier.js';
 
 let depthTexture: GPUTexture;
 let offscreenDepthTexture: GPUTexture;
@@ -118,14 +115,20 @@ var options: RenderOptions = {
     },
   },
 };
-var uniOptions: UniOptions = {
-  displacement: 0.0,
-  useTexture: true,
-  intersection: {
-    x: 0,
-    y: 0,
-  },
-};
+
+var mb3001d: number[] = [];
+var mb5001d: number[] = [];
+var mb7001d: number[] = [];
+var mb9001d: number[] = [];
+
+var visibility: number = 0.0;
+var tweenedVisibility = tweened(visibility, {
+  duration: 3500,
+  easing: cubicBezier,
+});
+tweenedVisibility.subscribe((value) => {
+  visibility = value;
+});
 
 const pipeline: GPURenderPipeline[] = [];
 const bindGroup: GPUBindGroup[] = [];
@@ -202,11 +205,12 @@ async function InitializeScene() {
 
   InitStores(options, hasChanged, canvas);
 
-  let heightMap = await executePromise(
-    'heightMap',
-    loadImage('/textures/nasa-heightmap.png'),
-    'height map'
+  let data = await executePromise(
+    'sphere',
+    CreateSphereData(options),
+    'Vertex Data'
   );
+
   let texture = await executePromise(
     'texture',
     loadImage('/textures/nasa-texture.jpg'),
@@ -230,17 +234,10 @@ async function InitializeScene() {
     'blue noise'
   );
 
-  const heightMapV = await GetTexture(device, heightMap);
   const textureV = await GetPartitionedTexture(device, texture);
   const lightMapV = await GetPartitionedTexture(device, lightmap);
   const noiseV = Create3DTextureFromData(device, noise);
   const blueNoiseV = await GetTexture(device, blueNoise);
-
-  let data = await executePromise(
-    'sphere',
-    CreateSphereData(options),
-    'Vertex Data'
-  );
 
   const presentationFormat = navigator.gpu.getPreferredCanvasFormat();
 
@@ -262,13 +259,19 @@ async function InitializeScene() {
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
 
+  const earthUniBuffer = device.createBuffer({
+    label: 'light uniform buffer',
+    size: 64,
+    usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+  });
+
   const lightUniBuffer = device.createBuffer({
     label: 'light uniform buffer',
     size: 64,
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
 
-  const atmosphereUniBuffer = device.createBuffer({
+  const atmoUniBuffer = device.createBuffer({
     label: 'light uniform buffer',
     size: 64,
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
@@ -283,16 +286,19 @@ async function InitializeScene() {
   };
 
   const generateNewNoiseTexture = false;
-  var worleyNoiseTexture = noiseV;
+  var worleyNoiseTexture;
+
   if (generateNewNoiseTexture) {
     worleyNoiseTexture = await executePromise(
       'worleyNoiseTexture',
       (await Get3DNoiseTexture(device)) as any,
       '3D Noise Texture'
     );
+  } else {
+    worleyNoiseTexture = noiseV;
   }
 
-  const fetchTextures = async () => {
+  const fetchTextures = async (setTextures: boolean = false) => {
     const dateString =
       options.projectionDate.year +
       options.projectionDate.month +
@@ -327,22 +333,21 @@ async function InitializeScene() {
     const mb700R = await mb700RD.json();
     const mb900R = await mb900RD.json();
 
-    parsed3DGribTexture = await Get3DTextureFromGribData(device, [
-      mb300R,
-      mb500R,
-      mb700R,
-      mb900R,
-    ]);
+    if (setTextures) {
+      parsed3DGribTexture = await Get3DTextureFromGribData(device, [
+        mb300,
+        mb500,
+        mb700,
+        mb900,
+      ]);
+    }
 
-    const tweenedDensity = tweened(0.0, {
-      duration: 3500,
-      easing: quintOut,
-    });
-
-    tweenedDensity.subscribe((value) => {
-      options.cloudDensity = value;
-    });
-    tweenedDensity.set(1.0);
+    return {
+      mb300: parseEncodedToFlattened(mb300R),
+      mb500: parseEncodedToFlattened(mb500R),
+      mb700: parseEncodedToFlattened(mb700R),
+      mb900: parseEncodedToFlattened(mb900R),
+    };
   };
 
   if (dev) {
@@ -353,55 +358,17 @@ async function InitializeScene() {
       mb900,
     ]);
   } else {
-    const dateString =
-      options.projectionDate.year +
-      options.projectionDate.month +
-      options.projectionDate.day;
-
-    const mb300RD = await executePromise(
-      'mb300RD',
-      fetch(`/api/cloud-texture?level_mb=300_mb&date=${dateString}`),
-      '300 millibar cloud-data'
-    );
-
-    const mb500RD = await executePromise(
-      'mb500RD',
-      fetch(`/api/cloud-texture?level_mb=500_mb&date=${dateString}`),
-      '500 millibar cloud-data'
-    );
-
-    const mb700RD = await executePromise(
-      'mb700RD',
-      fetch(`/api/cloud-texture?level_mb=700_mb&date=${dateString}`),
-      '700 millibar cloud-data'
-    );
-
-    const mb900RD = await executePromise(
-      'mb800RD',
-      fetch(`/api/cloud-texture?level_mb=900_mb&date=${dateString}`),
-      '900 millibar cloud-data'
-    );
-
-    const mb300R = await mb300RD.json();
-    const mb500R = await mb500RD.json();
-    const mb700R = await mb700RD.json();
-    const mb900R = await mb900RD.json();
+    const { mb300, mb500, mb700, mb900 } = await fetchTextures();
 
     parsed3DGribTexture = await Get3DTextureFromGribData(device, [
-      mb300R,
-      mb500R,
-      mb700R,
-      mb900R,
+      mb300,
+      mb500,
+      mb700,
+      mb900,
     ]);
-
-    // downloadJSONData(mb300R, 'mb300');
-    // downloadJSONData(mb500R, 'mb500');
-    // downloadJSONData(mb700R, 'mb700');
-    // downloadJSONData(mb900R, 'mb900');
   }
 
   let canvasTexture = context.getCurrentTexture();
-
   let colorTexture = device.createTexture({
     size: {
       width: canvasTexture.width,
@@ -502,33 +469,35 @@ async function InitializeScene() {
     },
     {
       binding: 1,
-      resource: heightMapV.texture.createView(),
+      resource: {
+        buffer: earthUniBuffer,
+      },
     },
     {
       binding: 2,
-      resource: lightMapV[0].texture.createView(),
-    },
-    {
-      binding: 3,
-      resource: lightMapV[1].texture.createView(),
-    },
-    {
-      binding: 4,
-      resource: textureV[0].texture.createView(),
-    },
-    {
-      binding: 5,
-      resource: textureV[1].texture.createView(),
-    },
-    {
-      binding: 6,
-      resource: textureV[0].sampler,
-    },
-    {
-      binding: 7,
       resource: {
         buffer: lightUniBuffer,
       },
+    },
+    {
+      binding: 3,
+      resource: lightMapV[0].texture.createView(),
+    },
+    {
+      binding: 4,
+      resource: lightMapV[1].texture.createView(),
+    },
+    {
+      binding: 5,
+      resource: textureV[0].texture.createView(),
+    },
+    {
+      binding: 6,
+      resource: textureV[1].texture.createView(),
+    },
+    {
+      binding: 7,
+      resource: textureV[0].sampler,
     },
   ];
 
@@ -578,7 +547,7 @@ async function InitializeScene() {
     },
   ];
 
-  const atmosphereBindings = [
+  const atmoBindings = [
     {
       binding: 0,
       resource: {
@@ -588,13 +557,13 @@ async function InitializeScene() {
     {
       binding: 1,
       resource: {
-        buffer: lightUniBuffer,
+        buffer: atmoUniBuffer,
       },
     },
     {
       binding: 2,
       resource: {
-        buffer: atmosphereUniBuffer,
+        buffer: lightUniBuffer,
       },
     },
   ];
@@ -647,61 +616,15 @@ async function InitializeScene() {
     },
   }));
 
-  zoom.set(2.5);
-  yaw.set(360);
-  pitch.set(45);
+  setYaw(360, true);
+  setZoom(3, true);
+  setPitch(0, true);
+  tweenedVisibility.set(1.0);
 
   async function frame() {
     if (!device) return;
-    var lightPosition = vec3.create();
-    vec3.set(lightPosition, 2 * Math.cos(elapsed), 0.0, 2 * Math.sin(elapsed));
-    const cloudUniValues = new Float32Array([
-      0.02 * options.scale,
-      options.layer.mb300,
-      options.cloudDensity,
-      options.sunDensity,
-      options.raymarchSteps,
-      options.raymarchLength,
-      options.coords.x,
-      options.coords.y,
-    ]);
-
-    const atmosphereUniValues = new Float32Array([
-      0.035 * options.scale,
-      options.cloudDensity,
-      options.layer.atmo,
-      0.0,
-    ]);
-
-    const lightUniValues = new Float32Array([
-      lightPosition[0],
-      lightPosition[1],
-      lightPosition[2],
-      options.rayleighIntensity,
-      options.lightType === 'full_day'
-        ? 1
-        : options.lightType === 'day_cycle'
-        ? 0.5
-        : options.lightType === 'full_night'
-        ? 0
-        : 1.0,
-    ]);
-
-    const earthUniValues = new Float32Array([
-      0.015 * options.scale,
-      uniOptions.useTexture ? 1 : 0,
-      uniOptions.intersection.x,
-      uniOptions.intersection.y,
-    ]);
-
     elapsed += 0.0005;
 
-    if (!options.isDragging) {
-      var newYaw = options.yaw + options.rotationSpeed / 10;
-      newYaw = newYaw % 360;
-
-      yaw.update((n) => (n = newYaw));
-    }
     const cameraPosition = vec3.create();
     vec3.set(
       cameraPosition,
@@ -714,6 +637,11 @@ async function InitializeScene() {
     canvasTexture = context.getCurrentTexture();
     offscreenWidth = Math.floor(canvasTexture.width / 2);
     offscreenHeight = Math.floor(canvasTexture.height / 2);
+
+    if (!options.isDragging) {
+      var newYaw = options.yaw + options.rotationSpeed / 10;
+      setYaw(newYaw, false);
+    }
 
     if (hasChanged.resolution) {
       hasChanged.resolution = false;
@@ -769,13 +697,66 @@ async function InitializeScene() {
       );
 
       offscreenDepthTexture = offscreenDepth.texture;
-
       depthTexture = depth.texture;
     }
 
+    if (hasChanged.projectionDate) {
+      hasChanged.projectionDate = false;
+      tweenedVisibility.set(0.0);
+      fetchTextures(true).then(() => {
+        tweenedVisibility.set(1.0);
+      });
+    }
+
+    cloudBindings[5].resource = parsed3DGribTexture.texture.createView({
+      dimension: '3d',
+    });
+
+    var lightPosition = vec3.create();
+    vec3.set(lightPosition, 2 * Math.cos(elapsed), 0.0, 2 * Math.sin(elapsed));
+
+    const cloudUniValues = new Float32Array([
+      elapsed,
+      visibility,
+      options.cloudDensity,
+      options.sunDensity,
+      options.raymarchSteps,
+      options.raymarchLength,
+      options.coords.x,
+      options.coords.y,
+    ]);
+
+    const atmoUniValues = new Float32Array([
+      elapsed,
+      visibility,
+      options.coords.x,
+      options.coords.y,
+    ]);
+
+    const lightUniValues = new Float32Array([
+      lightPosition[0],
+      lightPosition[1],
+      lightPosition[2],
+      options.rayleighIntensity,
+      options.lightType === 'full_day'
+        ? 1
+        : options.lightType === 'day_cycle'
+        ? 0.5
+        : options.lightType === 'full_night'
+        ? 0
+        : 1.0,
+    ]);
+
+    const earthUniValues = new Float32Array([
+      elapsed,
+      visibility,
+      options.coords.x,
+      options.coords.y,
+    ]);
+
     bindGroup[0] = CreateBindGroup(device, pipeline[0], earthBindings);
     bindGroup[1] = CreateBindGroup(device, pipeline[1], cloudBindings);
-    bindGroup[2] = CreateBindGroup(device, pipeline[2], atmosphereBindings);
+    bindGroup[2] = CreateBindGroup(device, pipeline[2], atmoBindings);
     bindGroup[3] = CreateBindGroup(device, pipeline[3], [
       {
         binding: 0,
@@ -794,26 +775,6 @@ async function InitializeScene() {
         resource: blueNoiseV.sampler,
       },
     ]);
-
-    cloudBindings[5].resource = parsed3DGribTexture.texture.createView({
-      dimension: '3d',
-    });
-
-    if (hasChanged.projectionDate) {
-      hasChanged.projectionDate = false;
-      const tweenedDensity = tweened(options.cloudDensity, {
-        duration: 3500,
-        easing: cubicBezier,
-      });
-
-      tweenedDensity.subscribe((value) => {
-        options.cloudDensity = value;
-      });
-
-      tweenedDensity.set(0.0);
-
-      fetchTextures();
-    }
 
     const colorAttachments =
       renderPassDescriptor.colorAttachments as (GPURenderPassColorAttachment | null)[];
@@ -848,18 +809,10 @@ async function InitializeScene() {
       192,
       cameraPosition as ArrayBuffer
     );
-    device.queue.writeBuffer(
-      vertexUniBuffer,
-      208,
-      earthUniValues as ArrayBuffer
-    );
+    device.queue.writeBuffer(earthUniBuffer, 0, earthUniValues as ArrayBuffer);
     device.queue.writeBuffer(cloudUniBuffer, 0, cloudUniValues as ArrayBuffer);
     device.queue.writeBuffer(lightUniBuffer, 0, lightUniValues as ArrayBuffer);
-    device.queue.writeBuffer(
-      atmosphereUniBuffer,
-      0,
-      atmosphereUniValues as ArrayBuffer
-    );
+    device.queue.writeBuffer(atmoUniBuffer, 0, atmoUniValues as ArrayBuffer);
 
     draw();
     requestAnimationFrame(frame);
@@ -871,7 +824,7 @@ async function InitializeScene() {
       const passEncoder = firstCommandEncoder.beginRenderPass(
         offscreenPassDescriptor as GPURenderPassDescriptor
       );
-      if (options.layer.mb300 > 0) {
+      if (visibility > 0) {
         passEncoder.setPipeline(pipeline[1]);
         passEncoder.setVertexBuffer(0, buffers[0][0]);
         passEncoder.setVertexBuffer(1, buffers[0][1]);
@@ -898,7 +851,7 @@ async function InitializeScene() {
 
     renderPass.draw(options.amountOfVertices);
 
-    if (options.layer.mb300 > 0) {
+    if (visibility > 0) {
       if (options.halfRes) {
         renderPass.setPipeline(pipeline[3]);
         renderPass.setBindGroup(0, bindGroup[3]);

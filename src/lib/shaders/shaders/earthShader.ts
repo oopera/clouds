@@ -4,8 +4,13 @@ export const earthShader = /* wgsl */ `
       modelMatrix : mat4x4<f32>,
       normalMatrix : mat4x4<f32>,
       cameraPosition : vec4<f32>,
-      options : vec4<f32>,
     };
+
+    struct EarthUniforms {
+      visibility : f32,
+    };
+
+
 
     struct LightUniforms {
       lightPosition : vec3<f32>,
@@ -28,34 +33,25 @@ export const earthShader = /* wgsl */ `
     };
     
     @group(0) @binding(0) var<uniform> uni: Uniforms;
-    @group(0) @binding(1) var heightTexture: texture_2d<f32>;
-    @group(0) @binding(2) var lightTexture_01: texture_2d<f32>;
-    @group(0) @binding(3) var lightTexture_02: texture_2d<f32>;
-    @group(0) @binding(4) var texture_01: texture_2d<f32>;
-    @group(0) @binding(5) var texture_02: texture_2d<f32>;
-    @group(0) @binding(6) var textureSampler: sampler;
-    @group(0) @binding(7) var<uniform> lightUni: LightUniforms;
+    @group(0) @binding(1) var<uniform> earthUni: EarthUniforms;
+    @group(0) @binding(2) var<uniform> lightUni: LightUniforms;
+    @group(0) @binding(3) var lightTexture_01: texture_2d<f32>;
+    @group(0) @binding(4) var lightTexture_02: texture_2d<f32>;
+    @group(0) @binding(5) var texture_01: texture_2d<f32>;
+    @group(0) @binding(6) var texture_02: texture_2d<f32>;
+    @group(0) @binding(7) var textureSampler: sampler;
 
     @vertex fn vs(input: Input, @builtin(vertex_index) vertexIndex: u32) -> Output {
       var output: Output;
-    
-      var d: vec2<i32> = vec2<i32>(textureDimensions(heightTexture));
-    
-      var heightPixel: vec4<f32> = textureLoad(
-        heightTexture,
-        vec2<i32>(i32(input.uv.x * f32(d.x)), i32(input.uv.y * f32(d.y))),
-        0
-      );
-      var height: f32 = heightPixel.x;
-    
+
+      var usedVisibility = earthUni.visibility;
+      
       let mPosition: vec4<f32> = uni.modelMatrix * input.position;
       let mNormal: vec4<f32> = uni.normalMatrix * input.normal;
-    
-      let displacement: vec3<f32> = normalize(mNormal.xyz) * (height * uni.options[0]);
-    
-      output.Position = uni.viewProjectionMatrix * (mPosition + vec4<f32>(displacement, 0.0));
   
-      output.vPosition = uni.viewProjectionMatrix * (mPosition + vec4<f32>(displacement, 0.0));
+      output.Position = uni.viewProjectionMatrix * (mPosition);
+  
+      output.vPosition = uni.viewProjectionMatrix * (mPosition);
       output.vNormal = mNormal;
       output.vUV = input.uv;
     
@@ -69,8 +65,8 @@ export const earthShader = /* wgsl */ `
     }
 
     fn convertUVToNormal(uv: vec2<f32>) -> vec3<f32> {
-      let u: f32 = uv.x * 2.0 * 3.14159265359; // Convert U coordinate to radians
-      let v: f32 = uv.y * 3.14159265359; // Convert V coordinate to radians
+      let u: f32 = uv.x * 2.0 * 3.14159265359; 
+      let v: f32 = uv.y * 3.14159265359; 
     
       let x: f32 = sin(v) * cos(u);
       let y: f32 = sin(v) * sin(u);
@@ -91,17 +87,10 @@ export const earthShader = /* wgsl */ `
     @fragment fn fs(output: Output) -> @location(0) vec4<f32> {
       let textureColor_01 = textureSample(texture_01, textureSampler, vec2<f32>(output.vUV.x * 2.0, output.vUV.y));
       let textureColor_02 = textureSample(texture_02, textureSampler, vec2<f32>((output.vUV.x - 0.5) * 2.0, output.vUV.y));
-      let heightColor: vec4<f32> = textureSample(heightTexture, textureSampler, output.vUV);
       let lightColor_01 = textureSample(lightTexture_01, textureSampler, vec2<f32>(output.vUV.x * 2.0, output.vUV.y));
       let lightColor_02 = textureSample(lightTexture_02, textureSampler, vec2<f32>((output.vUV.x - 0.5) * 2.0, output.vUV.y));
-      let normal: vec3<f32> = getNormal(vec2(uni.options[2], uni.options[3]));
       var textureColor: vec4<f32>;
       var lightColor: vec4<f32>;
-      var distance: f32 = length(output.vNormal.xyz - normal);
-
-      // if (distance < 0.1) {
-      //   return mix(vec4(textureColor), vec4(0.2, 0.3, 0.4, 1.0), 2.0);
-      // }
 
       if (output.vUV.x < 0.5) {
           textureColor = textureColor_01;
@@ -109,10 +98,6 @@ export const earthShader = /* wgsl */ `
       } else {
           textureColor = textureColor_02;
           lightColor = lightColor_02;
-      }
-
-      if(uni.options[1] <= 0.5){
-        textureColor = heightColor;
       }
 
 // COMMON LIGHT CALCS

@@ -49,6 +49,27 @@ body {
   --font-size-xs: 12px;
   --font-size-xl: 76px;
 
+  --star-gradient: radial-gradient(
+    circle,
+    rgb(225, 225, 225) 0%,
+    rgb(36, 85, 76) 30%,
+    rgba(11, 17, 17, 0) 100%
+  );
+
+  --dark-gradient: radial-gradient(
+    circle,
+    rgb(11, 17, 26) 0%,
+    rgb(16, 21, 24) 30%,
+    rgba(0, 0, 0) 100%
+  );
+
+  --blue-gradient: radial-gradient(
+    circle,
+    rgb(225, 225, 225) 0%,
+    rgb(0, 34, 76) 30%,
+    rgba(11, 17, 17, 0) 100%
+  );
+
   --font-family-mono: 'Supply', monospace;
 
   --ease: cubic-bezier(0.215, 0.61, 0.355, 1);
