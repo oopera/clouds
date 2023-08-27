@@ -47,6 +47,63 @@ export const GetTexture = async (
 
 export const Get3DTextureFromGribData = async (
   device: GPUDevice,
+  flattenedArray: number[][],
+  width: number = 1440,
+  height: number = 721,
+  addressModeU = 'repeat',
+  addressModeV = 'repeat',
+  addressModeW = 'repeat'
+) => {
+  const depth = flattenedArray.length;
+
+  const sampler = device.createSampler({
+    minFilter: 'linear',
+    magFilter: 'linear',
+    addressModeU: addressModeU as GPUAddressMode,
+    addressModeV: addressModeV as GPUAddressMode,
+    addressModeW: addressModeW as GPUAddressMode,
+  });
+
+  const rgbaData = new Uint8ClampedArray(width * height * depth * 4);
+
+  const texture = device.createTexture({
+    size: { width: width, height: height, depthOrArrayLayers: depth },
+    format: 'rgba8unorm',
+    usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST,
+    dimension: '3d',
+  });
+
+  for (let d = 0; d < depth; d++) {
+    const layerData = flattenedArray[d];
+
+    // Assuming layerData is a flat array that matches width*height
+    for (let i = 0; i < layerData.length; i++) {
+      const value = layerData[i];
+      const color = value * 2.55;
+      const rgbaIndex = (i + d * layerData.length) * 4;
+      rgbaData[rgbaIndex] = color;
+      rgbaData[rgbaIndex + 1] = color;
+      rgbaData[rgbaIndex + 2] = color;
+      rgbaData[rgbaIndex + 3] = color;
+    }
+  }
+
+  device.queue.writeTexture(
+    { texture: texture },
+    rgbaData,
+    { offset: 0, bytesPerRow: 4 * width, rowsPerImage: height },
+    { width: width, height: height, depthOrArrayLayers: depth }
+  );
+
+  return {
+    texture,
+    sampler,
+  };
+};
+
+// Encoded Runs
+export const DeprecatedGet3DTextureFromGribData = async (
+  device: GPUDevice,
   encodedRunsArray: number[][][],
   width: number = 1440,
   height: number = 721,
@@ -107,6 +164,7 @@ export const Get3DTextureFromGribData = async (
     sampler,
   };
 };
+
 export const GetTextureFromGribData = async (
   device: GPUDevice,
   encodedRuns: number[][], // Assume that this is an array of {value, count} objects
@@ -285,6 +343,17 @@ export const GetDepthTexture = async (
     texture,
     sampler,
   };
+};
+
+export const parseEncodedToFlattened = (encodedLayer: number[][]): number[] => {
+  let flattenedLayer: number[] = [];
+
+  for (const run of encodedLayer) {
+    for (let i = 0; i < run[0]; i++) {
+      flattenedLayer.push(run[1]);
+    }
+  }
+  return flattenedLayer;
 };
 
 export const Get3DNoiseTexture = async (
