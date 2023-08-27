@@ -180,10 +180,11 @@ export default function InitStores(
       var changeX = e.clientX - options.coords.lastX;
       var changeY = e.clientY - options.coords.lastY;
 
-      var newPitch = options.pitch + 0.1 * changeY * Math.pow(options.zoom, 1);
+      var newPitch =
+        options.pitch + 0.1 * changeY * Math.pow(options.zoom, 0.25);
       newPitch = Math.max(-89, Math.min(89, newPitch));
 
-      var newYaw = options.yaw - 0.1 * changeX * Math.pow(options.zoom, 1);
+      var newYaw = options.yaw - 0.1 * changeX * Math.pow(options.zoom, 0.25);
       options.coords.lastX = e.clientX;
       options.coords.lastY = e.clientY;
 

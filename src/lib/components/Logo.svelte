@@ -9,6 +9,7 @@
   let mounted = false;
   let loaded = false;
   let deviceFailed = false;
+
   onMount(() => {
     mounted = true;
   });
@@ -180,71 +181,36 @@
   @keyframes elongateHeight {
     0% {
       height: 32px;
-      background: radial-gradient(
-        circle,
-        rgb(225, 225, 225) 0%,
-        rgb(145, 174, 165) 30%,
-        rgba(11, 17, 17, 0) 100%
-      );
+      background: var(--star-gradient);
     }
     50% {
       height: 64px;
-      background: radial-gradient(
-        circle,
-        rgb(225, 225, 225) 0%,
-        rgb(36, 85, 76) 30%,
-        rgba(11, 17, 17, 0) 100%
-      );
+      background: var(--star-gradient);
     }
     100% {
       height: 32px;
-      background: radial-gradient(
-        circle,
-        rgb(225, 225, 225) 0%,
-        rgb(145, 174, 165) 30%,
-        rgba(11, 17, 17, 0) 100%
-      );
+      background: var(--star-gradient);
     }
   }
   @keyframes elongateWidth {
     0% {
       width: 32px;
-      background: radial-gradient(
-        circle,
-        rgb(225, 225, 225) 0%,
-        rgb(145, 174, 165) 30%,
-        rgba(11, 17, 17, 0) 100%
-      );
+      background: var(--star-gradient);
     }
     50% {
       width: 64px;
-      background: radial-gradient(
-        circle,
-        rgb(225, 225, 225) 0%,
-        rgb(36, 85, 76) 30%,
-        rgba(11, 17, 17, 0) 100%
-      );
+      background: var(--star-gradient);
     }
     100% {
       width: 32px;
-      background: radial-gradient(
-        circle,
-        rgb(225, 225, 225) 0%,
-        rgb(145, 174, 165) 30%,
-        rgba(11, 17, 17, 0) 100%
-      );
+      background: var(--star-gradient);
     }
   }
 
   .crosshair__horizontal {
     width: 0px;
     height: 1px;
-    background: radial-gradient(
-      circle,
-      rgb(225, 225, 225) 0%,
-      rgb(36, 85, 76) 30%,
-      rgba(11, 17, 17, 0) 100%
-    );
+    background: var(--star-gradient);
     position: absolute;
     top: 50%;
     left: 50%;
@@ -255,12 +221,7 @@
   .crosshair__vertical {
     width: 1px;
     height: 0px;
-    background: radial-gradient(
-      circle,
-      rgb(225, 225, 225) 0%,
-      rgb(36, 85, 76) 30%,
-      rgba(11, 17, 17, 0) 100%
-    );
+    background: var(--star-gradient);
     position: absolute;
     top: 50%;
     left: 50%;
@@ -342,12 +303,4 @@
     transition-delay: 0.5s;
     transition-duration: 1.14s;
   }
-
-  // .loaded {
-  //   opacity: 0;
-  //   top: gap(4);
-  //   @media (min-width: 768px) {
-  //     opacity: 1;
-  //   }
-  // }
 </style>

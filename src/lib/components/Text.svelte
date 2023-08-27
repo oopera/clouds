@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { fly } from 'svelte/transition';
-  import { cubicBezier } from '$lib/stores/easing';
+  import { cubicBezier } from '$lib/shaders/utils/cubicBezier';
 
   export let delay: number = 0;
   export let secondary = false;
