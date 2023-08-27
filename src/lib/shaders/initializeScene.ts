@@ -38,7 +38,7 @@ import { mb900 } from '$lib/assets/mb900.js';
 import { dev } from '$app/environment';
 import { tweened } from 'svelte/motion';
 import { fullScreenQuadShader } from './shaders/quadShader.js';
-import { cubicBezier } from '$lib/stores/easing.js';
+import { cubicBezier } from '$lib/shaders/utils/cubicBezier.js';
 
 let depthTexture: GPUTexture;
 let offscreenDepthTexture: GPUTexture;
@@ -716,7 +716,7 @@ async function InitializeScene() {
     vec3.set(lightPosition, 2 * Math.cos(elapsed), 0.0, 2 * Math.sin(elapsed));
 
     const cloudUniValues = new Float32Array([
-      0.02 * options.scale,
+      elapsed,
       visibility,
       options.cloudDensity,
       options.sunDensity,
@@ -727,10 +727,10 @@ async function InitializeScene() {
     ]);
 
     const atmoUniValues = new Float32Array([
-      0.035 * options.scale,
+      elapsed,
       visibility,
-      options.layer.atmo,
-      0.0,
+      options.coords.x,
+      options.coords.y,
     ]);
 
     const lightUniValues = new Float32Array([
@@ -748,8 +748,8 @@ async function InitializeScene() {
     ]);
 
     const earthUniValues = new Float32Array([
+      elapsed,
       visibility,
-      1,
       options.coords.x,
       options.coords.y,
     ]);

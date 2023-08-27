@@ -7,7 +7,7 @@ struct Uniforms {
 };
 
 struct CloudUniforms {
-  radius : f32,
+  elapsed : f32,
   visibility : f32, 
   density : f32,
   sunDensity : f32,
@@ -47,6 +47,8 @@ struct Output {
 @group(0) @binding(7) var blue_noise: texture_2d<f32>;
 @group(0) @binding(8) var blue_noise_sampler: sampler;
 
+const radius = 0.005;
+
  
 @vertex fn vs(input: Input, @builtin(vertex_index) vertexIndex: u32) -> Output {
     var output: Output;
@@ -54,7 +56,7 @@ struct Output {
     let mPosition: vec4<f32> = uni.modelMatrix * input.position;
     let mNormal: vec4<f32> = uni.normalMatrix * input.normal;
 
-    var displacement:vec4<f32> = vec4<f32>(normalize(mPosition.xyz) * (cloudUniforms.radius), 0.0);
+    var displacement:vec4<f32> = vec4<f32>(normalize(mPosition.xyz) * radius, 0.0);
 
     output.Position = uni.viewProjectionMatrix * (mPosition + displacement);
     output.vPosition = mPosition;
@@ -65,7 +67,6 @@ struct Output {
 }
 
 const PI: f32 = 3.141592653589793;
-
 const N: f32 = 2.545e25;  
 const n: f32 = 1.0003;    
 
@@ -110,9 +111,7 @@ fn computeNoise(coverage: f32, noise: vec4<f32>) -> f32 {
   }
 }
 
-
 fn getCoverage(p: vec3<f32>, depth: f32) -> f32 {
-  let radius: f32 = 1 + cloudUniforms.radius;
   let position = normalize(p) * radius;
   var longitude: f32 = atan2(position.z, position.x) / (2.0 *  PI);
   let latitude: f32 = acos(position.y / radius) / PI;
@@ -166,7 +165,7 @@ fn getDistance(uv: vec2<f32>, selectedPoint: vec2<f32>) -> f32 {
 
 @fragment fn fs(output: Output) -> @location(0) vec4<f32> {
   let cameraPosition: vec3<f32> = uni.cameraPosition.rgb;
-  var rayOrigin: vec3<f32> = output.vPosition.xyz - cloudUniforms.radius;
+  var rayOrigin: vec3<f32> = output.vPosition.xyz - radius;
   var rayDirection: vec3<f32> = normalize(rayOrigin + cameraPosition);
   var sunRayDirection: vec3<f32> = normalize(rayOrigin + lightUniforms.lightPosition);
   
@@ -182,7 +181,7 @@ fn getDistance(uv: vec2<f32>, selectedPoint: vec2<f32>) -> f32 {
   var noisedcoverage: f32;
 
   let stepSize: f32 = cloudUniforms.raymarchLength; 
-  let startDepth: f32 =  cloudUniforms.radius; 
+  let startDepth: f32 =  radius; 
   let endDepth: f32 =  startDepth + (cloudUniforms.raymarchSteps  * stepSize); 
 
   let baseColor = vec3<f32>(0.72, 0.73, 0.77);  

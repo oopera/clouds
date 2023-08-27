@@ -76,7 +76,6 @@ export const Get3DTextureFromGribData = async (
   for (let d = 0; d < depth; d++) {
     const layerData = flattenedArray[d];
 
-    // Assuming layerData is a flat array that matches width*height
     for (let i = 0; i < layerData.length; i++) {
       const value = layerData[i];
       const color = value * 2.55;

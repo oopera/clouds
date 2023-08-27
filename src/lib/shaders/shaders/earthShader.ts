@@ -100,7 +100,6 @@ export const earthShader = /* wgsl */ `
           lightColor = lightColor_02;
       }
 
-
 // COMMON LIGHT CALCS
 
       let dotProduct = dot(lightUni.lightPosition, output.vNormal.xyz);

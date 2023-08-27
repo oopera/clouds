@@ -23,6 +23,10 @@
 
 <svelte:head>
   <title>Clouds — WebGPU</title>
+  <meta
+    name="description"
+    content="Clouds is a realtime 3D visualization of global cloud cover."
+  />
 </svelte:head>
 
 <Cursor />
@@ -147,8 +151,8 @@
           delay={8}
           title="rotation_speed"
           min={0}
-          max={5}
-          step={0.25}
+          max={1}
+          step={0.05}
         />
         <Text accent vertical delay={9} text={'CAMERA'} />
       </Layout>

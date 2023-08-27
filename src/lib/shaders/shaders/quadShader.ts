@@ -10,7 +10,6 @@ struct Output {
 
 @group(0) @binding(0) var myTexture: texture_2d<f32>;
 @group(0) @binding(1) var mySampler: sampler;
-
 @group(0) @binding(2) var blue_noise: texture_2d<f32>;
 @group(0) @binding(3) var blue_noise_sampler: sampler;
 
@@ -18,12 +17,12 @@ struct Output {
     var output: Output;
 
     let quad_positions: array<vec2<f32>, 6> = array<vec2<f32>, 6>(
-        vec2<f32>(-1.0, -1.0),  // 0
-        vec2<f32>(1.0, -1.0),   // 1
-        vec2<f32>(-1.0, 1.0),   // 2
-        vec2<f32>(-1.0, 1.0),   // 2 (repeated for second triangle)
-        vec2<f32>(1.0, -1.0),   // 1 (repeated for second triangle)
-        vec2<f32>(1.0, 1.0)     // 3
+        vec2<f32>(-1.0, -1.0), 
+        vec2<f32>(1.0, -1.0),  
+        vec2<f32>(-1.0, 1.0),  
+        vec2<f32>(-1.0, 1.0),   
+        vec2<f32>(1.0, -1.0),  
+        vec2<f32>(1.0, 1.0)     
     );
 
     output.Position = vec4<f32>(quad_positions[vertexIndex], 0.0, 1.0);
@@ -34,11 +33,9 @@ struct Output {
 @fragment fn fs(output: Output) -> @location(0) vec4<f32> {
     var color = textureSample(myTexture, mySampler, output.uv);
     
-    // Control factors
-    let ditherIntensity: f32 = 0.025;  // Adjust this for stronger/weaker dithering
-    let threshold: f32 = 0.25;        // Adjust to make dithering more/less frequent
+    let ditherIntensity: f32 = 0.025; 
+    let threshold: f32 = 0.25;      
 
-    // Sample the blue noise texture
     let noiseUV = output.uv ;
     let noise = textureSample(blue_noise, blue_noise_sampler, noiseUV).r;
 
