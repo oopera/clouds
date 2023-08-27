@@ -1,6 +1,6 @@
 <script lang="ts">
   import { tweened } from 'svelte/motion';
-  import { zoom } from '../stores/stores.js';
+  import { setZoom, tweenedZoom, zoom } from '../stores/stores.js';
   import { quintOut } from 'svelte/easing';
   import Text from './Text.svelte';
 
@@ -14,7 +14,7 @@
       2.25,
       Math.min(Number((e.target as HTMLInputElement).value), 7.25)
     );
-    zoom.set(finalZoom);
+    setZoom(finalZoom, true);
   };
 
   const indicatorArray = Array.from({ length: 10 }, (_, i) => i + 1);
@@ -45,17 +45,10 @@
     {step}
     on:input={handleInput}
     type="range"
-    class="slider"
-    id="zoom-input"
   />
 </div>
 
 <style lang="scss">
-  .rotate {
-    rotate: 90deg;
-    transform: translateY(0px);
-  }
-
   .zoom {
     position: relative;
     align-items: center;
@@ -98,7 +91,7 @@
     }
   }
 
-  .slider {
+  input {
     position: absolute;
     appearance: none;
     -webkit-appearance: none;

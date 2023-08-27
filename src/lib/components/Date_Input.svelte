@@ -3,9 +3,6 @@
   import Layout from './Layout.svelte';
   import { projection_date } from '$lib/stores/stores';
   import { dev } from '$app/environment';
-  let mounted: boolean = false;
-
-  let yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
   const getDateValues = (date: Date) => {
     var day = ('0' + date.getDate()).slice(-2);
@@ -23,8 +20,14 @@
     return `${date.year}-${date.month}-${date.day}`;
   };
 
-  let current_date = getDateValues(yesterday);
-  let max_date = getDateValues(yesterday);
+  let mounted: boolean = false;
+
+  let today = new Date(Date.now());
+  let tenDays = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
+
+  let current_date = getDateValues(today);
+  let max_date = getDateValues(today);
+  let min_date = getDateValues(tenDays);
 
   onMount(() => {
     mounted = true;
@@ -36,41 +39,33 @@
       });
     }
   });
+
+  const oninput = (e: Event) => {
+    if (!e.target) return;
+    const date = new Date((e.target as HTMLInputElement).value);
+    if (getDateValues(date) === $projection_date) return;
+    current_date = getDateValues(date);
+    projection_date.set({
+      day: current_date.day,
+      month: current_date.month,
+      year: current_date.year,
+    });
+  };
 </script>
 
 <div class="date-input">
   <Layout gap="1" align="end" justify="between">
     <input
-      on:input={(e) => {
-        const date = new Date(e.target.value);
-        if (getDateValues(date) === $projection_date) return;
-        current_date = getDateValues(date);
-        projection_date.set({
-          day: current_date.day,
-          month: current_date.month,
-          year: current_date.year,
-        });
-      }}
+      on:input={oninput}
       value={getDateString(current_date)}
       max={getDateString(max_date)}
-      min={getDateString({
-        day: '01',
-        month: '01',
-        year: (Number(current_date.year) - 1).toString(),
-      })}
+      min={getDateString(min_date)}
       type="date"
     />
   </Layout>
 </div>
 
 <style lang="scss">
-  .range-input {
-    min-width: 144px;
-    white-space: nowrap;
-    box-sizing: border-box;
-    z-index: 2;
-  }
-
   input {
     appearance: none;
     -webkit-appearance: none;

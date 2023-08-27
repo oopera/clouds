@@ -59,11 +59,7 @@ fn smoothstep(edge0: f32, edge1: f32, x: f32) -> f32 {
 }
 
 @fragment fn fs(output: Output) -> @location(0) vec4<f32> {
-
   let viewDirection: vec3<f32> = normalize(uni.cameraPosition.xyz - output.vPosition.xyz);
-
-// COMMON LIGHT CALCS
-
 
 
   let dotProduct = dot(lightUni.lightPosition, output.vNormal.xyz);
@@ -74,8 +70,6 @@ fn smoothstep(edge0: f32, edge1: f32, x: f32) -> f32 {
   }else if(lightUni.lightType == 1.0){
     lightness = 1.0;
   }
-
-
 
   let edge = fwidth(lightness);
   let borderColor = vec4(1.0, 0.92, 0.95, 1.0);

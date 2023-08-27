@@ -4,8 +4,10 @@ export const earthShader = /* wgsl */ `
       modelMatrix : mat4x4<f32>,
       normalMatrix : mat4x4<f32>,
       cameraPosition : vec4<f32>,
-      options : vec4<f32>,
+      options: vec4<f32>,
     };
+
+
 
     struct LightUniforms {
       lightPosition : vec3<f32>,
@@ -38,6 +40,8 @@ export const earthShader = /* wgsl */ `
 
     @vertex fn vs(input: Input, @builtin(vertex_index) vertexIndex: u32) -> Output {
       var output: Output;
+
+      var scale = uni.options[0];
     
       var d: vec2<i32> = vec2<i32>(textureDimensions(heightTexture));
     
@@ -51,7 +55,7 @@ export const earthShader = /* wgsl */ `
       let mPosition: vec4<f32> = uni.modelMatrix * input.position;
       let mNormal: vec4<f32> = uni.normalMatrix * input.normal;
     
-      let displacement: vec3<f32> = normalize(mNormal.xyz) * (height * uni.options[0]);
+      let displacement: vec3<f32> = normalize(mNormal.xyz) * (height * scale);
     
       output.Position = uni.viewProjectionMatrix * (mPosition + vec4<f32>(displacement, 0.0));
   
@@ -69,8 +73,8 @@ export const earthShader = /* wgsl */ `
     }
 
     fn convertUVToNormal(uv: vec2<f32>) -> vec3<f32> {
-      let u: f32 = uv.x * 2.0 * 3.14159265359; // Convert U coordinate to radians
-      let v: f32 = uv.y * 3.14159265359; // Convert V coordinate to radians
+      let u: f32 = uv.x * 2.0 * 3.14159265359; 
+      let v: f32 = uv.y * 3.14159265359; 
     
       let x: f32 = sin(v) * cos(u);
       let y: f32 = sin(v) * sin(u);
@@ -94,13 +98,15 @@ export const earthShader = /* wgsl */ `
       let heightColor: vec4<f32> = textureSample(heightTexture, textureSampler, output.vUV);
       let lightColor_01 = textureSample(lightTexture_01, textureSampler, vec2<f32>(output.vUV.x * 2.0, output.vUV.y));
       let lightColor_02 = textureSample(lightTexture_02, textureSampler, vec2<f32>((output.vUV.x - 0.5) * 2.0, output.vUV.y));
-      let normal: vec3<f32> = getNormal(vec2(uni.options[2], uni.options[3]));
       var textureColor: vec4<f32>;
       var lightColor: vec4<f32>;
-      var distance: f32 = length(output.vNormal.xyz - normal);
+
+      // var selPoint: vec2<f32> = vec2(uni.options[2], uni.options[3]);
+      // let normal: vec3<f32> = getNormal(selPoint);
+      // var distance: f32 = length(output.vNormal.xyz - normal);
 
       // if (distance < 0.1) {
-      //   return mix(vec4(textureColor), vec4(0.2, 0.3, 0.4, 1.0), 2.0);
+      //   return vec4<f32>(0.0, 0.0, 0.0, 0.0);
       // }
 
       if (output.vUV.x < 0.5) {

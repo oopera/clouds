@@ -23,24 +23,47 @@ export const mb500 = writable(1);
 export const mb700 = writable(1);
 export const atmo = writable(1);
 export const cloud = writable(1);
-export const pitch = writable(1);
-export const tweenedPitch = tweened(100, {
-  duration: 250,
+export const pitch = writable(0);
+export const tweenedPitch = tweened(0, {
+  duration: 1250,
   easing: cubicBezier,
 });
-export const yaw = writable(1);
-export const tweenedYaw = tweened(100, {
-  duration: 250,
+export const setPitch = (value: number, useTween: boolean) => {
+  if (useTween) {
+    tweenedPitch.set(value);
+  } else {
+    pitch.set(value);
+  }
+};
+
+export const yaw = writable(0);
+export const tweenedYaw = tweened(0, {
+  duration: 1250,
   easing: cubicBezier,
 });
+export const setYaw = (value: number, useTween: boolean) => {
+  if (useTween) {
+    tweenedYaw.set(value);
+  } else {
+    yaw.set(value);
+  }
+};
+
 export const zoom = writable(25);
 export const tweenedZoom = tweened(25, {
   duration: 1250,
   easing: cubicBezier,
 });
+export const setZoom = (value: number, useTween: boolean) => {
+  if (useTween) {
+    tweenedZoom.set(value);
+  } else {
+    zoom.set(value);
+  }
+};
 
 export const cameraposition = derived(
-  [tweenedPitch, tweenedYaw, tweenedZoom],
+  [pitch, yaw, zoom],
   ([$pitch, $yaw, $zoom]) => {
     const pitchRadian = ($pitch * Math.PI) / 180;
     const yawRadian = ($yaw * Math.PI) / 180;

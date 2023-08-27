@@ -13,7 +13,6 @@ struct CloudUniforms {
   sunDensity : f32,
   raymarchSteps : f32,
   raymarchLength : f32,
-  elapsedTime : f32,
   interactionx: f32,
   interactiony: f32,
 }
@@ -153,6 +152,17 @@ fn convertUVToNormal(uv: vec2<f32>) -> vec3<f32> {
   return normalize(vec3<f32>(x, z, -y));
 }
 
+fn getDistance(uv: vec2<f32>, selectedPoint: vec2<f32>) -> f32 {
+  let delta = abs(uv - selectedPoint);
+
+  // Take into account the wrap-around for the U coordinate
+  let wrappedDeltaX = min(delta.x, 1.0 - delta.x);
+  let wrappedDelta = vec2<f32>(wrappedDeltaX, delta.y);
+
+  return length(wrappedDelta);
+}
+
+
 
 @fragment fn fs(output: Output) -> @location(0) vec4<f32> {
   let cameraPosition: vec3<f32> = uni.cameraPosition.rgb;
@@ -223,10 +233,9 @@ fn convertUVToNormal(uv: vec2<f32>) -> vec3<f32> {
   }
   let bnoise = textureSample(blue_noise, blue_noise_sampler, output.vUV).r;
 
-  let normal: vec3<f32> = getNormal(cloudUniforms.interactionx, cloudUniforms.interactiony);
-  var distance: f32 = length(output.vNormal.xyz - normal);
-
-  if (distance < 0.15) {
+  let selectedNormal: vec3<f32> = getNormal(cloudUniforms.interactionx, cloudUniforms.interactiony);
+  var distance: f32 = length(output.vNormal.xyz - selectedNormal);
+  if (distance < 0.1) {
     return vec4(0,0,0,0);
   }
 

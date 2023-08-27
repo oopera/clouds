@@ -12,7 +12,7 @@ import {
   CreateTransforms,
 } from './utils/helper/matrixHelper.js';
 import { earthShader } from './shaders/earthShader.js';
-import { yaw, loading, zoom, pitch } from '$lib/stores/stores.js';
+import { loading, setZoom, setPitch, setYaw } from '$lib/stores/stores.js';
 import { cloudShader } from './shaders/cloudShader.js';
 
 import {
@@ -647,9 +647,9 @@ async function InitializeScene() {
     },
   }));
 
-  zoom.set(2.5);
-  yaw.set(360);
-  pitch.set(45);
+  setYaw(360, true);
+  setZoom(3, true);
+  setPitch(0, true);
 
   async function frame() {
     if (!device) return;
@@ -690,17 +690,15 @@ async function InitializeScene() {
     const earthUniValues = new Float32Array([
       0.015 * options.scale,
       uniOptions.useTexture ? 1 : 0,
-      uniOptions.intersection.x,
-      uniOptions.intersection.y,
+      options.coords.x,
+      options.coords.y,
     ]);
 
     elapsed += 0.0005;
 
     if (!options.isDragging) {
       var newYaw = options.yaw + options.rotationSpeed / 10;
-      newYaw = newYaw % 360;
-
-      yaw.update((n) => (n = newYaw));
+      setYaw(newYaw, false);
     }
     const cameraPosition = vec3.create();
     vec3.set(
