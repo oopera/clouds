@@ -350,7 +350,7 @@ async function InitializeScene() {
     };
   };
 
-  if (!dev) {
+  if (dev) {
     parsed3DGribTexture = await Get3DTextureFromGribData(device, [
       mb300,
       mb500,
