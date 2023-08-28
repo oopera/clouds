@@ -22,7 +22,7 @@
 
   let mounted: boolean = false;
 
-  let today = new Date(Date.now());
+  let today = new Date(Date.now() - 1 * 24 * 60 * 60 * 1000);
   let tenDays = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
 
   let current_date = getDateValues(today);
@@ -31,13 +31,12 @@
 
   onMount(() => {
     mounted = true;
-    if (!dev) {
-      projection_date.set({
-        day: current_date.day,
-        month: current_date.month,
-        year: current_date.year,
-      });
-    }
+
+    projection_date.set({
+      day: current_date.day,
+      month: current_date.month,
+      year: current_date.year,
+    });
   });
 
   const oninput = (e: Event) => {
