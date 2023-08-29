@@ -135,8 +135,9 @@ export default function InitStores(
   });
 
   mouse_interaction.subscribe((value) => {
-    options.coords.x = -value.x;
+    options.coords.x = value.x;
     options.coords.y = value.y;
+    console.log(value);
   });
 
   const handleScroll = (e: WheelEvent) => {
@@ -169,58 +170,74 @@ export default function InitStores(
   window.addEventListener('wheel', handleScroll, { passive: false });
   window.addEventListener('touchmove', handleTouch, { passive: false });
 
+  let initialX = 0; // Store the initial X coordinate on mousedown
+  let initialY = 0; // Store the initial Y coordinate on mousedown
+
   const handlemouseup = (e: MouseEvent) => {
     options.isDragging = false;
-    options.coords.lastX = 0;
-    options.coords.lastY = 0;
+
+    // Calculate the distance moved during the drag
+    const distance = Math.sqrt(
+      Math.pow(e.clientX - initialX, 2) + Math.pow(e.clientY - initialY, 2)
+    );
+
+    if (distance < 50) {
+      const intersection_coords = CalculateIntersection(
+        e.clientX,
+        e.clientY,
+        options
+      );
+
+      const mouseInteractionData = {
+        intersected: false,
+        x: 0,
+        y: 0,
+        longitude: 0,
+        latitude: 0,
+      };
+
+      if (intersection_coords.discriminant > 0) {
+        mouseInteractionData.intersected = true;
+        mouseInteractionData.x = -intersection_coords.u;
+        mouseInteractionData.y = intersection_coords.v;
+        mouseInteractionData.longitude = intersection_coords.longitude || 0;
+        mouseInteractionData.latitude = intersection_coords.latitude || 0;
+      }
+
+      mouse_interaction.set(mouseInteractionData);
+    }
+
+    // Reset the stored initial coordinates
+    initialX = 0;
+    initialY = 0;
   };
 
   const handlemousemove = (e: MouseEvent) => {
     if (options.isDragging) {
-      var changeX = e.clientX - options.coords.lastX;
-      var changeY = e.clientY - options.coords.lastY;
+      const changeX = e.clientX - options.coords.lastX;
+      const changeY = e.clientY - options.coords.lastY;
 
-      var newPitch =
+      const newPitch =
         options.pitch + 0.1 * changeY * Math.pow(options.zoom, 0.25);
-      newPitch = Math.max(-89, Math.min(89, newPitch));
+      const newYaw = options.yaw - 0.1 * changeX * Math.pow(options.zoom, 0.25);
 
-      var newYaw = options.yaw - 0.1 * changeX * Math.pow(options.zoom, 0.25);
       options.coords.lastX = e.clientX;
       options.coords.lastY = e.clientY;
 
-      setPitch(newPitch, false);
+      setPitch(Math.max(-89, Math.min(89, newPitch)), false);
       setYaw(newYaw, false);
     }
   };
 
   const handlemousedown = (e: MouseEvent) => {
     options.isDragging = true;
+
+    // Store the initial X and Y coordinates
+    initialX = e.clientX;
+    initialY = e.clientY;
+
     options.coords.lastX = e.clientX;
     options.coords.lastY = e.clientY;
-
-    const intersection_coords = CalculateIntersection(
-      e.clientX,
-      e.clientY,
-      options
-    );
-
-    if (intersection_coords.discriminant > 0) {
-      mouse_interaction.set({
-        intersected: true,
-        x: intersection_coords.u,
-        y: intersection_coords.v,
-        longitude: intersection_coords.longitude || 0,
-        latitude: intersection_coords.latitude || 0,
-      });
-    } else {
-      mouse_interaction.set({
-        intersected: false,
-        x: 0,
-        y: 0,
-        longitude: 0,
-        latitude: 0,
-      });
-    }
   };
 
   canvas.addEventListener('mousedown', handlemousedown);

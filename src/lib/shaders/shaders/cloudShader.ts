@@ -21,6 +21,8 @@ struct LightUniforms {
   lightPosition : vec3<f32>,
   rayleighIntensity : f32,
   lightType : f32,
+  elapsed : f32,
+  lastElapsed : f32,
 };
 
 struct Input {
@@ -135,13 +137,8 @@ fn ReMap(value: f32, old_low: f32, old_high: f32, new_low: f32, new_high: f32) -
   return ret_val;
 }
 
-fn getNormal(x: f32, y: f32) -> vec3<f32> {
-  let normal: vec3<f32> = convertUVToNormal(vec2<f32>(x, y));
-  return normal;
-}
-
 fn convertUVToNormal(uv: vec2<f32>) -> vec3<f32> {
-  let u: f32 = uv.x * 2.0 * 3.14159265359; // Convert U coordinate to radians
+  let u: f32 = uv.x * 2.005 * 3.14159265359; // Convert U coordinate to radians
   let v: f32 = uv.y * 3.14159265359; // Convert V coordinate to radians
 
   let x: f32 = sin(v) * cos(u);
@@ -149,6 +146,12 @@ fn convertUVToNormal(uv: vec2<f32>) -> vec3<f32> {
   let z: f32 = cos(v);
 
   return normalize(vec3<f32>(x, z, -y));
+}
+
+
+fn getNormal(x: f32, y: f32) -> vec3<f32> {
+  let normal: vec3<f32> = convertUVToNormal(vec2<f32>(x, y));
+  return normal;
 }
 
 fn getDistance(uv: vec2<f32>, selectedPoint: vec2<f32>) -> f32 {
@@ -161,6 +164,10 @@ fn getDistance(uv: vec2<f32>, selectedPoint: vec2<f32>) -> f32 {
   return length(wrappedDelta);
 }
 
+fn modifyDensity(originalDensity: f32, distance: f32, maxRadius: f32) -> f32 {
+  let falloff = smoothstep(0.0, maxRadius, distance); // Adjust this to fit your needs
+  return originalDensity * falloff ;
+}
 
 
 @fragment fn fs(output: Output) -> @location(0) vec4<f32> {
@@ -184,11 +191,11 @@ fn getDistance(uv: vec2<f32>, selectedPoint: vec2<f32>) -> f32 {
   let startDepth: f32 =  radius; 
   let endDepth: f32 =  startDepth + (cloudUniforms.raymarchSteps  * stepSize); 
 
-  let baseColor = vec3<f32>(0.72, 0.73, 0.77);  
+  let baseColor = vec3<f32>(0.62, 0.63, 0.67);  
   let highColor = vec3<f32>(0.89, 0.87, 0.90); 
 
   var outputDensity: f32;
-  var outputColor = vec3<f32>(0.0, 0.0, 0.0);
+  var outputColor = baseColor;
 
   for (var depth: f32 = startDepth; depth < endDepth; depth += stepSize) {
     let texturePosition: vec3<f32> = rayOrigin + rayDirection * depth;
@@ -209,11 +216,22 @@ fn getDistance(uv: vec2<f32>, selectedPoint: vec2<f32>) -> f32 {
     theta = dot(normalize(texturePosition), normalize(sunRayDirection));
 
     light = mieScattering(theta) * lightUniforms.rayleighIntensity;
-    sunDensity += getDensity(cloudUniforms.sunDensity,noisedcoverage, ReMap(depth, startDepth, endDepth, .0, 1.0))  * light;
+    sunDensity += getDensity(cloudUniforms.sunDensity, noisedcoverage, 0.2);
     }
+
+    
+    let selectedNormal: vec3<f32> = getNormal(cloudUniforms.interactionx, cloudUniforms.interactiony);
+
+    let timeSinceAnimationStart = lightUniforms.elapsed - lightUniforms.lastElapsed;
   
-    outputColor += density * sunDensity * highColor; 
-    outputDensity += density;
+    // Calculate the current diameter of the circle based on the elapsed time
+    let currentDiameter = mix(0.0, 0.5, clamp(timeSinceAnimationStart / 0.05, 0.0, 0.25));
+  
+    let distance: f32 = length(output.vNormal.xyz - selectedNormal);
+
+
+    outputColor += clamp(density, 0.0, 0.1) * sunDensity * highColor * light; 
+    outputDensity += modifyDensity(density, distance, currentDiameter);;
     rayOrigin = texturePosition;
   }
 
@@ -232,14 +250,7 @@ fn getDistance(uv: vec2<f32>, selectedPoint: vec2<f32>) -> f32 {
   }
   let bnoise = textureSample(blue_noise, blue_noise_sampler, output.vUV).r;
 
-  let selectedNormal: vec3<f32> = getNormal(cloudUniforms.interactionx, cloudUniforms.interactiony);
-  var distance: f32 = length(output.vNormal.xyz - selectedNormal);
-  if (distance < 0.1) {
-    return vec4(0,0,0,0);
-  }
 
-
-  outputColor += baseColor;
   return vec4<f32>(outputColor, outputDensity) * cloudUniforms.visibility * lightness;
 }
 `;

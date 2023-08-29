@@ -7,7 +7,10 @@ export const earthShader = /* wgsl */ `
     };
 
     struct EarthUniforms {
+      elapsed: f32,
       visibility : f32,
+      coordx: f32,
+      coordy: f32,
     };
 
 
@@ -92,6 +95,7 @@ export const earthShader = /* wgsl */ `
       var textureColor: vec4<f32>;
       var lightColor: vec4<f32>;
 
+
       if (output.vUV.x < 0.5) {
           textureColor = textureColor_01;
           lightColor = lightColor_01;
@@ -120,6 +124,12 @@ export const earthShader = /* wgsl */ `
         let edge = fwidth(lightness);
          mask = smoothstep(0.0, blendRadius, edge);
       }
+
+      // let selectedNormal: vec3<f32> = getNormal(vec2(earthUni.coordx, earthUni.coordy));
+      // var distance: f32 = length(output.vNormal.xyz - selectedNormal);
+      // if (distance < 0.1) {
+      //   return vec4(0,0,0,0);
+      // }
 
       let resultColor = vec4(textureColor.rgb * pow(lightness, 1.2), 1) + 
                    vec4(lightColor.rgb  * pow(1.0 - lightness, 1.2) , 1.0) +

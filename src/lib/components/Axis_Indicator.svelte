@@ -104,7 +104,7 @@
     position: absolute;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%) rotate3d(0, 1, 0, var(--z));
+    transform: translate(-50%, -50%) rotate3d(0, 1, 0, calc(var(--z)));
   }
 
   .crosshair__vertical {
@@ -114,7 +114,7 @@
     position: absolute;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%) rotate3d(0, 1, 1, var(--z));
+    transform: translate(-50%, -50%) rotate3d(0, 1, 1, calc(var(--z)));
   }
   .crosshair__depth {
     width: 1px;
@@ -127,7 +127,7 @@
   }
 
   .circle {
-    width: 84px;
+    width: 80%;
     aspect-ratio: 1/1;
     border-radius: 150px;
     border: 1px solid white;
@@ -145,18 +145,15 @@
 
   .circle:nth-child(2) {
     border: 1pt solid var(--c-tertiary);
-    transform: translate(-50%, -50%) rotate3d(0, 1, 0, calc(var(--z)))
-      scale(calc(2 - (var(--zo) / 5)));
+    transform: translate(-50%, -50%) rotate3d(0, 1, 0, calc(var(--z)));
   }
 
   .circle:nth-child(3) {
     border: 1pt solid var(--c-tertiary);
-    transform: translate(-50%, -50%) rotate3d(0, 0, 1, var(--z))
-      scale(calc(2 - (var(--zo) / 5)));
+    transform: translate(-50%, -50%) rotate3d(0, 1, 1, calc(var(--z)));
   }
   .circle:nth-child(4) {
     border: 1pt solid var(--c-tertiary);
-    transform: translate(-50%, -50%) rotate3d(1, 1, 1, calc(var(--z)))
-      scale(calc(2 - (var(--zo) / 5)));
+    transform: translate(-50%, -50%) rotate3d(1, 1, 1, calc(var(--z)));
   }
 </style>

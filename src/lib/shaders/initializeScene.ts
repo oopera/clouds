@@ -76,6 +76,9 @@ var options: RenderOptions = {
   halfRes: false,
   isDragging: false,
 
+  elapsed: 0,
+  lastElapsed: 0,
+
   projectionDate: {
     day: '0',
     month: '0',
@@ -134,7 +137,7 @@ const pipeline: GPURenderPipeline[] = [];
 const bindGroup: GPUBindGroup[] = [];
 const buffers: GPUBuffer[][] = [];
 
-var elapsed = -1;
+var elapsed = 0;
 
 const displayError = (message: string) => {
   var counter = 0;
@@ -342,11 +345,16 @@ async function InitializeScene() {
       ]);
     }
 
+    mb3001d = parseEncodedToFlattened(mb300R);
+    mb5001d = parseEncodedToFlattened(mb500R);
+    mb7001d = parseEncodedToFlattened(mb700R);
+    mb9001d = parseEncodedToFlattened(mb900R);
+
     return {
-      mb300: parseEncodedToFlattened(mb300R),
-      mb500: parseEncodedToFlattened(mb500R),
-      mb700: parseEncodedToFlattened(mb700R),
-      mb900: parseEncodedToFlattened(mb900R),
+      mb300: mb3001d,
+      mb500: mb5001d,
+      mb700: mb7001d,
+      mb900: mb9001d,
     };
   };
 
@@ -568,6 +576,25 @@ async function InitializeScene() {
     },
   ];
 
+  const quadBindings = [
+    {
+      binding: 0,
+      resource: offscreenTextureResolve.createView(),
+    },
+    {
+      binding: 1,
+      resource: sampler,
+    },
+    {
+      binding: 2,
+      resource: blueNoiseV.texture.createView(),
+    },
+    {
+      binding: 3,
+      resource: blueNoiseV.sampler,
+    },
+  ];
+
   pipeline[0] = CreatePipeline(
     device,
     device.createShaderModule({ code: earthShader }),
@@ -623,7 +650,7 @@ async function InitializeScene() {
 
   async function frame() {
     if (!device) return;
-    elapsed += 0.0005;
+    options.elapsed += 0.0005;
 
     const cameraPosition = vec3.create();
     vec3.set(
@@ -716,7 +743,7 @@ async function InitializeScene() {
     vec3.set(lightPosition, 2 * Math.cos(elapsed), 0.0, 2 * Math.sin(elapsed));
 
     const cloudUniValues = new Float32Array([
-      elapsed,
+      options.elapsed,
       visibility,
       options.cloudDensity,
       options.sunDensity,
@@ -727,7 +754,7 @@ async function InitializeScene() {
     ]);
 
     const atmoUniValues = new Float32Array([
-      elapsed,
+      options.elapsed,
       visibility,
       options.coords.x,
       options.coords.y,
@@ -745,36 +772,22 @@ async function InitializeScene() {
         : options.lightType === 'full_night'
         ? 0
         : 1.0,
+      options.elapsed,
+      options.lastElapsed,
     ]);
 
     const earthUniValues = new Float32Array([
-      elapsed,
+      options.elapsed,
       visibility,
       options.coords.x,
       options.coords.y,
     ]);
 
+    quadBindings[0].resource = offscreenTextureResolve.createView();
     bindGroup[0] = CreateBindGroup(device, pipeline[0], earthBindings);
     bindGroup[1] = CreateBindGroup(device, pipeline[1], cloudBindings);
     bindGroup[2] = CreateBindGroup(device, pipeline[2], atmoBindings);
-    bindGroup[3] = CreateBindGroup(device, pipeline[3], [
-      {
-        binding: 0,
-        resource: offscreenTextureResolve.createView(),
-      },
-      {
-        binding: 1,
-        resource: sampler,
-      },
-      {
-        binding: 2,
-        resource: blueNoiseV.texture.createView(),
-      },
-      {
-        binding: 3,
-        resource: blueNoiseV.sampler,
-      },
-    ]);
+    bindGroup[3] = CreateBindGroup(device, pipeline[3], quadBindings);
 
     const colorAttachments =
       renderPassDescriptor.colorAttachments as (GPURenderPassColorAttachment | null)[];

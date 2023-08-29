@@ -143,8 +143,8 @@
           delay={8}
           title="sun_transmittance"
           min={0}
-          max={0.025}
-          step={0.0005}
+          max={1.0}
+          step={0.02}
         />
         <Text accent vertical delay={9} text={'LIGHT'} />
         <Range_Input
