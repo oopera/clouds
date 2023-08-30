@@ -40,6 +40,9 @@ export interface RenderOptions {
   halfRes: boolean;
   isDragging: boolean;
 
+  elapsed: number;
+  lastElapsed: number;
+
   projectionDate: {
     day: string;
     month: string;

@@ -1,10 +1,12 @@
 import { mat4, vec3, vec4 } from 'gl-matrix';
 import { CreateViewProjection } from './helper/matrixHelper';
 import type { RenderOptions } from '$lib/types/types';
+import { cameraposition } from '$lib/stores/stores';
 
-const degToRad = (degrees: number) => {
-  return (degrees * Math.PI) / 180;
-};
+var cam: any;
+cameraposition.subscribe((value) => {
+  cam = value;
+});
 
 export function CalculateIntersection(
   mouseX: number,
@@ -17,11 +19,7 @@ export function CalculateIntersection(
   const x = ((mouseX - rect.left) / canvas.width) * 2 - 1;
   const y = -((mouseY - rect.top) / canvas.height) * 2 + 1;
 
-  const pitchRadian = degToRad(options.pitch);
-  const yawRadian = degToRad(options.yaw);
-
   const cameraPosition = vec3.create();
-
   vec3.set(
     cameraPosition,
     options.cameraPosition.x,
@@ -57,13 +55,14 @@ export function CalculateIntersection(
   );
 
   const sphereCenter = vec3.fromValues(0, 0, 0);
-  const sphereRadius = 2;
+  const sphereRadius = 2.005; // Make sure this is consistent with your rendering code
 
   const rayOriginToSphereCenter = vec3.sub(
     vec3.create(),
     sphereCenter,
     cameraPosition
   );
+
   const a = vec3.dot(rayDirection, rayDirection);
   const b = 2.0 * vec3.dot(rayDirection, rayOriginToSphereCenter);
   const c =
@@ -79,21 +78,10 @@ export function CalculateIntersection(
       rayOriginToSphereCenter,
       vec3.scale(vec3.create(), rayDirection, t)
     );
-    const rotationMatrix = mat4.create();
-    mat4.rotateY(rotationMatrix, rotationMatrix, yawRadian);
-    mat4.rotateX(rotationMatrix, rotationMatrix, pitchRadian);
 
-    const rotatedIntersectionPoint = vec3.transformMat4(
-      vec3.create(),
-      intersectionPoint,
-      rotationMatrix
-    );
-
-    const azimuth = Math.atan2(
-      rotatedIntersectionPoint[2],
-      rotatedIntersectionPoint[0]
-    );
-    const polar = Math.asin(rotatedIntersectionPoint[1] / sphereRadius);
+    // Directly use the intersection point, no need to rotate
+    const azimuth = Math.atan2(intersectionPoint[2], intersectionPoint[0]);
+    const polar = Math.asin(intersectionPoint[1] / sphereRadius);
 
     const degreesPerRadian = 180 / Math.PI;
     const longitude = azimuth * degreesPerRadian;
@@ -104,9 +92,13 @@ export function CalculateIntersection(
 
     const u = normalizedLongitude;
     const v = normalizedLatitude;
+
+    options.lastElapsed = options.elapsed;
+
     return { u, v, discriminant, longitude, latitude };
   } else {
     return { u: 0, v: 0, discriminant, longitude: 0, latitude: 0 };
   }
 }
+
 export default CalculateIntersection;
