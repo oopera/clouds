@@ -137,7 +137,6 @@ export default function InitStores(
   mouse_interaction.subscribe((value) => {
     options.coords.x = value.x;
     options.coords.y = value.y;
-    console.log(value);
   });
 
   const handleScroll = (e: WheelEvent) => {

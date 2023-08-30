@@ -740,7 +740,12 @@ async function InitializeScene() {
     });
 
     var lightPosition = vec3.create();
-    vec3.set(lightPosition, 2 * Math.cos(elapsed), 0.0, 2 * Math.sin(elapsed));
+    vec3.set(
+      lightPosition,
+      2 * Math.cos(options.elapsed),
+      0.0,
+      2 * Math.sin(options.elapsed)
+    );
 
     const cloudUniValues = new Float32Array([
       options.elapsed,
