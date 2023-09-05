@@ -44,7 +44,7 @@ struct Output {
 @group(0) @binding(3) var noise_texture: texture_3d<f32>;
 @group(0) @binding(4) var noise_sampler: sampler;
 
-@group(0) @binding(5) var cloud_texture: texture_2d<f32>;
+@group(0) @binding(5) var cloud_texture: texture_3d<f32>;
 @group(0) @binding(6) var cloud_sampler: sampler;
 
 
@@ -110,11 +110,11 @@ fn computeNoise(coverage: f32, noise: vec4<f32>) -> f32 {
   }
 }
 
-fn getCoverage(p: vec3<f32>) -> f32 {
+fn getCoverage(p: vec3<f32>, depth: f32) -> f32 {
   let position = normalize(p) * inner_radius;
   var longitude: f32 = atan2(position.z, position.x) / (2.0 *  PI);
   let latitude: f32 = acos(position.y / inner_radius) / PI;
-  return textureSample(cloud_texture, cloud_sampler, vec2<f32>(longitude, latitude)).r;
+  return textureSample(cloud_texture, cloud_sampler, vec3<f32>(longitude, latitude, depth)).r;
 }
 
 fn rayleighScattering(theta: f32) -> f32 {
@@ -172,30 +172,40 @@ fn ReMap(value: f32, old_low: f32, old_high: f32, new_low: f32, new_high: f32) -
     let deviation = rayPosition - corresponding_inner_point;
 
     let max_height = textureSample(noise_texture, noise_sampler, corresponding_inner_point).g;
-    let detail_height = textureSample(noise_texture, noise_sampler, corresponding_inner_point * 2.0);
+    let detail_height = textureSample(noise_texture, noise_sampler, corresponding_inner_point);
     let height = length(deviation);
 
-    coverage = getCoverage(corresponding_inner_point);
+    coverage = getCoverage(corresponding_inner_point, ReMap(height, 0, max_height, 0.0, .3));
     noisedcoverage = computeNoise(coverage, detail_height);
 
-    if (height < max_height || max_height < 0.05) {  
-      if(height < detail_height.r * 0.5) {
+    if (height < max_height || max_height < 0.1) {  
+      if(height < detail_height.a ) {
       density += getDensity(cloudUniforms.density, noisedcoverage, 0.2);
       outputDensity += density;
+      }
     }
-  }
 
-    for(var i = 0.0; i < 0.5; i += 0.1){
+    for(var i = 0.0; i < 0.5; i += 0.01){
       let sunRayPosition: vec3<f32> = rayPosition + sunRayDirection * i;
+
+      let dir_to_raymarch = normalize(sunRayPosition - sphere_center);
+      let corresponding_inner_point = sphere_center + dir_to_raymarch * (inner_radius + 2);
+      let deviation = sunRayPosition - corresponding_inner_point;
   
-      coverage = getCoverage(sunRayPosition);
-      noise = getNoise(sunRayPosition, vec3<f32>(1.0, 1.0, 1.0));
-      noisedcoverage = computeNoise(coverage, noise);
-  
-      theta = dot(normalize(rayPosition), normalize(sunRayPosition));
-  
-      light += mieScattering(theta) * lightUniforms.rayleighIntensity;
-      sunDensity += getDensity(cloudUniforms.sunDensity, noisedcoverage, 0.1);
+      let max_height = textureSample(noise_texture, noise_sampler, corresponding_inner_point).g;
+      let detail_height = textureSample(noise_texture, noise_sampler, corresponding_inner_point);
+      let height = length(deviation);
+
+      coverage = getCoverage(corresponding_inner_point, ReMap(height, 0, max_height, 0.0, .3));
+      noisedcoverage = computeNoise(coverage, detail_height);
+
+      if (height < max_height  || max_height < 0.1) {  
+        if(height < detail_height.a ) {
+          theta = dot(normalize(rayPosition), normalize(sunRayPosition));
+          sunDensity += getDensity(cloudUniforms.sunDensity, noisedcoverage, 0.1);
+          light += mieScattering(theta) * lightUniforms.rayleighIntensity;
+        }
+      }
       }
 
     rayOrigin = rayPosition;

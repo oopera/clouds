@@ -360,7 +360,12 @@ async function InitializeScene() {
   };
 
   if (dev) {
-    parsed3DGribTexture = await GetTextureFromGribData(device, mb700);
+    parsed3DGribTexture = await Get3DTextureFromGribData(device, [
+      mb300,
+      mb500,
+      mb700,
+      mb900,
+    ]);
   } else {
     const { mb300, mb500, mb700, mb900 } = await fetchTextures();
 
@@ -535,7 +540,7 @@ async function InitializeScene() {
 
     {
       binding: 5,
-      resource: parsed3DGribTexture.texture.createView(),
+      resource: parsed3DGribTexture.texture.createView({ dimension: '3d' }),
     },
     {
       binding: 6,
@@ -723,7 +728,9 @@ async function InitializeScene() {
       });
     }
 
-    cloudBindings[5].resource = parsed3DGribTexture.texture.createView();
+    cloudBindings[5].resource = parsed3DGribTexture.texture.createView({
+      dimension: '3d',
+    });
 
     var lightPosition = vec3.create();
     vec3.set(
