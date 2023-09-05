@@ -95,7 +95,7 @@ fn computeNoise(coverage: f32, noise: vec4<f32>) -> f32 {
   let threshold3 = 0.5; 
   let threshold4 = 0.7;
 
-  return billowy *  coverage;
+  return worley_l *  coverage;
   
   if coverage <= threshold1 {
     return smoothstep(0.0, threshold1, coverage);
@@ -143,7 +143,8 @@ fn ReMap(value: f32, old_low: f32, old_high: f32, new_low: f32, new_high: f32) -
   
   var sunDensity: f32 = 0.0;
   var density: f32 = 0.0;
-  var noise : vec4<f32> = getNoise(rayOrigin, vec3<f32>(2.0, 2.0, 2.0));
+  var noise : vec4<f32> = getNoise(rayOrigin, vec3<f32>(.20, .20, .20));
+
   var theta: f32;
 
   var coverage: f32;
@@ -157,7 +158,7 @@ fn ReMap(value: f32, old_low: f32, old_high: f32, new_low: f32, new_high: f32) -
   let startDepth: f32 = 0; 
   let endDepth: f32 =  startDepth + (cloudUniforms.raymarchSteps * stepSize); 
 
-  let baseColor = vec3<f32>(0.22, 0.23, 0.27);  
+  let baseColor = vec3<f32>(0.52, 0.53, 0.67);  
   let highColor = vec3<f32>(0.89, 0.87, 0.90); 
 
   var outputDensity: f32 = 0.0;
@@ -170,13 +171,15 @@ fn ReMap(value: f32, old_low: f32, old_high: f32, new_low: f32, new_high: f32) -
     let corresponding_inner_point = sphere_center + dir_to_raymarch * (inner_radius + 2);
     let deviation = rayPosition - corresponding_inner_point;
 
-    let max_height = textureSample(noise_texture, noise_sampler, corresponding_inner_point).a;
+    let max_height = textureSample(noise_texture, noise_sampler, corresponding_inner_point).g;
+    let detail_height = textureSample(noise_texture, noise_sampler, corresponding_inner_point * 2.0);
     let height = length(deviation);
 
     coverage = getCoverage(corresponding_inner_point);
-    noisedcoverage = computeNoise(coverage, noise);
+    noisedcoverage = computeNoise(coverage, detail_height);
 
-    if (height < max_height * 2 || max_height < 0.05) {  
+    if (height < max_height || max_height < 0.05) {  
+      if(height < detail_height.r * 0.5) {
       density += getDensity(cloudUniforms.density, noisedcoverage, 0.2);
       outputDensity += density;
     }
@@ -190,13 +193,14 @@ fn ReMap(value: f32, old_low: f32, old_high: f32, new_low: f32, new_high: f32) -
   
       theta = dot(normalize(rayPosition), normalize(sunRayPosition));
   
-      light = mieScattering(theta) * lightUniforms.rayleighIntensity;
-      sunDensity += getDensity(cloudUniforms.sunDensity, noisedcoverage, 0.2);
+      light += mieScattering(theta) * lightUniforms.rayleighIntensity;
+      sunDensity += getDensity(cloudUniforms.sunDensity, noisedcoverage, 0.1);
       }
+
     rayOrigin = rayPosition;
   }
 
-  outputColor += density * highColor * sunDensity * light;
+  outputColor += density  * highColor * sunDensity * clamp(light, 0.0, 2.0);
 
   let dotProduct = dot(lightUniforms.lightPosition, output.vNormal.xyz);
   let scaledDotProduct: f32 = dotProduct * 10.0;
