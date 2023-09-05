@@ -183,6 +183,7 @@ fn ReMap(value: f32, old_low: f32, old_high: f32, new_low: f32, new_high: f32) -
       density += getDensity(cloudUniforms.density, noisedcoverage, 0.2);
       outputDensity += density;
     }
+  }
 
     for(var i = 0.0; i < 0.5; i += 0.1){
       let sunRayPosition: vec3<f32> = rayPosition + sunRayDirection * i;
