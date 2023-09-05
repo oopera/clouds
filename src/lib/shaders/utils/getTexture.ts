@@ -166,37 +166,26 @@ export const DeprecatedGet3DTextureFromGribData = async (
 
 export const GetTextureFromGribData = async (
   device: GPUDevice,
-  encodedRuns: number[][], // Assume that this is an array of {value, count} objects
+  data: number[],
   addressModeU = 'repeat',
   addressModeV = 'repeat'
 ) => {
-  const width = 1440; // the number of longitudes
-  const height = 721; // the number of latitudes
+  const width = 1440;
+  const height = 721;
 
-  // Decode run-length encoded data
-  const gribData = new Float32Array(width * height);
-  let index = 0;
-  for (const run of encodedRuns) {
-    for (let i = 0; i < run[0] && index < gribData.length; i++) {
-      gribData[index++] = run[1];
-    }
+  const rgbaData = new Uint8Array(width * height * 4);
+
+  for (let wh = 0; wh < width * height; wh++) {
+    const layerData = data[wh];
+    const offset = wh * 4;
+
+    const value = Math.floor(layerData * 2.55);
+
+    rgbaData[offset] = value;
+    rgbaData[offset + 1] = value;
+    rgbaData[offset + 2] = value;
+    rgbaData[offset + 3] = 255; // alpha channel
   }
-
-  // create RGBA data from grib data
-  const rgbaData = new Uint8ClampedArray(gribData.length * 4);
-  for (let i = 0; i < gribData.length; i++) {
-    const value = gribData[i];
-    const color = value * 2.55; // scale 0-100 to 0-255
-    const index = i * 4;
-    rgbaData[index] = color; // R
-    rgbaData[index + 1] = color; // G
-    rgbaData[index + 2] = color; // B
-    rgbaData[index + 3] = color; // A
-  }
-
-  const imageBitmap = await createImageBitmap(
-    new ImageData(rgbaData, width, height)
-  );
 
   const sampler = device.createSampler({
     minFilter: 'linear',
@@ -206,7 +195,7 @@ export const GetTextureFromGribData = async (
   });
 
   const texture = device.createTexture({
-    size: [imageBitmap.width, imageBitmap.height, 1],
+    size: [width, height, 1],
     format: 'rgba8unorm',
     usage:
       GPUTextureUsage.TEXTURE_BINDING |
@@ -214,10 +203,11 @@ export const GetTextureFromGribData = async (
       GPUTextureUsage.RENDER_ATTACHMENT,
   });
 
-  device.queue.copyExternalImageToTexture(
-    { source: imageBitmap },
-    { texture: texture },
-    [imageBitmap.width, imageBitmap.height, 1]
+  device.queue.writeTexture(
+    { texture },
+    rgbaData,
+    { bytesPerRow: width * 4, rowsPerImage: height },
+    [width, height, 1]
   );
 
   return {
@@ -444,6 +434,7 @@ export const downloadData = async (data: Uint8Array, filename: string) => {
   window.URL.revokeObjectURL(url);
   document.body.removeChild(a);
 };
+
 export const downloadJSONData = async (jsonData: any, filename: string) => {
   const jsonString = JSON.stringify(jsonData, null, 2);
 

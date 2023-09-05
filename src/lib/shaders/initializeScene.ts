@@ -23,6 +23,7 @@ import {
   Create3DTextureFromData,
   Get3DTextureFromGribData,
   parseEncodedToFlattened,
+  GetTextureFromGribData,
 } from './utils/getTexture.js';
 
 import { GetDepthTexture } from './utils/getTexture.js';
@@ -359,12 +360,7 @@ async function InitializeScene() {
   };
 
   if (dev) {
-    parsed3DGribTexture = await Get3DTextureFromGribData(device, [
-      mb300,
-      mb500,
-      mb700,
-      mb900,
-    ]);
+    parsed3DGribTexture = await GetTextureFromGribData(device, mb700);
   } else {
     const { mb300, mb500, mb700, mb900 } = await fetchTextures();
 
@@ -539,19 +535,11 @@ async function InitializeScene() {
 
     {
       binding: 5,
-      resource: parsed3DGribTexture.texture.createView({ dimension: '3d' }),
+      resource: parsed3DGribTexture.texture.createView(),
     },
     {
       binding: 6,
       resource: parsed3DGribTexture.sampler,
-    },
-    {
-      binding: 7,
-      resource: blueNoiseV.texture.createView(),
-    },
-    {
-      binding: 8,
-      resource: blueNoiseV.sampler,
     },
   ];
 
@@ -735,9 +723,7 @@ async function InitializeScene() {
       });
     }
 
-    cloudBindings[5].resource = parsed3DGribTexture.texture.createView({
-      dimension: '3d',
-    });
+    cloudBindings[5].resource = parsed3DGribTexture.texture.createView();
 
     var lightPosition = vec3.create();
     vec3.set(

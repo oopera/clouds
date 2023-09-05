@@ -3,7 +3,7 @@ import { derived, writable, type Writable } from 'svelte/store';
 import { cubicBezier } from '../shaders/utils/cubicBezier';
 import { tweened } from 'svelte/motion';
 
-export const amount_of_points = writable(250);
+export const amount_of_points = writable(50);
 export const scale = writable(0.05);
 
 export const cloud_density = writable(0.15);

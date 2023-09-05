@@ -63,7 +63,6 @@
     padding: 0;
     margin: 0;
     box-sizing: border-box;
-    transform: translateY(2px);
   }
   .secondary {
     color: var(--c-secondary);
