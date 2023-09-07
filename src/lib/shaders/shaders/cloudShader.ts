@@ -86,31 +86,6 @@ fn smoothstep(a: f32, b: f32, x: f32) -> f32 {
 fn clamp(x: f32, minVal: f32, maxVal: f32) -> f32 {
   return max(min(x, maxVal), minVal);
 }
-fn computeNoise(coverage: f32, noise: vec4<f32>) -> f32 {
-  let perlin = noise.r;
-  let worley_l = noise.g;
-  let worley_s = noise.b;
-  let billowy = noise.a;
-
-  let threshold1 = 0.1; 
-  let threshold2 = 0.3; 
-  let threshold3 = 0.5; 
-  let threshold4 = 0.7;
-
-  return billowy *  coverage;
-  
-  if coverage <= threshold1 {
-    return smoothstep(0.0, threshold1, coverage);
-  } else if coverage <= threshold2 {
-    return perlin + (billowy - perlin) * smoothstep(threshold1, threshold2, coverage);
-  } else if coverage <= threshold3 {
-    return billowy + (worley_s - billowy) * smoothstep(threshold2, threshold3, coverage);
-  } else if coverage <= threshold4 {
-    return worley_s + (billowy - worley_s) * smoothstep(threshold3, threshold4, coverage);
-  } else {
-    return billowy;
-  }
-}
 
 fn getCoverage(p: vec3<f32>, depth: f32) -> f32 {
   let position = normalize(p) * inner_radius;
@@ -141,7 +116,7 @@ fn ReMap(value: f32, old_low: f32, old_high: f32, new_low: f32, new_high: f32) -
   let cameraPosition: vec3<f32> = uni.cameraPosition.rgb;
   var rayOrigin: vec3<f32> = output.vPosition.xyz;
   var rayDirection: vec3<f32> = normalize(rayOrigin + cameraPosition);
-  var sunRayDirection: vec3<f32> = normalize(rayOrigin - lightUniforms.lightPosition);
+  var sunRayDirection: vec3<f32> = normalize(rayOrigin + lightUniforms.lightPosition);
   
   var sunDensity: f32 = 0.0;
   var density: f32 = 0.0;
@@ -175,19 +150,29 @@ fn ReMap(value: f32, old_low: f32, old_high: f32, new_low: f32, new_high: f32) -
 
     coverage = getCoverage(corresponding_inner_point, 1);
 
-    let max_height = textureSample(noise_texture, noise_sampler, corresponding_inner_point).g * coverage / 100;
-    let detail_height = textureSample(noise_texture, noise_sampler, corresponding_inner_point).g;
+    let max_height = textureSample(noise_texture, noise_sampler, corresponding_inner_point).g;
+    let detail_height = textureSample(noise_texture, noise_sampler, corresponding_inner_point);
     let height = length(deviation);
 
-  
-    noisedcoverage = coverage * detail_height;
-
-    if (height <= max_height || max_height < 0.05) {  
-      if(height <= detail_height) {
-      density += getDensity(cloudUniforms.density, noisedcoverage, 1 / cloudUniforms.raymarchSteps);
-      outputDensity += density;
+    if (height < max_height) {  
+      if(height < detail_height.a) {
+        noisedcoverage = coverage * detail_height.a;
+        density += getDensity(cloudUniforms.sunDensity, noisedcoverage, 1 / cloudUniforms.raymarchSteps);
+        outputDensity += density; 
+      } else if(height < detail_height.g) {
+        noisedcoverage = coverage * detail_height.g;
+        density += getDensity(cloudUniforms.sunDensity, noisedcoverage, 1 / cloudUniforms.raymarchSteps);
+        outputDensity += density;
       }
     }
+
+    // if (height <= max_height || max_height < 0.05) {  
+    //   if(height <= detail_height) {
+    //   density += getDensity(cloudUniforms.density, noisedcoverage, 1 / cloudUniforms.raymarchSteps);
+    //   outputDensity += density;
+    //   }
+    // }
+ 
 
     for(var i = 0.0; i < 1.0; i += 0.2){
       let sunRayPosition: vec3<f32> = rayPosition + sunRayDirection * i;
@@ -198,35 +183,49 @@ fn ReMap(value: f32, old_low: f32, old_high: f32, new_low: f32, new_high: f32) -
       
       coverage = getCoverage(corresponding_inner_point, 1);
 
-
-      let max_height = textureSample(noise_texture, noise_sampler, corresponding_inner_point).g * coverage / 100;
-      let detail_height = textureSample(noise_texture, noise_sampler, corresponding_inner_point).g;
+      let max_height = textureSample(noise_texture, noise_sampler, corresponding_inner_point).g * coverage / 100 ;
+      let detail_height = textureSample(noise_texture, noise_sampler, corresponding_inner_point);
       let height = length(deviation);
-  
 
-      noisedcoverage = coverage * detail_height;
+      noisedcoverage = coverage * detail_height.r;
 
-      if (height <= max_height  || max_height < 0.05) {  
-        if(height <= detail_height) {
-          theta = dot(normalize(rayPosition), normalize(sunRayPosition));
-          sunDensity += getDensity(cloudUniforms.sunDensity, noisedcoverage, 1 / cloudUniforms.raymarchSteps);
-          light += mieScattering(theta) * lightUniforms.rayleighIntensity;
+
+      
+    if (height < max_height) {  
+      if(height < detail_height.a) {
+        noisedcoverage = coverage * detail_height.a;
+        theta = dot(normalize(rayPosition), normalize(sunRayPosition));
+        sunDensity += getDensity(cloudUniforms.sunDensity, noisedcoverage, 1 / cloudUniforms.raymarchSteps);
+        light += mieScattering(theta) * lightUniforms.rayleighIntensity;
+      } else if(height < detail_height.g) {
+        noisedcoverage = coverage * detail_height.g;
+        theta = dot(normalize(rayPosition), normalize(sunRayPosition));
+        sunDensity += getDensity(cloudUniforms.sunDensity, noisedcoverage, 1 / cloudUniforms.raymarchSteps);
+        light += mieScattering(theta) * lightUniforms.rayleighIntensity;
+      }
+    }
+      if (height <= max_height) {  
+        if(height * 1.5 >= max_height){
+          if(height <= detail_height.r) {
+            theta = dot(normalize(rayPosition), normalize(sunRayPosition));
+            sunDensity += getDensity(cloudUniforms.sunDensity, noisedcoverage, 1 / cloudUniforms.raymarchSteps);
+            light += mieScattering(theta) * lightUniforms.rayleighIntensity;
+          }
+        } else {
+          if(height <= detail_height.a) {
+            theta = dot(normalize(rayPosition), normalize(sunRayPosition));
+            sunDensity += getDensity(cloudUniforms.sunDensity, noisedcoverage, 1 / cloudUniforms.raymarchSteps);
+            light += mieScattering(theta) * lightUniforms.rayleighIntensity;
           }
         }
-      } 
-      rayOrigin = rayPosition;
+      }
+    }
+      
+    rayOrigin = rayPosition;
   }
 
-  outputColor += density  * highColor * sunDensity * light;
+  outputColor += density * highColor * sunDensity * light;
 
-  let dotProduct = dot(lightUniforms.lightPosition, output.vNormal.xyz);
-  let scaledDotProduct: f32 = dotProduct * 10.0;
-  var lightness: f32 = 1.0 - (1.0 / (1.0 + exp(-scaledDotProduct)));
-  if(lightness < 0.75){
-    lightness = 0.75;
-  }
-
-
-  return vec4<f32>(outputColor, outputDensity) * cloudUniforms.visibility * lightness;
+  return vec4<f32>(outputColor, outputDensity) * cloudUniforms.visibility;
 }
 `;

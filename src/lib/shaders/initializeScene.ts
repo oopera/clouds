@@ -89,7 +89,7 @@ var options: RenderOptions = {
   // Strings (enum types)
   lightType: 'day_cycle',
   cloudType: 'cumulus',
-  cullmode: 'none',
+  cullmode: 'back',
   topology: 'triangle-list',
 
   // Nested Objects
@@ -608,7 +608,6 @@ async function InitializeScene() {
     device.createShaderModule({ code: cloudShader }),
     {
       ...options,
-      cullmode: 'back',
     },
     presentationFormat
   );
