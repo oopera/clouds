@@ -34,7 +34,7 @@ struct Output {
 @group(0) @binding(1) var<uniform> atmopshereUniforms: AtmosphereUniforms;
 @group(0) @binding(2) var<uniform> lightUni: LightUniforms;
 
-const radius = 0.015;
+const radius = 0.0075;
 
 fn smoothstep(edge0: f32, edge1: f32, x: f32) -> f32 {
   let t = clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);

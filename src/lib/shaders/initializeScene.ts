@@ -89,7 +89,7 @@ var options: RenderOptions = {
   // Strings (enum types)
   lightType: 'day_cycle',
   cloudType: 'cumulus',
-  cullmode: 'back',
+  cullmode: 'none',
   topology: 'triangle-list',
 
   // Nested Objects
@@ -359,13 +359,19 @@ async function InitializeScene() {
     };
   };
 
+  const use3DTexture = false;
+
   if (dev) {
-    parsed3DGribTexture = await Get3DTextureFromGribData(device, [
-      mb300,
-      mb500,
-      mb700,
-      mb900,
-    ]);
+    if (use3DTexture) {
+      parsed3DGribTexture = await Get3DTextureFromGribData(device, [
+        mb300,
+        mb500,
+        mb700,
+        mb900,
+      ]);
+    } else {
+      parsed3DGribTexture = await GetTextureFromGribData(device, mb700);
+    }
   } else {
     const { mb300, mb500, mb700, mb900 } = await fetchTextures();
 
@@ -540,7 +546,9 @@ async function InitializeScene() {
 
     {
       binding: 5,
-      resource: parsed3DGribTexture.texture.createView({ dimension: '3d' }),
+      resource: parsed3DGribTexture.texture.createView(
+        use3DTexture ? { dimension: '3d' } : {}
+      ),
     },
     {
       binding: 6,
@@ -728,9 +736,13 @@ async function InitializeScene() {
       });
     }
 
-    cloudBindings[5].resource = parsed3DGribTexture.texture.createView({
-      dimension: '3d',
-    });
+    cloudBindings[5].resource = parsed3DGribTexture.texture.createView(
+      use3DTexture
+        ? {
+            dimension: '3d',
+          }
+        : {}
+    );
 
     var lightPosition = vec3.create();
     vec3.set(
@@ -878,15 +890,15 @@ async function InitializeScene() {
         renderPass.draw(options.amountOfVertices);
       }
     }
-    if (options.layer.atmo > 0) {
-      renderPass.setPipeline(pipeline[2]);
-      renderPass.setVertexBuffer(0, buffers[0][0]);
-      renderPass.setVertexBuffer(1, buffers[0][1]);
-      renderPass.setVertexBuffer(2, buffers[0][2]);
-      renderPass.setBindGroup(0, bindGroup[2]);
+    // if (options.layer.atmo > 0) {
+    //   renderPass.setPipeline(pipeline[2]);
+    //   renderPass.setVertexBuffer(0, buffers[0][0]);
+    //   renderPass.setVertexBuffer(1, buffers[0][1]);
+    //   renderPass.setVertexBuffer(2, buffers[0][2]);
+    //   renderPass.setBindGroup(0, bindGroup[2]);
 
-      renderPass.draw(options.amountOfVertices);
-    }
+    //   renderPass.draw(options.amountOfVertices);
+    // }
     renderPass.end();
 
     device.queue.submit([commandEncoder.finish()]);

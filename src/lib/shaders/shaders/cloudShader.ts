@@ -36,6 +36,7 @@ struct Output {
   @location(0) vPosition : vec4<f32>,
   @location(1) vNormal : vec4<f32>,
   @location(2) vUV : vec2<f32>,
+  @location(3) vOuterPosition : vec4<f32>,
 };
 
 @group(0) @binding(0) var<uniform> uni: Uniforms;
@@ -44,12 +45,13 @@ struct Output {
 @group(0) @binding(3) var noise_texture: texture_3d<f32>;
 @group(0) @binding(4) var noise_sampler: sampler;
 
-@group(0) @binding(5) var cloud_texture: texture_3d<f32>;
+// @group(0) @binding(5) var cloud_texture: texture_3d<f32>;
+@group(0) @binding(5) var cloud_texture: texture_2d<f32>;
 @group(0) @binding(6) var cloud_sampler: sampler;
 
 
-const outer_radius = 0.01;
-const inner_radius = 0.005;
+const outer_radius = 0.05;
+const inner_radius = 0.0025;
 const sphere_center = vec3<f32>(0.0, 0.0, 0.0);
 const PI: f32 = 3.141592653589793;
 const N: f32 = 2.545e25;  
@@ -95,7 +97,7 @@ fn computeNoise(coverage: f32, noise: vec4<f32>) -> f32 {
   let threshold3 = 0.5; 
   let threshold4 = 0.7;
 
-  return worley_l *  coverage;
+  return billowy *  coverage;
   
   if coverage <= threshold1 {
     return smoothstep(0.0, threshold1, coverage);
@@ -114,7 +116,7 @@ fn getCoverage(p: vec3<f32>, depth: f32) -> f32 {
   let position = normalize(p) * inner_radius;
   var longitude: f32 = atan2(position.z, position.x) / (2.0 *  PI);
   let latitude: f32 = acos(position.y / inner_radius) / PI;
-  return textureSample(cloud_texture, cloud_sampler, vec3<f32>(longitude, latitude, depth)).r;
+  return textureSample(cloud_texture, cloud_sampler, vec2<f32>(longitude, latitude)).r;
 }
 
 fn rayleighScattering(theta: f32) -> f32 {
@@ -139,11 +141,11 @@ fn ReMap(value: f32, old_low: f32, old_high: f32, new_low: f32, new_high: f32) -
   let cameraPosition: vec3<f32> = uni.cameraPosition.rgb;
   var rayOrigin: vec3<f32> = output.vPosition.xyz;
   var rayDirection: vec3<f32> = normalize(rayOrigin + cameraPosition);
-  var sunRayDirection: vec3<f32> = normalize(rayOrigin + lightUniforms.lightPosition);
+  var sunRayDirection: vec3<f32> = normalize(rayOrigin - lightUniforms.lightPosition);
   
   var sunDensity: f32 = 0.0;
   var density: f32 = 0.0;
-  var noise : vec4<f32> = getNoise(rayOrigin, vec3<f32>(.20, .20, .20));
+  var noise : vec4<f32> = getNoise(rayOrigin, vec3<f32>(1, 1, 1));
 
   var theta: f32;
 
@@ -155,7 +157,7 @@ fn ReMap(value: f32, old_low: f32, old_high: f32, new_low: f32, new_high: f32) -
 
 
   let stepSize: f32 = cloudUniforms.raymarchLength; 
-  let startDepth: f32 = 0; 
+  let startDepth: f32 = inner_radius; 
   let endDepth: f32 =  startDepth + (cloudUniforms.raymarchSteps * stepSize); 
 
   let baseColor = vec3<f32>(0.52, 0.53, 0.67);  
@@ -171,45 +173,48 @@ fn ReMap(value: f32, old_low: f32, old_high: f32, new_low: f32, new_high: f32) -
     let corresponding_inner_point = sphere_center + dir_to_raymarch * (inner_radius + 2);
     let deviation = rayPosition - corresponding_inner_point;
 
-    let max_height = textureSample(noise_texture, noise_sampler, corresponding_inner_point * 0.5).g;
-    let detail_height = textureSample(noise_texture, noise_sampler, corresponding_inner_point * 2);
+    coverage = getCoverage(corresponding_inner_point, 1);
+
+    let max_height = textureSample(noise_texture, noise_sampler, corresponding_inner_point).g * coverage / 100;
+    let detail_height = textureSample(noise_texture, noise_sampler, corresponding_inner_point).g;
     let height = length(deviation);
 
-    coverage = getCoverage(corresponding_inner_point, ReMap(height, 0, max_height, 0.0, .3));
-    noisedcoverage = computeNoise(coverage, detail_height);
+  
+    noisedcoverage = coverage * detail_height;
 
-    if (height < max_height * 2 || max_height < 0.1) {  
-      if(height < detail_height.g * 2) {
-      density += getDensity(cloudUniforms.density, noisedcoverage, 0.2);
+    if (height <= max_height || max_height < 0.05) {  
+      if(height <= detail_height) {
+      density += getDensity(cloudUniforms.density, noisedcoverage, 1 / cloudUniforms.raymarchSteps);
       outputDensity += density;
-      }else if(height < detail_height.a + 0.1){
-        density += getDensity(cloudUniforms.density, detail_height.r * coverage, 0.1);
       }
     }
 
-    for(var i = 0.0; i < 0.5; i += 0.25){
+    for(var i = 0.0; i < 1.0; i += 0.2){
       let sunRayPosition: vec3<f32> = rayPosition + sunRayDirection * i;
 
       let dir_to_raymarch = normalize(sunRayPosition - sphere_center);
       let corresponding_inner_point = sphere_center + dir_to_raymarch * (inner_radius + 2);
       let deviation = sunRayPosition - corresponding_inner_point;
-  
-      let max_height = textureSample(noise_texture, noise_sampler, corresponding_inner_point).g;
-      let detail_height = textureSample(noise_texture, noise_sampler, corresponding_inner_point);
+      
+      coverage = getCoverage(corresponding_inner_point, 1);
+
+
+      let max_height = textureSample(noise_texture, noise_sampler, corresponding_inner_point).g * coverage / 100;
+      let detail_height = textureSample(noise_texture, noise_sampler, corresponding_inner_point).g;
       let height = length(deviation);
+  
 
-      coverage = getCoverage(corresponding_inner_point, ReMap(height, 0, max_height, 0.0, .3));
-      noisedcoverage = computeNoise(coverage, detail_height);
+      noisedcoverage = coverage * detail_height;
 
-      if (height < max_height  || max_height < 0.1) {  
-        if(height < detail_height.a ) {
+      if (height <= max_height  || max_height < 0.05) {  
+        if(height <= detail_height) {
           theta = dot(normalize(rayPosition), normalize(sunRayPosition));
-          sunDensity += getDensity(cloudUniforms.sunDensity, noisedcoverage, 0.1);
+          sunDensity += getDensity(cloudUniforms.sunDensity, noisedcoverage, 1 / cloudUniforms.raymarchSteps);
           light += mieScattering(theta) * lightUniforms.rayleighIntensity;
+          }
         }
-      }
-      }
-    rayOrigin = rayPosition;
+      } 
+      rayOrigin = rayPosition;
   }
 
   outputColor += density  * highColor * sunDensity * light;
@@ -220,7 +225,8 @@ fn ReMap(value: f32, old_low: f32, old_high: f32, new_low: f32, new_high: f32) -
   if(lightness < 0.75){
     lightness = 0.75;
   }
-  
+
+
   return vec4<f32>(outputColor, outputDensity) * cloudUniforms.visibility * lightness;
 }
 `;
