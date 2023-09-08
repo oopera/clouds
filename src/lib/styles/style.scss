@@ -131,14 +131,12 @@ a {
 h1,
 h3,
 p {
-  line-height: 1em;
   padding: 0;
   margin: 0;
 }
 
 h1 {
   @include type-m;
-  // text-transform: uppercase;
 }
 p {
   @include type-xs;

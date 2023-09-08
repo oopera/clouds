@@ -36,6 +36,7 @@ struct Output {
   @location(0) vPosition : vec4<f32>,
   @location(1) vNormal : vec4<f32>,
   @location(2) vUV : vec2<f32>,
+  @location(3) vOuterPosition : vec4<f32>,
 };
 
 @group(0) @binding(0) var<uniform> uni: Uniforms;
@@ -45,11 +46,16 @@ struct Output {
 @group(0) @binding(4) var noise_sampler: sampler;
 
 @group(0) @binding(5) var cloud_texture: texture_3d<f32>;
+// @group(0) @binding(5) var cloud_texture: texture_2d<f32>;
 @group(0) @binding(6) var cloud_sampler: sampler;
-@group(0) @binding(7) var blue_noise: texture_2d<f32>;
-@group(0) @binding(8) var blue_noise_sampler: sampler;
 
-const radius = 0.005;
+
+const outer_radius = 0.005;
+const inner_radius = 0.005;
+const sphere_center = vec3<f32>(0.0, 0.0, 0.0);
+const PI: f32 = 3.141592653589793;
+const N: f32 = 2.545e25;  
+const n: f32 = 1.0003;   
 
  
 @vertex fn vs(input: Input, @builtin(vertex_index) vertexIndex: u32) -> Output {
@@ -58,24 +64,19 @@ const radius = 0.005;
     let mPosition: vec4<f32> = uni.modelMatrix * input.position;
     let mNormal: vec4<f32> = uni.normalMatrix * input.normal;
 
-    var displacement:vec4<f32> = vec4<f32>(normalize(mPosition.xyz) * radius, 0.0);
-
-    output.Position = uni.viewProjectionMatrix * (mPosition + displacement);
-    output.vPosition = mPosition;
+    var outer_displacement:vec4<f32> = vec4<f32>(normalize(mPosition.xyz) * outer_radius, 0.0);
+    var inner_displacement:vec4<f32> = vec4<f32>(normalize(mPosition.xyz) * inner_radius, 0.0);
+    output.Position = uni.viewProjectionMatrix * (mPosition + outer_displacement);
+    output.vPosition =  mPosition;
     output.vNormal = mNormal;
     output.vUV = input.uv;
 
     return output;
-}
-
-const PI: f32 = 3.141592653589793;
-const N: f32 = 2.545e25;  
-const n: f32 = 1.0003;    
+} 
 
 fn getNoise(p: vec3<f32>, noiseScale: vec3<f32>) -> vec4<f32> {
   return textureSample(noise_texture, noise_sampler, p * noiseScale);
   }
-
 
 fn smoothstep(a: f32, b: f32, x: f32) -> f32 {
   let t = clamp((x - a) / (b - a), 0.0, 1.0);
@@ -86,37 +87,10 @@ fn clamp(x: f32, minVal: f32, maxVal: f32) -> f32 {
   return max(min(x, maxVal), minVal);
 }
 
-fn computeNoise(coverage: f32, noise: vec4<f32>) -> f32 {
-  let perlin = noise.r;
-  let worley_l = noise.g;
-  let worley_s = noise.b;
-  let billowy = noise.a;
-
-  let bar1 = 0.2;
-  let bar2 = 0.3;
-  let bar3 = 0.4;
-  let bar4 = 0.6;
-  let bar5 = 0.8;
-
-  if coverage <= bar1 {
-      return pow(smoothstep(0, 0.3, coverage),2);
-  } else if coverage <= bar2 {
-      return perlin * smoothstep(bar1, bar2, coverage);
-  } else if coverage <= bar3 {
-      return perlin + (billowy - perlin) * smoothstep(bar2, bar3, coverage);
-  } else if coverage <= bar4 {
-      return billowy + (billowy - billowy) * smoothstep(bar3, bar4, coverage);
-  } else if coverage <= bar5 {
-      return billowy + (worley_s - billowy) * smoothstep(bar4, bar5, coverage);
-  } else {
-      return worley_s;
-  }
-}
-
 fn getCoverage(p: vec3<f32>, depth: f32) -> f32 {
-  let position = normalize(p) * radius;
+  let position = normalize(p) * inner_radius;
   var longitude: f32 = atan2(position.z, position.x) / (2.0 *  PI);
-  let latitude: f32 = acos(position.y / radius) / PI;
+  let latitude: f32 = acos(position.y / inner_radius) / PI;
   return textureSample(cloud_texture, cloud_sampler, vec3<f32>(longitude, latitude, depth)).r;
 }
 
@@ -137,120 +111,80 @@ fn ReMap(value: f32, old_low: f32, old_high: f32, new_low: f32, new_high: f32) -
   return ret_val;
 }
 
-fn convertUVToNormal(uv: vec2<f32>) -> vec3<f32> {
-  let u: f32 = uv.x * 2.005 * 3.14159265359; // Convert U coordinate to radians
-  let v: f32 = uv.y * 3.14159265359; // Convert V coordinate to radians
+fn calculateDensity(ray_position: vec3<f32>, corresponding_inner_point: vec3<f32>, coverage: f32, detail_height: vec4<f32>, baseDensity: f32, step: f32) -> f32 {
+  var density: f32 = 0.0;
+  let height = length(ray_position - corresponding_inner_point);
+  let max_height = detail_height.g * coverage;
 
-  let x: f32 = sin(v) * cos(u);
-  let y: f32 = sin(v) * sin(u);
-  let z: f32 = cos(v);
-
-  return normalize(vec3<f32>(x, z, -y));
+  if (height < max_height) {  
+      density = getDensity(baseDensity, coverage, step);
+  }
+  return density;
 }
 
-
-fn getNormal(x: f32, y: f32) -> vec3<f32> {
-  let normal: vec3<f32> = convertUVToNormal(vec2<f32>(x, y));
-  return normal;
-}
-
-fn getDistance(uv: vec2<f32>, selectedPoint: vec2<f32>) -> f32 {
-  let delta = abs(uv - selectedPoint);
-
-  // Take into account the wrap-around for the U coordinate
-  let wrappedDeltaX = min(delta.x, 1.0 - delta.x);
-  let wrappedDelta = vec2<f32>(wrappedDeltaX, delta.y);
-
-  return length(wrappedDelta);
-}
-
-fn modifyDensity(originalDensity: f32, distance: f32, maxRadius: f32) -> f32 {
-  let falloff = smoothstep(0.0, maxRadius, distance); // Adjust this to fit your needs
-  return originalDensity * falloff ;
+fn getInnerPoint(ray_position: vec3<f32>) -> vec3<f32> {
+  let dir_to_raymarch = normalize(ray_position - sphere_center);
+  return sphere_center + dir_to_raymarch * (inner_radius + 2);
 }
 
 
 @fragment fn fs(output: Output) -> @location(0) vec4<f32> {
-  let cameraPosition: vec3<f32> = uni.cameraPosition.rgb;
-  var rayOrigin: vec3<f32> = output.vPosition.xyz - radius;
-  var rayDirection: vec3<f32> = normalize(rayOrigin + cameraPosition);
-  var sunRayDirection: vec3<f32> = normalize(rayOrigin + lightUniforms.lightPosition);
-  
-  var sunDensity: f32 = 0.0;
+  var ray_origin: vec3<f32> = output.vPosition.xyz;
+  var ray_direction: vec3<f32> = normalize(ray_origin + uni.cameraPosition.rgb);
+  var sunray_direction: vec3<f32> = normalize(ray_origin + lightUniforms.lightPosition);
+
+  var sun_density: f32 = 0.0;
   var density: f32 = 0.0;
-  var noise : vec4<f32> = getNoise(rayOrigin, vec3<f32>(1.0, 1.0, 1.0));
+  var noise : vec4<f32> = getNoise(ray_origin, vec3<f32>(1, 1, 1));
   var theta: f32;
-
   var coverage: f32;
-
   var color : vec4<f32> = vec4<f32>(0.0, 0.0, 0.0, 1.0);
   var light: f32 = 1.0;
-  var noisedcoverage: f32;
+  var noised_coverage: f32;
+
 
   let stepSize: f32 = cloudUniforms.raymarchLength; 
-  let startDepth: f32 =  radius; 
-  let endDepth: f32 =  startDepth + (cloudUniforms.raymarchSteps  * stepSize); 
+  let startDepth: f32 = 0; 
+  let endDepth: f32 =  startDepth + (cloudUniforms.raymarchSteps * stepSize); 
 
-  let baseColor = vec3<f32>(0.62, 0.63, 0.67);  
-  let highColor = vec3<f32>(0.89, 0.87, 0.90); 
+  let baseColor = vec3<f32>(0.72, 0.73, 0.77);  
+  let highColor = vec3<f32>(0.99, 0.97, 1.0); 
 
-  var outputDensity: f32;
-  var outputColor = baseColor;
+  var output_density: f32 = 0.0;
+  var output_color = baseColor;
 
   for (var depth: f32 = startDepth; depth < endDepth; depth += stepSize) {
-    let texturePosition: vec3<f32> = rayOrigin + rayDirection * depth;
+    let ray_position: vec3<f32> = ray_origin + ray_direction * depth;
 
-    coverage = getCoverage(texturePosition, ReMap(depth, startDepth, endDepth, .0, 1.0));
-    noise = getNoise(texturePosition, vec3<f32>(1.0, 1.0, 1.0));
-    noisedcoverage = computeNoise(coverage, noise);
+    let corresponding_inner_point = getInnerPoint(ray_position);
+    let deviation = ray_position - corresponding_inner_point;
+    let height = length(deviation);
 
-    density += getDensity(cloudUniforms.density, noisedcoverage, ReMap(depth, startDepth, endDepth, .0, 1.0)); 
-    
-    for(var i = 0.0; i < 0.5; i += 0.1){
-    let sunTexturePosition: vec3<f32> = texturePosition + sunRayDirection * i;
+    let detail_height = textureSample(noise_texture, noise_sampler, corresponding_inner_point);
+    coverage = getCoverage(corresponding_inner_point, ReMap(depth, startDepth, endDepth, 0.0, 1.0));
+    density += calculateDensity(ray_position, corresponding_inner_point, coverage, detail_height, cloudUniforms.density, 1.0 / cloudUniforms.raymarchSteps);
 
-    coverage = getCoverage(texturePosition, ReMap(depth, startDepth, endDepth, 0.0, 1.0));
-    noise = getNoise(texturePosition, vec3<f32>(1.0, 1.0, 1.0));
-    noisedcoverage = computeNoise(coverage, noise);
+    for(var i = 0.0; i < 1.0; i += 0.5){
+      let sunray_position: vec3<f32> = ray_position + sunray_direction * i;
 
-    theta = dot(normalize(texturePosition), normalize(sunRayDirection));
+      let corresponding_inner_point = getInnerPoint(sunray_position);
+      let deviation = sunray_position - corresponding_inner_point;
+      let height = length(deviation);
+      
+      let detail_height = textureSample(noise_texture, noise_sampler, corresponding_inner_point);
+      coverage = getCoverage(corresponding_inner_point, ReMap(depth, startDepth, endDepth, 0.0, 1.0));
 
-    light = mieScattering(theta) * lightUniforms.rayleighIntensity;
-    sunDensity += getDensity(cloudUniforms.sunDensity, noisedcoverage, 0.2);
+      theta = dot(normalize(ray_position), normalize(sunray_position));
+      light = rayleighScattering(theta) * lightUniforms.rayleighIntensity;
+
+      sun_density += calculateDensity(sunray_position, corresponding_inner_point, coverage, detail_height, cloudUniforms.sunDensity, 0.2);
     }
 
-    
-    let selectedNormal: vec3<f32> = getNormal(cloudUniforms.interactionx, cloudUniforms.interactiony);
-
-    let timeSinceAnimationStart = lightUniforms.elapsed - lightUniforms.lastElapsed;
-  
-    // Calculate the current diameter of the circle based on the elapsed time
-    let currentDiameter = mix(0.0, 0.5, clamp(timeSinceAnimationStart / 0.05, 0.0, 0.25));
-  
-    let distance: f32 = length(output.vNormal.xyz - selectedNormal);
-
-
-    outputColor += clamp(density, 0.0, 0.1) * sunDensity * highColor * light; 
-    outputDensity += modifyDensity(density, distance, currentDiameter);;
-    rayOrigin = texturePosition;
+    output_density += density;
+    output_color += density * highColor * sun_density * light;
+    ray_origin = ray_position;
   }
 
-  let dotProduct = dot(lightUniforms.lightPosition, output.vNormal.xyz);
-  let scaledDotProduct: f32 = dotProduct * 10.0;
-  var lightness: f32 = 1.0 - (1.0 / (1.0 + exp(-scaledDotProduct)));
-
-  if(lightness < 0.5){
-    lightness = 0.5;
-  }
-
-  if(lightUniforms.lightType == 0.0){
-    lightness = 0.5;
-  }else if(lightUniforms.lightType == 1.0){
-    lightness = 1.0;
-  }
-  let bnoise = textureSample(blue_noise, blue_noise_sampler, output.vUV).r;
-
-
-  return vec4<f32>(outputColor, outputDensity) * cloudUniforms.visibility * lightness;
+  return vec4<f32>(output_color, output_density) * cloudUniforms.visibility;
 }
 `;

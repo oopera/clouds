@@ -23,6 +23,7 @@ import {
   Create3DTextureFromData,
   Get3DTextureFromGribData,
   parseEncodedToFlattened,
+  GetTextureFromGribData,
 } from './utils/getTexture.js';
 
 import { GetDepthTexture } from './utils/getTexture.js';
@@ -358,13 +359,19 @@ async function InitializeScene() {
     };
   };
 
+  const use3DTexture = true;
+
   if (dev) {
-    parsed3DGribTexture = await Get3DTextureFromGribData(device, [
-      mb300,
-      mb500,
-      mb700,
-      mb900,
-    ]);
+    if (use3DTexture) {
+      parsed3DGribTexture = await Get3DTextureFromGribData(device, [
+        mb300,
+        mb500,
+        mb700,
+        mb900,
+      ]);
+    } else {
+      parsed3DGribTexture = await GetTextureFromGribData(device, mb700);
+    }
   } else {
     const { mb300, mb500, mb700, mb900 } = await fetchTextures();
 
@@ -539,19 +546,13 @@ async function InitializeScene() {
 
     {
       binding: 5,
-      resource: parsed3DGribTexture.texture.createView({ dimension: '3d' }),
+      resource: parsed3DGribTexture.texture.createView(
+        use3DTexture ? { dimension: '3d' } : {}
+      ),
     },
     {
       binding: 6,
       resource: parsed3DGribTexture.sampler,
-    },
-    {
-      binding: 7,
-      resource: blueNoiseV.texture.createView(),
-    },
-    {
-      binding: 8,
-      resource: blueNoiseV.sampler,
     },
   ];
 
@@ -607,7 +608,6 @@ async function InitializeScene() {
     device.createShaderModule({ code: cloudShader }),
     {
       ...options,
-      cullmode: 'back',
     },
     presentationFormat
   );
@@ -735,9 +735,13 @@ async function InitializeScene() {
       });
     }
 
-    cloudBindings[5].resource = parsed3DGribTexture.texture.createView({
-      dimension: '3d',
-    });
+    cloudBindings[5].resource = parsed3DGribTexture.texture.createView(
+      use3DTexture
+        ? {
+            dimension: '3d',
+          }
+        : {}
+    );
 
     var lightPosition = vec3.create();
     vec3.set(

@@ -34,21 +34,26 @@
 
 <main>
   <Layout padding="m" horizontal justify="between" align="start" gap="2">
-    <Loading />
-    <Layout align="end" gap="1" fit>
+    <Layout align="start" gap="1">
+      <Loading />
       <Tag>
-        <Text text="all systems operational" />
+        <Text text={'All Systems Operational'} />
         <span data-indicator />
       </Tag>
+    </Layout>
 
-      <Text tertiary text={new Date().toISOString()} delay={10} />
+    <Layout align="end" gap="1" fit>
       <DateInput />
       <Radio_Button
         delay={5}
         title="light_type"
         options={['day_cycle', 'full_day', 'full_night']}
       />
-      <Checkbox delay={5} title="half_res" />
+      <Layout horizontal justify="end" gap="1">
+        <Checkbox delay={5} title="mb300" />
+        <Checkbox delay={8} title="atmo" />
+        <Checkbox delay={5} title="half_res" />
+      </Layout>
     </Layout>
   </Layout>
 
@@ -103,11 +108,6 @@
     </Layout>
     <Axis_Indicator />
     <Layout align="end" gap="2" fit horizontal>
-      <!-- <Layout align="end" gap="1" fit horizontal>
-          <Checkbox delay={5} title="mb300" />
-          <Checkbox delay={8} title="atmo" />
-        </Layout> -->
-
       <Layout align="end" gap="1" fit>
         <Range_Input
           delay={8}
@@ -119,8 +119,8 @@
         <Range_Input
           delay={8}
           title="raymarch_length"
-          min={0.00001}
-          max={0.0025}
+          min={0}
+          max={0.01}
           step={0.00005}
         />
         <Range_Input
@@ -143,8 +143,8 @@
           delay={8}
           title="sun_transmittance"
           min={0}
-          max={1.0}
-          step={0.02}
+          max={0.25}
+          step={0.005}
         />
         <Text accent vertical delay={9} text={'LIGHT'} />
         <Range_Input
