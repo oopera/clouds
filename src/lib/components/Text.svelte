@@ -52,17 +52,21 @@
 
 <style lang="scss">
   p {
-    vertical-align: middle;
+    vertical-align: baseline;
+    margin: -2px;
+    &::after {
+      content: '';
+      display: inline-block;
+      height: 1em;
+    }
   }
   span {
     display: inline-block;
-    position: relative;
-    vertical-align: middle;
-    text-align: center;
-    will-change: transform;
-    padding: 0;
+    padding: -2px;
     margin: 0;
     box-sizing: border-box;
+    transition: color 128ms var(--ease);
+    will-change: color, transform;
   }
   .secondary {
     color: var(--c-secondary);
@@ -76,10 +80,7 @@
   .mini {
     max-width: 16px;
   }
-  span {
-    transition: color 128ms var(--ease);
-    will-change: color;
-  }
+
   .nowrap {
     white-space: nowrap;
   }

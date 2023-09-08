@@ -359,7 +359,7 @@ async function InitializeScene() {
     };
   };
 
-  const use3DTexture = false;
+  const use3DTexture = true;
 
   if (dev) {
     if (use3DTexture) {

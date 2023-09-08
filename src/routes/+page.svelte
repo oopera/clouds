@@ -37,7 +37,7 @@
     <Layout align="start" gap="1">
       <Loading />
       <Tag>
-        <p>ALL SYSTEMS OPERATIONAL</p>
+        <Text text={'All Systems Operational'} />
         <span data-indicator />
       </Tag>
     </Layout>
