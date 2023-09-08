@@ -46,7 +46,6 @@ struct Output {
 @group(0) @binding(4) var noise_sampler: sampler;
 
 @group(0) @binding(5) var cloud_texture: texture_3d<f32>;
-// @group(0) @binding(5) var cloud_texture: texture_2d<f32>;
 @group(0) @binding(6) var cloud_sampler: sampler;
 
 
@@ -56,6 +55,14 @@ const sphere_center = vec3<f32>(0.0, 0.0, 0.0);
 const PI: f32 = 3.141592653589793;
 const N: f32 = 2.545e25;  
 const n: f32 = 1.0003;   
+
+fn useValues() -> f32 {
+  let cloud = cloudUniforms;
+  let light = lightUniforms;
+  let noise = textureSample(noise_texture, noise_sampler, vec3(1.0,1.0,1.0));
+  let clouds = textureSample(cloud_texture, cloud_sampler, vec3(1.0,1.0,1.0));
+  return 1.0;
+}
 
  
 @vertex fn vs(input: Input, @builtin(vertex_index) vertexIndex: u32) -> Output {
@@ -129,62 +136,44 @@ fn getInnerPoint(ray_position: vec3<f32>) -> vec3<f32> {
 
 
 @fragment fn fs(output: Output) -> @location(0) vec4<f32> {
+  let one = useValues();
+
   var ray_origin: vec3<f32> = output.vPosition.xyz;
-  var ray_direction: vec3<f32> = normalize(ray_origin + uni.cameraPosition.rgb);
-  var sunray_direction: vec3<f32> = normalize(ray_origin + lightUniforms.lightPosition);
+  var ray_direction: vec3<f32> = normalize(uni.cameraPosition.xyz - ray_origin);
 
-  var sun_density: f32 = 0.0;
+  let sphere_center: vec3<f32> = vec3<f32>(0.0, 0.0, 0.0);
+  let sphere_radius: f32 = 2.5;
+
+  var output_color: vec3<f32> = vec3<f32>(0.0, 0.0, 0.0);
   var density: f32 = 0.0;
-  var noise : vec4<f32> = getNoise(ray_origin, vec3<f32>(1, 1, 1));
-  var theta: f32;
-  var coverage: f32;
-  var color : vec4<f32> = vec4<f32>(0.0, 0.0, 0.0, 1.0);
-  var light: f32 = 1.0;
-  var noised_coverage: f32;
+
+  for (var i: u32 = 0; i < 10; i = i + 1) {
+    let t: f32 = f32(i) / 9.0;
+    let sample_point = ray_origin + t * cloudUniforms.raymarchLength * ray_direction;
+    let oc = sample_point - sphere_center;
+
+    let a = dot(ray_direction, ray_direction);
+    let b = 2.0 * dot(oc, ray_direction);
+    let c = dot(oc, oc) - (sphere_radius * sphere_radius);
+    let discriminant = b * b - 4.0 * a * c;
+
+    let r = length(sample_point - sphere_center);
+    let theta = acos((sample_point.y - sphere_center.y) / r);
+    let phi = atan2(sample_point.z - sphere_center.z, sample_point.x - sphere_center.x);
+    
+    let uv = vec2(phi / (2.0 * PI), theta / PI);
+    let sampled_noise = textureSample(noise_texture, noise_sampler, vec3(uv, r)).r;
+    let sampled_coverage = textureSample(cloud_texture, cloud_sampler, vec3(uv, r)).r;
+
+    if(discriminant > 0.0){
 
 
-  let stepSize: f32 = cloudUniforms.raymarchLength; 
-  let startDepth: f32 = 0; 
-  let endDepth: f32 =  startDepth + (cloudUniforms.raymarchSteps * stepSize); 
-
-  let baseColor = vec3<f32>(0.72, 0.73, 0.77);  
-  let highColor = vec3<f32>(0.99, 0.97, 1.0); 
-
-  var output_density: f32 = 0.0;
-  var output_color = baseColor;
-
-  for (var depth: f32 = startDepth; depth < endDepth; depth += stepSize) {
-    let ray_position: vec3<f32> = ray_origin + ray_direction * depth;
-
-    let corresponding_inner_point = getInnerPoint(ray_position);
-    let deviation = ray_position - corresponding_inner_point;
-    let height = length(deviation);
-
-    let detail_height = textureSample(noise_texture, noise_sampler, corresponding_inner_point);
-    coverage = getCoverage(corresponding_inner_point, ReMap(depth, startDepth, endDepth, 0.0, 1.0));
-    density += calculateDensity(ray_position, corresponding_inner_point, coverage, detail_height, cloudUniforms.density, 1.0 / cloudUniforms.raymarchSteps);
-
-    for(var i = 0.0; i < 1.0; i += 0.5){
-      let sunray_position: vec3<f32> = ray_position + sunray_direction * i;
-
-      let corresponding_inner_point = getInnerPoint(sunray_position);
-      let deviation = sunray_position - corresponding_inner_point;
-      let height = length(deviation);
-      
-      let detail_height = textureSample(noise_texture, noise_sampler, corresponding_inner_point);
-      coverage = getCoverage(corresponding_inner_point, ReMap(depth, startDepth, endDepth, 0.0, 1.0));
-
-      theta = dot(normalize(ray_position), normalize(sunray_position));
-      light = rayleighScattering(theta) * lightUniforms.rayleighIntensity;
-
-      sun_density += calculateDensity(sunray_position, corresponding_inner_point, coverage, detail_height, cloudUniforms.sunDensity, 0.2);
+      density += sampled_noise * sampled_coverage;
     }
-
-    output_density += density;
-    output_color += density * highColor * sun_density * light;
-    ray_origin = ray_position;
   }
 
-  return vec4<f32>(output_color, output_density) * cloudUniforms.visibility;
+  output_color = density * vec3<f32>(1.0, 1.0, 1.0);
+
+  return vec4<f32>(output_color, density);
 }
 `;

@@ -40,6 +40,7 @@ import { dev } from '$app/environment';
 import { tweened } from 'svelte/motion';
 import { fullScreenQuadShader } from './shaders/quadShader.js';
 import { cubicBezier } from '$lib/shaders/utils/cubicBezier.js';
+import { generateCubeData } from './primitives/cubeData.js';
 
 let depthTexture: GPUTexture;
 let offscreenDepthTexture: GPUTexture;
@@ -215,6 +216,8 @@ async function InitializeScene() {
     'Vertex Data'
   );
 
+  let cubeData = generateCubeData(2);
+
   let texture = await executePromise(
     'texture',
     loadImage('/textures/nasa-texture.jpg'),
@@ -232,16 +235,9 @@ async function InitializeScene() {
     '3d noise textures'
   );
 
-  let blueNoise = await executePromise(
-    'blueNoise',
-    loadImage('/textures/BlueNoise64Tiled.jpg'),
-    'blue noise'
-  );
-
   const textureV = await GetPartitionedTexture(device, texture);
   const lightMapV = await GetPartitionedTexture(device, lightmap);
   const noiseV = Create3DTextureFromData(device, noise);
-  const blueNoiseV = await GetTexture(device, blueNoise);
 
   const presentationFormat = navigator.gpu.getPreferredCanvasFormat();
 
@@ -586,14 +582,6 @@ async function InitializeScene() {
       binding: 1,
       resource: sampler,
     },
-    {
-      binding: 2,
-      resource: blueNoiseV.texture.createView(),
-    },
-    {
-      binding: 3,
-      resource: blueNoiseV.sampler,
-    },
   ];
 
   pipeline[0] = CreatePipeline(
@@ -633,6 +621,16 @@ async function InitializeScene() {
 
   buffers[0] = CreateVertexBuffers(device, data);
   WriteVertexBuffers(device, buffers[0][0], buffers[0][1], buffers[0][2], data);
+
+  buffers[1] = CreateVertexBuffers(device, cubeData);
+
+  WriteVertexBuffers(
+    device,
+    buffers[1][0],
+    buffers[1][1],
+    buffers[1][2],
+    cubeData
+  );
 
   loading.update((current) => ({
     ...current,
@@ -831,6 +829,7 @@ async function InitializeScene() {
       192,
       cameraPosition as ArrayBuffer
     );
+
     device.queue.writeBuffer(earthUniBuffer, 0, earthUniValues as ArrayBuffer);
     device.queue.writeBuffer(cloudUniBuffer, 0, cloudUniValues as ArrayBuffer);
     device.queue.writeBuffer(lightUniBuffer, 0, lightUniValues as ArrayBuffer);
@@ -841,63 +840,63 @@ async function InitializeScene() {
   }
 
   function draw() {
-    if (options.halfRes) {
-      const firstCommandEncoder = device.createCommandEncoder();
-      const passEncoder = firstCommandEncoder.beginRenderPass(
-        offscreenPassDescriptor as GPURenderPassDescriptor
-      );
-      if (visibility > 0) {
-        passEncoder.setPipeline(pipeline[1]);
-        passEncoder.setVertexBuffer(0, buffers[0][0]);
-        passEncoder.setVertexBuffer(1, buffers[0][1]);
-        passEncoder.setVertexBuffer(2, buffers[0][2]);
-        passEncoder.setBindGroup(0, bindGroup[1]);
+    // if (options.halfRes) {
+    //   const firstCommandEncoder = device.createCommandEncoder();
+    //   const passEncoder = firstCommandEncoder.beginRenderPass(
+    //     offscreenPassDescriptor as GPURenderPassDescriptor
+    //   );
+    //   if (visibility > 0) {
+    //     passEncoder.setPipeline(pipeline[1]);
+    //     passEncoder.setVertexBuffer(0, buffers[1][0]);
+    //     passEncoder.setVertexBuffer(1, buffers[1][1]);
+    //     passEncoder.setVertexBuffer(2, buffers[1][2]);
+    //     passEncoder.setBindGroup(0, bindGroup[1]);
 
-        passEncoder.draw(options.amountOfVertices);
-      }
+    //     passEncoder.draw(36);
+    //   }
 
-      passEncoder.end();
-      device.queue.submit([firstCommandEncoder.finish()]);
-    }
+    //   passEncoder.end();
+    //   device.queue.submit([firstCommandEncoder.finish()]);
+    // }
 
     const commandEncoder = device.createCommandEncoder();
     const renderPass = commandEncoder.beginRenderPass(
       renderPassDescriptor as GPURenderPassDescriptor
     );
 
-    renderPass.setPipeline(pipeline[0]);
-    renderPass.setVertexBuffer(0, buffers[0][0]);
-    renderPass.setVertexBuffer(1, buffers[0][1]);
-    renderPass.setVertexBuffer(2, buffers[0][2]);
-    renderPass.setBindGroup(0, bindGroup[0]);
+    // renderPass.setPipeline(pipeline[0]);
+    // renderPass.setVertexBuffer(0, buffers[0][0]);
+    // renderPass.setVertexBuffer(1, buffers[0][1]);
+    // renderPass.setVertexBuffer(2, buffers[0][2]);
+    // renderPass.setBindGroup(0, bindGroup[0]);
 
-    renderPass.draw(options.amountOfVertices);
+    // renderPass.draw(options.amountOfVertices);
 
-    if (visibility > 0) {
-      if (options.halfRes) {
-        renderPass.setPipeline(pipeline[3]);
-        renderPass.setBindGroup(0, bindGroup[3]);
+    // if (visibility > 0) {
+    //   if (options.halfRes) {
+    //     renderPass.setPipeline(pipeline[3]);
+    //     renderPass.setBindGroup(0, bindGroup[3]);
 
-        renderPass.draw(6);
-      } else {
-        renderPass.setPipeline(pipeline[1]);
-        renderPass.setVertexBuffer(0, buffers[0][0]);
-        renderPass.setVertexBuffer(1, buffers[0][1]);
-        renderPass.setVertexBuffer(2, buffers[0][2]);
-        renderPass.setBindGroup(0, bindGroup[1]);
+    //     renderPass.draw(6);
+    //   } else {
+    renderPass.setPipeline(pipeline[1]);
+    renderPass.setVertexBuffer(0, buffers[1][0]);
+    renderPass.setVertexBuffer(1, buffers[1][1]);
+    renderPass.setVertexBuffer(2, buffers[1][2]);
+    renderPass.setBindGroup(0, bindGroup[1]);
 
-        renderPass.draw(options.amountOfVertices);
-      }
-    }
-    if (options.layer.atmo > 0) {
-      renderPass.setPipeline(pipeline[2]);
-      renderPass.setVertexBuffer(0, buffers[0][0]);
-      renderPass.setVertexBuffer(1, buffers[0][1]);
-      renderPass.setVertexBuffer(2, buffers[0][2]);
-      renderPass.setBindGroup(0, bindGroup[2]);
+    renderPass.draw(36);
+    // }
+    // }
+    // if (options.layer.atmo > 0) {
+    //   renderPass.setPipeline(pipeline[2]);
+    //   renderPass.setVertexBuffer(0, buffers[0][0]);
+    //   renderPass.setVertexBuffer(1, buffers[0][1]);
+    //   renderPass.setVertexBuffer(2, buffers[0][2]);
+    //   renderPass.setBindGroup(0, bindGroup[2]);
 
-      renderPass.draw(options.amountOfVertices);
-    }
+    //   renderPass.draw(options.amountOfVertices);
+    // }
     renderPass.end();
 
     device.queue.submit([commandEncoder.finish()]);
