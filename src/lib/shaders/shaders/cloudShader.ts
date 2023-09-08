@@ -114,16 +114,10 @@ fn ReMap(value: f32, old_low: f32, old_high: f32, new_low: f32, new_high: f32) -
 fn calculateDensity(ray_position: vec3<f32>, corresponding_inner_point: vec3<f32>, coverage: f32, detail_height: vec4<f32>, baseDensity: f32, step: f32) -> f32 {
   var density: f32 = 0.0;
   let height = length(ray_position - corresponding_inner_point);
-  let max_height = detail_height.g;
-  var noised_coverage: f32;
+  let max_height = detail_height.g * coverage;
 
   if (height < max_height) {  
-      if(height < detail_height.a) {
-          noised_coverage = coverage * detail_height.a;
-      } else if(height <= detail_height.g) {
-          noised_coverage = coverage * detail_height.g;
-      }
-      density = getDensity(baseDensity, noised_coverage, step);
+      density = getDensity(baseDensity, coverage, step);
   }
   return density;
 }
