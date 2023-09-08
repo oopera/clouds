@@ -889,15 +889,15 @@ async function InitializeScene() {
         renderPass.draw(options.amountOfVertices);
       }
     }
-    // if (options.layer.atmo > 0) {
-    //   renderPass.setPipeline(pipeline[2]);
-    //   renderPass.setVertexBuffer(0, buffers[0][0]);
-    //   renderPass.setVertexBuffer(1, buffers[0][1]);
-    //   renderPass.setVertexBuffer(2, buffers[0][2]);
-    //   renderPass.setBindGroup(0, bindGroup[2]);
+    if (options.layer.atmo > 0) {
+      renderPass.setPipeline(pipeline[2]);
+      renderPass.setVertexBuffer(0, buffers[0][0]);
+      renderPass.setVertexBuffer(1, buffers[0][1]);
+      renderPass.setVertexBuffer(2, buffers[0][2]);
+      renderPass.setBindGroup(0, bindGroup[2]);
 
-    //   renderPass.draw(options.amountOfVertices);
-    // }
+      renderPass.draw(options.amountOfVertices);
+    }
     renderPass.end();
 
     device.queue.submit([commandEncoder.finish()]);

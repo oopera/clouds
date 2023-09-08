@@ -67,7 +67,7 @@ return (3.0 / 4.0) * (1.0 + cos(theta) * cos(theta));
 }
 
 @fragment fn fs(output: Output) -> @location(0) vec4<f32> {
-  let viewDirection: vec3<f32> = normalize(uni.cameraPosition.xyz + output.vPosition.xyz);
+  let viewDirection: vec3<f32> = normalize(uni.cameraPosition.xyz - output.vPosition.xyz);
   let visibility = atmopshereUniforms.visibility;
 
 
