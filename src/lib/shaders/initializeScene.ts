@@ -371,12 +371,16 @@ async function InitializeScene() {
   } else {
     const { mb300, mb500, mb700, mb900 } = await fetchTextures();
 
-    parsed3DGribTexture = await Get3DTextureFromGribData(device, [
-      mb300,
-      mb500,
-      mb700,
-      mb900,
-    ]);
+    if (use3DTexture) {
+      parsed3DGribTexture = await Get3DTextureFromGribData(device, [
+        mb300,
+        mb500,
+        mb700,
+        mb900,
+      ]);
+    } else {
+      parsed3DGribTexture = await GetTextureFromGribData(device, mb700);
+    }
   }
 
   let canvasTexture = context.getCurrentTexture();
