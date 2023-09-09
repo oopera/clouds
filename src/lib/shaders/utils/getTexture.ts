@@ -314,7 +314,7 @@ export const GetDepthTexture = async (
 ) => {
   const texture = device.createTexture({
     size: [width, height, 1],
-    format: 'depth24plus',
+    format: 'depth32float',
     sampleCount: sampleCount,
     usage:
       GPUTextureUsage.TEXTURE_BINDING |

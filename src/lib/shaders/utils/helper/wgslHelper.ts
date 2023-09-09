@@ -100,7 +100,7 @@ export function CreatePipeline(
       cullMode: options.cullmode,
     },
     depthStencil: {
-      format: 'depth24plus',
+      format: 'depth32float',
       depthWriteEnabled: options.depthWriteEnabled,
       depthCompare: 'less',
     },

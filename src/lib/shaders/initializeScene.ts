@@ -216,7 +216,7 @@ async function InitializeScene() {
     'Vertex Data'
   );
 
-  let cubeData = generateCubeData(2.2);
+  let cubeData = generateCubeData(2.5);
 
   let texture = await executePromise(
     'texture',
@@ -284,6 +284,16 @@ async function InitializeScene() {
     texture: GPUTexture;
     sampler: GPUSampler;
   };
+
+  var parsedGribTexture: {
+    texture: GPUTexture;
+    sampler: GPUSampler;
+  };
+
+  var parsedGribTextures: {
+    texture: GPUTexture;
+    sampler: GPUSampler;
+  }[] = [];
 
   const generateNewNoiseTexture = false;
   var worleyNoiseTexture;
@@ -355,32 +365,18 @@ async function InitializeScene() {
     };
   };
 
-  const use3DTexture = false;
-
   if (dev) {
-    if (use3DTexture) {
-      parsed3DGribTexture = await Get3DTextureFromGribData(device, [
-        mb300,
-        mb500,
-        mb700,
-        mb900,
-      ]);
-    } else {
-      parsed3DGribTexture = await GetTextureFromGribData(device, mb700);
-    }
+    parsedGribTextures[0] = await GetTextureFromGribData(device, mb300);
+    parsedGribTextures[1] = await GetTextureFromGribData(device, mb500);
+    parsedGribTextures[2] = await GetTextureFromGribData(device, mb700);
+    parsedGribTextures[3] = await GetTextureFromGribData(device, mb900);
   } else {
     const { mb300, mb500, mb700, mb900 } = await fetchTextures();
 
-    if (use3DTexture) {
-      parsed3DGribTexture = await Get3DTextureFromGribData(device, [
-        mb300,
-        mb500,
-        mb700,
-        mb900,
-      ]);
-    } else {
-      parsed3DGribTexture = await GetTextureFromGribData(device, mb700);
-    }
+    parsedGribTextures[0] = await GetTextureFromGribData(device, mb300);
+    parsedGribTextures[1] = await GetTextureFromGribData(device, mb500);
+    parsedGribTextures[2] = await GetTextureFromGribData(device, mb700);
+    parsedGribTextures[3] = await GetTextureFromGribData(device, mb900);
   }
 
   let canvasTexture = context.getCurrentTexture();
@@ -543,16 +539,25 @@ async function InitializeScene() {
       binding: 4,
       resource: worleyNoiseTexture.sampler,
     },
-
     {
       binding: 5,
-      resource: parsed3DGribTexture.texture.createView(
-        use3DTexture ? { dimension: '3d' } : {}
-      ),
+      resource: parsedGribTextures[0].texture.createView(),
     },
     {
       binding: 6,
-      resource: parsed3DGribTexture.sampler,
+      resource: parsedGribTextures[1].texture.createView(),
+    },
+    {
+      binding: 7,
+      resource: parsedGribTextures[2].texture.createView(),
+    },
+    {
+      binding: 8,
+      resource: parsedGribTextures[3].texture.createView(),
+    },
+    {
+      binding: 9,
+      resource: parsedGribTextures[0].sampler,
     },
   ];
 
@@ -736,14 +741,6 @@ async function InitializeScene() {
         tweenedVisibility.set(1.0);
       });
     }
-
-    cloudBindings[5].resource = parsed3DGribTexture.texture.createView(
-      use3DTexture
-        ? {
-            dimension: '3d',
-          }
-        : {}
-    );
 
     var lightPosition = vec3.create();
     vec3.set(
