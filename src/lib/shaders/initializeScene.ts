@@ -355,7 +355,7 @@ async function InitializeScene() {
     };
   };
 
-  const use3DTexture = true;
+  const use3DTexture = false;
 
   if (dev) {
     if (use3DTexture) {

@@ -73,35 +73,39 @@ fn useValues() -> f32 {
 } 
 
 
+
 @fragment fn fs(output: Output) -> @location(0) vec4<f32> {
-
   let one = useValues();
-  let sphere_center: vec3<f32> = vec3<f32>(0.0, 0.0, 0.0);  // Sphere center
-  let sphere_radius: f32 = 2.0;  // Sphere radius
+  var output_color: vec3<f32> = vec3<f32>(0.0, 0.0, 0.0);
+  var accumulated_alpha: f32 = 0.0;
 
-  var frag_color: vec4<f32> = vec4<f32>(0.0, 0.0, 1.0, 1.0);  // Default to blue
-
-  // Initialize ray variables
   let ray_origin = uni.cameraPosition.xyz;
   let ray_direction = normalize(output.vPosition.xyz - ray_origin);
-
-  // Ray-sphere intersection
+  
   let oc = ray_origin - sphere_center;
   let a = dot(ray_direction, ray_direction);
   let b = 2.0 * dot(oc, ray_direction);
   let c = dot(oc, oc) - (sphere_radius * sphere_radius);
   let discriminant = b * b - 4.0 * a * c;
 
-  if (discriminant > 0.0) {
-    // We have an intersection
-    let t1 = (-b - sqrt(discriminant)) / (2.0 * a);
-    let t2 = (-b + sqrt(discriminant)) / (2.0 * a);
+  let t1: f32 = (-b - sqrt(discriminant)) / (2.0 * a);
+  let t2: f32 = (-b + sqrt(discriminant)) / (2.0 * a);
+  let t: f32 = min(t1, t2);
+  let start_point: vec3<f32> = ray_origin + t * ray_direction;
 
-    if (t1 > 0.0 || t2 > 0.0) {
-      frag_color = vec4<f32>(1.0, 0.0, 0.0, 1.0);  // Inside the sphere, set to red
+  let cloud_color = vec3<f32>(1.0, 1.0, 1.0);
+  let steps = cloudUniforms.raymarchSteps;
+
+  for (var i: f32 = 0.0; i < steps; i += 1.0) {
+    let current_point = start_point + i * ray_direction * cloudUniforms.raymarchLength / steps;
+    let density = textureSample(cloud_texture, cloud_sampler, current_point).r * textureSample(noise_texture, noise_sampler, current_point).g * cloudUniforms.density;
+
+    if (discriminant > 0.0) {
+      accumulated_alpha += (1.0 - accumulated_alpha) * density;
+      output_color += (1.0 - accumulated_alpha) * density * cloud_color;
     }
   }
 
-  return frag_color;
+  return vec4<f32>(output_color, accumulated_alpha);
 }
 `;
