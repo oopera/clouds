@@ -50,9 +50,9 @@ struct Output {
 
 
 const sphere_center = vec3<f32>(0.0, 0.0, 0.0);
-
-const inner_sphere_radius: f32 = 1.0;
-const outer_sphere_radius: f32 = 2.0;
+const raymarch_target: f32 = 1.0;
+const inner_sphere_radius: f32 = 2.0;
+const outer_sphere_radius: f32 = 2.1;
 
 const PI: f32 = 3.141592653589793;
 const N: f32 = 2.545e25;  
@@ -77,56 +77,95 @@ fn useValues() -> f32 {
   return output;
 } 
 
+fn ReMap(value: f32, old_low: f32, old_high: f32, new_low: f32, new_high: f32) -> f32 {
+  var ret_val: f32 = new_low + (value - old_low) * (new_high - new_low) / (old_high - old_low);
+  return ret_val;
+}
+
+fn mieScattering(theta: f32) -> f32 {
+  return (3.0 / 4.0) * (1.0 + cos(theta) * cos(theta));
+}
+
 
 @fragment fn fs(output: Output) -> @location(0) vec4<f32> {
   let one = useValues();
-
-  var output_color: vec3<f32> = vec3<f32>(0.0, 0.0, 0.0);
+  var output_color: vec3<f32> = vec3<f32>(0.7, 0.7, 0.7);
+  var highlight_color: vec3<f32> = vec3<f32>(1.0, 1.0, 1.0);
   var accumulated_alpha: f32 = 0.0;
+
+  var light: f32 = 0.0;
+  var sun_density: f32 = 0.0;
+  var cloud_density: f32 = 0.0;
 
   let ray_origin = uni.cameraPosition.xyz;
   let ray_direction = normalize(output.vPosition.xyz - ray_origin);
+  let sun_ray_direction = normalize(output.vPosition.xyz - lightUniforms.lightPosition);
   
   let oc = ray_origin - sphere_center;
   let a = dot(ray_direction, ray_direction);
   let b = 2.0 * dot(oc, ray_direction);
-  let c = dot(oc, oc) - (inner_sphere_radius * inner_sphere_radius);
-  let outer_c = dot(oc, oc) - (outer_sphere_radius * outer_sphere_radius);
+  let c = dot(oc, oc) - (outer_sphere_radius * outer_sphere_radius);
   let discriminant = b * b - 4.0 * a * c;
-  
-  let outer_discriminant = b * b - 4.0 * a * outer_c;
-
   let t1: f32 = (-b - sqrt(discriminant)) / (2.0 * a);
   let t2: f32 = (-b + sqrt(discriminant)) / (2.0 * a);
   let t: f32 = min(t1, t2);
   let start_point: vec3<f32> = ray_origin + t * ray_direction;
 
   let cloud_color = vec3<f32>(1.0, 1.0, 1.0);
-  let debug_color = vec3<f32>(1.0, 0.0, 0.0);
   let steps = cloudUniforms.raymarchSteps;
+  let step_length = (outer_sphere_radius - raymarch_target) / steps;
 
   for (var i: f32 = 0.0; i < steps; i += 1.0) {
-    let current_point = start_point + i * ray_direction * cloudUniforms.raymarchLength / steps;
+    let current_point = start_point + i * ray_direction * step_length;
+    let distance_to_center = length(current_point - sphere_center);
+    let inner_sphere_point = sphere_center + normalize(current_point - sphere_center) * inner_sphere_radius;
+
     let sphere_uv = vec2<f32>(
-      0.5 + atan2(current_point.z - sphere_center.z, current_point.x - sphere_center.x) / (2.0 * PI),
-      0.5 - asin((current_point.y - sphere_center.y) / inner_sphere_radius) / PI
+      0.5 + atan2(inner_sphere_point.z - sphere_center.z, inner_sphere_point.x - sphere_center.x) / (2.0 * PI),
+      0.5 - asin((inner_sphere_point.y - sphere_center.y) / inner_sphere_radius) / PI
     );
-    
-    let density = textureSample(cloud_texture, cloud_sampler, sphere_uv).r * cloudUniforms.density;
-    
-    if (discriminant > 0.0) {
-      accumulated_alpha += (1.0 - accumulated_alpha) * density;
-      output_color += (1.0 - accumulated_alpha) * density * cloud_color;
-    } else if(outer_discriminant > 0.0) {
-      accumulated_alpha += (1.0 - accumulated_alpha) * density;
-      output_color += (1.0 - accumulated_alpha) * density * debug_color;
-    } else {
-      accumulated_alpha += (1.0 - accumulated_alpha) * density;
-      output_color += (1.0 - accumulated_alpha) * density * vec3(1.0, 0.0, 1.0);;
+
+    let coverage = textureSample(cloud_texture, cloud_sampler, sphere_uv).r;
+    var maxheight = textureSample(noise_texture, noise_sampler, inner_sphere_point / 2).g;
+    maxheight = ReMap(maxheight, 0.0, 1.0, 0.0, outer_sphere_radius - inner_sphere_radius);
+    let distance_to_inner_sphere = length(current_point - inner_sphere_point);
+
+    if (distance_to_center < outer_sphere_radius && distance_to_center >= inner_sphere_radius) {
+      if (distance_to_inner_sphere < maxheight) {
+        cloud_density += coverage  * cloudUniforms.density;
+      }
     }
-  }
+
+    for(var i = 0.0; i < 0.5; i += 0.1){
+      let sun_point: vec3<f32> = current_point + sun_ray_direction * i;
+      let distance_to_center = length(sun_point - sphere_center);
+      let inner_sphere_point = sphere_center + normalize(sun_point - sphere_center) * inner_sphere_radius;
+
+      let sphere_uv = vec2<f32>(
+        0.5 + atan2(inner_sphere_point.z - sphere_center.z, inner_sphere_point.x - sphere_center.x) / (2.0 * PI),
+        0.5 - asin((inner_sphere_point.y - sphere_center.y) / inner_sphere_radius) / PI
+      );
   
-  return vec4<f32>(output_color, accumulated_alpha);
+      let coverage = textureSample(cloud_texture, cloud_sampler, sphere_uv).r;
+      var maxheight = textureSample(noise_texture, noise_sampler, inner_sphere_point / 2).g;
+      maxheight = ReMap(maxheight, 0.0, 1.0, 0.0, outer_sphere_radius - inner_sphere_radius);
+      let distance_to_inner_sphere = length(current_point - inner_sphere_point);
+  
+      let theta = dot(normalize(current_point), normalize(sun_ray_direction));
+      light = mieScattering(theta) * lightUniforms.rayleighIntensity;
+      if (distance_to_center < outer_sphere_radius && distance_to_center >= inner_sphere_radius) {
+        if (distance_to_inner_sphere < maxheight) {
+          sun_density += coverage * cloudUniforms.sunDensity * light;
+        }
+      }
+    }     
+  }
+
+  output_color += sun_density * highlight_color;
+
+  return vec4<f32>(output_color, cloud_density);
 }
+
+
 
 `;

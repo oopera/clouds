@@ -120,8 +120,8 @@
           delay={8}
           title="raymarch_length"
           min={0}
-          max={0.1}
-          step={0.0005}
+          max={1}
+          step={0.005}
         />
         <Range_Input
           delay={8}

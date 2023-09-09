@@ -34,7 +34,7 @@ struct Output {
 @group(0) @binding(1) var<uniform> atmopshereUniforms: AtmosphereUniforms;
 @group(0) @binding(2) var<uniform> lightUni: LightUniforms;
 
-const radius = 0.0075;
+const radius = 0.15;
 const PI: f32 = 3.141592653589793;
 
 

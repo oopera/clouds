@@ -90,7 +90,7 @@ var options: RenderOptions = {
   // Strings (enum types)
   lightType: 'day_cycle',
   cloudType: 'cumulus',
-  cullmode: 'back',
+  cullmode: 'none',
   topology: 'triangle-list',
 
   // Nested Objects
@@ -216,7 +216,7 @@ async function InitializeScene() {
     'Vertex Data'
   );
 
-  let cubeData = generateCubeData(2);
+  let cubeData = generateCubeData(2.2);
 
   let texture = await executePromise(
     'texture',
@@ -864,13 +864,13 @@ async function InitializeScene() {
       renderPassDescriptor as GPURenderPassDescriptor
     );
 
-    // renderPass.setPipeline(pipeline[0]);
-    // renderPass.setVertexBuffer(0, buffers[0][0]);
-    // renderPass.setVertexBuffer(1, buffers[0][1]);
-    // renderPass.setVertexBuffer(2, buffers[0][2]);
-    // renderPass.setBindGroup(0, bindGroup[0]);
+    renderPass.setPipeline(pipeline[0]);
+    renderPass.setVertexBuffer(0, buffers[0][0]);
+    renderPass.setVertexBuffer(1, buffers[0][1]);
+    renderPass.setVertexBuffer(2, buffers[0][2]);
+    renderPass.setBindGroup(0, bindGroup[0]);
 
-    // renderPass.draw(options.amountOfVertices);
+    renderPass.draw(options.amountOfVertices);
 
     // if (visibility > 0) {
     //   if (options.halfRes) {
