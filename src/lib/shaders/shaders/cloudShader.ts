@@ -49,11 +49,11 @@ struct Output {
 
 
 const sphere_center = vec3<f32>(0.0, 0.0, 0.0);
-const inner_sphere_radius: f32 = 2.00;
-const layer_1_sphere_radius: f32 = 2.05;
-const layer_2_sphere_radius: f32 = 2.08;
-const layer_3_sphere_radius: f32 = 2.1;
-const outer_sphere_radius: f32 = 2.12;
+const inner_sphere_radius: f32 = 2.03;
+const layer_1_sphere_radius: f32 = 2.12;
+const layer_2_sphere_radius: f32 = 2.17;
+const layer_3_sphere_radius: f32 = 2.21;
+const outer_sphere_radius: f32 = 2.25;
 
 const PI: f32 = 3.141592653589793;
 const N: f32 = 2.545e25;  
@@ -150,20 +150,20 @@ fn calculate_height(sphere_radius: f32, scaling_factor: f32, noise: f32, detail_
       let distance_to_inner_sphere = length(current_point - inner_sphere_point);
 
       if (distance_to_center < outer_sphere_radius) {
-        if(distance_to_center >= layer_3_sphere_radius) {
-          if((distance_to_inner_sphere <= heights_mb900[0] && distance_to_inner_sphere > heights_mb900[1]) || (heights_mb900[0] <= 0.02)){
+        if(distance_to_center > layer_3_sphere_radius) {
+          if((distance_to_inner_sphere < heights_mb900[0] && distance_to_inner_sphere > heights_mb900[1]) || (heights_mb900[0] <= 0.02)){
               cloud_density += coverage_mb900 * cloudUniforms.density;
             }
-        } else if (distance_to_center >= layer_2_sphere_radius) {
-          if((distance_to_inner_sphere <= heights_mb700[0] && distance_to_inner_sphere > heights_mb700[1]) || (heights_mb700[0] <= 0.02)){
+        } else if (distance_to_center > layer_2_sphere_radius) {
+          if((distance_to_inner_sphere < heights_mb700[0] && distance_to_inner_sphere > heights_mb700[1]) || (heights_mb700[0] <= 0.02)){
             cloud_density += coverage_mb700 * cloudUniforms.density;
           }
-        } else if (distance_to_center >= layer_1_sphere_radius) {
-          if((distance_to_inner_sphere <= heights_mb500[0] && distance_to_inner_sphere > heights_mb500[1]) || (heights_mb500[0] <= 0.02)){
+        } else if (distance_to_center > layer_1_sphere_radius) {
+          if((distance_to_inner_sphere < heights_mb500[0] && distance_to_inner_sphere > heights_mb500[1]) || (heights_mb500[0] <= 0.02)){
             cloud_density += coverage_mb500 * cloudUniforms.density;
           }
-        } else if (distance_to_center >= inner_sphere_radius) {
-          if((distance_to_inner_sphere <= heights_mb300[0] && distance_to_inner_sphere > heights_mb300[1]) || (heights_mb300[0] <= 0.02)){
+        } else if (distance_to_center > inner_sphere_radius) {
+          if((distance_to_inner_sphere < heights_mb300[0] && distance_to_inner_sphere > heights_mb300[1]) || (heights_mb300[0] <= 0.02)){
             cloud_density += coverage_mb300 * cloudUniforms.density;
           }
         }
@@ -203,20 +203,20 @@ fn calculate_height(sphere_radius: f32, scaling_factor: f32, noise: f32, detail_
         light = mieScattering(theta) * lightUniforms.rayleighIntensity;
       
         if (distance_to_center < outer_sphere_radius) {
-          if(distance_to_center >= layer_3_sphere_radius) {
-            if((distance_to_inner_sphere <= heights_mb900[0] && distance_to_inner_sphere > heights_mb900[1]) || (heights_mb900[0] <= 0.02)){
+          if(distance_to_center > layer_3_sphere_radius) {
+            if((distance_to_inner_sphere < heights_mb900[0] && distance_to_inner_sphere > heights_mb900[1]) || (heights_mb900[0] <= 0.02)){
                 sun_density += coverage_mb900 * cloudUniforms.sunDensity * light;
               }
-          } else if (distance_to_center >= layer_2_sphere_radius) {
-            if((distance_to_inner_sphere <= heights_mb700[0] && distance_to_inner_sphere > heights_mb700[1]) || (heights_mb700[0] <= 0.02)){
+          } else if (distance_to_center > layer_2_sphere_radius) {
+            if((distance_to_inner_sphere < heights_mb700[0] && distance_to_inner_sphere > heights_mb700[1]) || (heights_mb700[0] <= 0.02)){
                 sun_density += coverage_mb700 * cloudUniforms.sunDensity * light;
               }
-          } else if (distance_to_center >= layer_1_sphere_radius) {
-            if((distance_to_inner_sphere <= heights_mb500[0] && distance_to_inner_sphere > heights_mb500[1]) || (heights_mb500[0] <= 0.02)){ 
+          } else if (distance_to_center > layer_1_sphere_radius) {
+            if((distance_to_inner_sphere < heights_mb500[0] && distance_to_inner_sphere > heights_mb500[1]) || (heights_mb500[0] <= 0.02)){ 
               sun_density += coverage_mb500 * cloudUniforms.sunDensity * light;
             }
-          } else if (distance_to_center >= inner_sphere_radius) {
-            if((distance_to_inner_sphere <= heights_mb300[0] && distance_to_inner_sphere > heights_mb300[1]) || (heights_mb300[0] <= 0.02)){
+          } else if (distance_to_center > inner_sphere_radius) {
+            if((distance_to_inner_sphere < heights_mb300[0] && distance_to_inner_sphere > heights_mb300[1]) || (heights_mb300[0] <= 0.02)){
               sun_density += coverage_mb300 * cloudUniforms.sunDensity * light;
             }
           }

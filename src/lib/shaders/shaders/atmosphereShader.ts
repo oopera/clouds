@@ -34,7 +34,7 @@ struct Output {
 @group(0) @binding(1) var<uniform> atmopshereUniforms: AtmosphereUniforms;
 @group(0) @binding(2) var<uniform> lightUni: LightUniforms;
 
-const radius = 0.13;
+const radius = 0.27;
 const PI: f32 = 3.141592653589793;
 
 
@@ -72,7 +72,7 @@ return (3.0 / 4.0) * (1.0 + cos(theta) * cos(theta));
   let dotProduct = dot(lightUni.lightPosition, output.vNormal.xyz);
   let scaledDotProduct: f32 = dotProduct * 10.0;
   var lightness: f32 = 1.0 - (1.0 / (1.0 + exp(-scaledDotProduct)));
-  
+
   if(lightUni.lightType == 0.0){
     lightness = 0.5;
   }else if(lightUni.lightType == 1.0){
