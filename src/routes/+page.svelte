@@ -113,8 +113,8 @@
           delay={8}
           title="cloud_density"
           min={0}
-          max={0.5}
-          step={0.01}
+          max={1.0}
+          step={0.02}
         />
         <Range_Input
           delay={8}

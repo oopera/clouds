@@ -47,6 +47,9 @@ export default function InitStores(
 
   half_res.subscribe((value) => {
     options.halfRes = value;
+    if (!isFirstInvocation) {
+      hasChanged.resolution = true;
+    }
   });
 
   raymarch_steps.subscribe((value) => {
