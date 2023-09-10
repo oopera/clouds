@@ -53,7 +53,6 @@
 <style lang="scss">
   p {
     vertical-align: baseline;
-    margin: -2px;
     &::after {
       content: '';
       display: inline-block;

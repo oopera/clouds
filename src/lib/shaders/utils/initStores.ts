@@ -172,8 +172,8 @@ export default function InitStores(
   window.addEventListener('wheel', handleScroll, { passive: false });
   window.addEventListener('touchmove', handleTouch, { passive: false });
 
-  let initialX = 0; // Store the initial X coordinate on mousedown
-  let initialY = 0; // Store the initial Y coordinate on mousedown
+  let initialX = 0;
+  let initialY = 0;
 
   const handlemouseup = (e: MouseEvent) => {
     options.isDragging = false;

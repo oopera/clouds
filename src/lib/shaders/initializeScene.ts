@@ -16,17 +16,15 @@ import { loading, setZoom, setPitch, setYaw } from '$lib/stores/stores.js';
 import { cloudShader } from './shaders/cloudShader.js';
 
 import {
-  GetTexture,
   GetPartitionedTexture,
   Get3DNoiseTexture,
   loadBinaryData,
   Create3DTextureFromData,
-  Get3DTextureFromGribData,
   parseEncodedToFlattened,
-  GetTextureFromGribData,
-} from './utils/getTexture.js';
+  Get4LayerTextureFromGribData,
+  GetDepthTexture,
+} from './utils/helper/textureHelper.js';
 
-import { GetDepthTexture } from './utils/getTexture.js';
 import type { RenderOptions, HasChanged } from '$lib/types/types.js';
 import { atmosphereShader } from './shaders/atmosphereShader.js';
 import { executePromise, loadImage } from './utils/executeAndUpdate.js';
@@ -121,11 +119,6 @@ var options: RenderOptions = {
   },
 };
 
-var mb3001d: number[] = [];
-var mb5001d: number[] = [];
-var mb7001d: number[] = [];
-var mb9001d: number[] = [];
-
 var visibility: number = 0.0;
 var tweenedVisibility = tweened(visibility, {
   duration: 3500,
@@ -138,8 +131,6 @@ tweenedVisibility.subscribe((value) => {
 const pipeline: GPURenderPipeline[] = [];
 const bindGroup: GPUBindGroup[] = [];
 const buffers: GPUBuffer[][] = [];
-
-var elapsed = 0;
 
 const displayError = (message: string) => {
   var counter = 0;
@@ -280,20 +271,10 @@ async function InitializeScene() {
   const normalMatrix = mat4.create();
   const modelMatrix = mat4.create();
 
-  var parsed3DGribTexture: {
-    texture: GPUTexture;
-    sampler: GPUSampler;
-  };
-
   var parsedGribTexture: {
     texture: GPUTexture;
     sampler: GPUSampler;
   };
-
-  var parsedGribTextures: {
-    texture: GPUTexture;
-    sampler: GPUSampler;
-  }[] = [];
 
   const generateNewNoiseTexture = false;
   var worleyNoiseTexture;
@@ -344,7 +325,7 @@ async function InitializeScene() {
     const mb900R = await mb900RD.json();
 
     if (setTextures) {
-      parsed3DGribTexture = await Get3DTextureFromGribData(device, [
+      parsedGribTexture = await Get4LayerTextureFromGribData(device, [
         mb300,
         mb500,
         mb700,
@@ -352,10 +333,10 @@ async function InitializeScene() {
       ]);
     }
 
-    mb3001d = parseEncodedToFlattened(mb300R);
-    mb5001d = parseEncodedToFlattened(mb500R);
-    mb7001d = parseEncodedToFlattened(mb700R);
-    mb9001d = parseEncodedToFlattened(mb900R);
+    const mb3001d = parseEncodedToFlattened(mb300R);
+    const mb5001d = parseEncodedToFlattened(mb500R);
+    const mb7001d = parseEncodedToFlattened(mb700R);
+    const mb9001d = parseEncodedToFlattened(mb900R);
 
     return {
       mb300: mb3001d,
@@ -366,17 +347,20 @@ async function InitializeScene() {
   };
 
   if (dev) {
-    parsedGribTextures[0] = await GetTextureFromGribData(device, mb300);
-    parsedGribTextures[1] = await GetTextureFromGribData(device, mb500);
-    parsedGribTextures[2] = await GetTextureFromGribData(device, mb700);
-    parsedGribTextures[3] = await GetTextureFromGribData(device, mb900);
+    parsedGribTexture = await Get4LayerTextureFromGribData(device, [
+      mb300,
+      mb500,
+      mb700,
+      mb900,
+    ]);
   } else {
     const { mb300, mb500, mb700, mb900 } = await fetchTextures();
-
-    parsedGribTextures[0] = await GetTextureFromGribData(device, mb300);
-    parsedGribTextures[1] = await GetTextureFromGribData(device, mb500);
-    parsedGribTextures[2] = await GetTextureFromGribData(device, mb700);
-    parsedGribTextures[3] = await GetTextureFromGribData(device, mb900);
+    parsedGribTexture = await Get4LayerTextureFromGribData(device, [
+      mb300,
+      mb500,
+      mb700,
+      mb900,
+    ]);
   }
 
   let canvasTexture = context.getCurrentTexture();
@@ -541,23 +525,11 @@ async function InitializeScene() {
     },
     {
       binding: 5,
-      resource: parsedGribTextures[0].texture.createView(),
+      resource: parsedGribTexture.texture.createView(),
     },
     {
       binding: 6,
-      resource: parsedGribTextures[1].texture.createView(),
-    },
-    {
-      binding: 7,
-      resource: parsedGribTextures[2].texture.createView(),
-    },
-    {
-      binding: 8,
-      resource: parsedGribTextures[3].texture.createView(),
-    },
-    {
-      binding: 9,
-      resource: parsedGribTextures[0].sampler,
+      resource: parsedGribTexture.sampler,
     },
   ];
 

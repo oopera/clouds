@@ -118,16 +118,9 @@
         />
         <Range_Input
           delay={8}
-          title="raymarch_length"
-          min={0}
-          max={1}
-          step={0.005}
-        />
-        <Range_Input
-          delay={8}
           title="raymarch_steps"
           min={1}
-          max={99}
+          max={199}
           step={1}
         />
         <Text accent vertical delay={9} text={'FORM'} />

@@ -1,5 +1,4 @@
 export const generateCubeData = (size: number) => {
-  // Expanded vertex data for each face (2 triangles per face, 3 vertices per triangle)
   const vertices = [
     // Front face
     -size,
@@ -128,7 +127,6 @@ export const generateCubeData = (size: number) => {
     size,
   ];
 
-  // Normals (similarly expanded)
   const normals = new Array(36)
     .fill([
       0,
@@ -152,7 +150,6 @@ export const generateCubeData = (size: number) => {
     ])
     .flat();
 
-  // UVs (also similarly expanded)
   const uv = new Array(6).fill([0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1]).flat();
 
   return {
