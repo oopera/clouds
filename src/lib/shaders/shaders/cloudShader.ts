@@ -53,9 +53,9 @@ struct Output {
 
 
 const sphere_center = vec3<f32>(0.0, 0.0, 0.0);
-const inner_sphere_radius: f32 = 2.05;
+const inner_sphere_radius: f32 = 2.00;
 const layer_1_sphere_radius: f32 = 2.1;
-const layer_2_sphere_radius: f32 = 2.14;
+const layer_2_sphere_radius: f32 = 2.15;
 const layer_3_sphere_radius: f32 = 2.17;
 const outer_sphere_radius: f32 = 2.2;
 
@@ -150,15 +150,15 @@ fn is_point_in_front_of_sphere(point: vec3<f32>, camera_position: vec3<f32>) -> 
       var minheight_mb300 = (layer_1_sphere_radius - 2) - maxheight_mb300 * scaling_factor;
       
       var maxheight_mb500 = ReMap(noise.g, 0.0, 1.0, 0.0, layer_2_sphere_radius - 2);
-      var max_detail_height_mb500 = ReMap(detail_noise.b, 0.0, 1.0, 0.0, layer_2_sphere_radius - 2);
+      var max_detail_height_mb500 = ReMap(detail_noise.g, 0.0, 1.0, 0.0, layer_2_sphere_radius - 2);
       var minheight_mb500 = (layer_2_sphere_radius - 2) - maxheight_mb500 * scaling_factor;
       
       var maxheight_mb700 = ReMap(noise.g, 0.0, 1.0, 0.0, layer_3_sphere_radius - 2);
-      var max_detail_height_mb700 = ReMap(detail_noise.a, 0.0, 1.0, 0.0, layer_3_sphere_radius - 2);
+      var max_detail_height_mb700 = ReMap(detail_noise.g, 0.0, 1.0, 0.0, layer_3_sphere_radius - 2);
       var minheight_mb700 = (layer_3_sphere_radius - 2) - maxheight_mb700 * scaling_factor;
       
       var maxheight_mb900 = ReMap(noise.g, 0.0, 1.0, 0.0, outer_sphere_radius - 2);
-      var max_detail_height_mb900 = ReMap(detail_noise.a, 0.0, 1.0, 0.0, outer_sphere_radius - 2);
+      var max_detail_height_mb900 = ReMap(detail_noise.g, 0.0, 1.0, 0.0, outer_sphere_radius - 2);
       var minheight_mb900 = (outer_sphere_radius - 2) - maxheight_mb900 * scaling_factor;
 
       let distance_to_inner_sphere = length(current_point - inner_sphere_point);
@@ -212,15 +212,15 @@ fn is_point_in_front_of_sphere(point: vec3<f32>, camera_position: vec3<f32>) -> 
         var minheight_mb300 = (layer_1_sphere_radius - 2) - maxheight_mb300 * scaling_factor;
 
         var maxheight_mb500 = ReMap(noise.g, 0.0, 1.0, 0.0, layer_2_sphere_radius - 2);
-        var max_detail_height_mb500 = ReMap(detail_noise.b, 0.0, 1.0, 0.0, layer_2_sphere_radius - 2);
+        var max_detail_height_mb500 = ReMap(detail_noise.g, 0.0, 1.0, 0.0, layer_2_sphere_radius - 2);
         var minheight_mb500 = (layer_2_sphere_radius - 2) - maxheight_mb500 * scaling_factor;
         
         var maxheight_mb700 = ReMap(noise.g, 0.0, 1.0, 0.0, layer_3_sphere_radius - 2);
-        var max_detail_height_mb700 = ReMap(detail_noise.a, 0.0, 1.0, 0.0, layer_3_sphere_radius - 2);
+        var max_detail_height_mb700 = ReMap(detail_noise.g, 0.0, 1.0, 0.0, layer_3_sphere_radius - 2);
         var minheight_mb700 = (layer_3_sphere_radius - 2) - maxheight_mb700 * scaling_factor;
         
         var maxheight_mb900 = ReMap(noise.g, 0.0, 1.0, 0.0, outer_sphere_radius - 2);
-        var max_detail_height_mb900 = ReMap(detail_noise.a, 0.0, 1.0, 0.0, outer_sphere_radius - 2);
+        var max_detail_height_mb900 = ReMap(detail_noise.g, 0.0, 1.0, 0.0, outer_sphere_radius - 2);
         var minheight_mb900 = (outer_sphere_radius - 2) - maxheight_mb900 * scaling_factor;
       
         let distance_to_inner_sphere = length(sun_point - inner_sphere_point);
