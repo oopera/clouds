@@ -104,8 +104,6 @@ export const earthShader = /* wgsl */ `
           lightColor = lightColor_02;
       }
 
-// COMMON LIGHT CALCS
-
       let dotProduct = dot(lightUni.lightPosition, output.vNormal.xyz);
       let scaledDotProduct: f32 = dotProduct * 10.0;
       var lightness: f32 = 1.0 - (1.0 / (1.0 + exp(-scaledDotProduct)));
@@ -114,26 +112,19 @@ export const earthShader = /* wgsl */ `
       let blendRadius = 0.1; 
       var mask: f32 = 0;
 
-// COMMON LIGHT CALCS
-
       if(lightUni.lightType == 0.0){
         lightness = 0.0;
       }else if(lightUni.lightType == 1.0){
         lightness = 1.0;
-      }else{
-        let edge = fwidth(lightness);
-         mask = smoothstep(0.0, blendRadius, edge);
       }
-
-      // let selectedNormal: vec3<f32> = getNormal(vec2(earthUni.coordx, earthUni.coordy));
-      // var distance: f32 = length(output.vNormal.xyz - selectedNormal);
-      // if (distance < 0.1) {
-      //   return vec4(0,0,0,0);
+      
+      // else{
+      //   let edge = fwidth(lightness);
+      //    mask = smoothstep(0.0, blendRadius, edge);
       // }
 
       let resultColor = vec4(textureColor.rgb * pow(lightness, 1.2), 1) + 
-                   vec4(lightColor.rgb  * pow(1.0 - lightness, 1.2) , 1.0) +
-                   mask * borderColor;
+                   vec4(lightColor.rgb  * pow(1.0 - lightness, 1.2) , 1.0);
 
       return resultColor;
     }       

@@ -10,8 +10,6 @@ struct Output {
 
 @group(0) @binding(0) var myTexture: texture_2d<f32>;
 @group(0) @binding(1) var mySampler: sampler;
-@group(0) @binding(2) var blue_noise: texture_2d<f32>;
-@group(0) @binding(3) var blue_noise_sampler: sampler;
 
 @vertex fn vs(input: Input, @builtin(vertex_index) vertexIndex: u32) -> Output {
     var output: Output;
@@ -32,13 +30,6 @@ struct Output {
 }
 @fragment fn fs(output: Output) -> @location(0) vec4<f32> {
     var color = textureSample(myTexture, mySampler, output.uv);
-    
-    let ditherIntensity: f32 = 0.025; 
-    let threshold: f32 = 0.25;      
-
-    let noiseUV = output.uv ;
-    let noise = textureSample(blue_noise, blue_noise_sampler, noiseUV).r;
-
     return color;
 }
 `;

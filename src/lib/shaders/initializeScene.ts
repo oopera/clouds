@@ -16,17 +16,15 @@ import { loading, setZoom, setPitch, setYaw } from '$lib/stores/stores.js';
 import { cloudShader } from './shaders/cloudShader.js';
 
 import {
-  GetTexture,
   GetPartitionedTexture,
   Get3DNoiseTexture,
   loadBinaryData,
   Create3DTextureFromData,
-  Get3DTextureFromGribData,
   parseEncodedToFlattened,
-  GetTextureFromGribData,
-} from './utils/getTexture.js';
+  Get4LayerTextureFromGribData,
+  GetDepthTexture,
+} from './utils/helper/textureHelper.js';
 
-import { GetDepthTexture } from './utils/getTexture.js';
 import type { RenderOptions, HasChanged } from '$lib/types/types.js';
 import { atmosphereShader } from './shaders/atmosphereShader.js';
 import { executePromise, loadImage } from './utils/executeAndUpdate.js';
@@ -40,6 +38,7 @@ import { dev } from '$app/environment';
 import { tweened } from 'svelte/motion';
 import { fullScreenQuadShader } from './shaders/quadShader.js';
 import { cubicBezier } from '$lib/shaders/utils/cubicBezier.js';
+import { generateCubeData } from './primitives/cubeData.js';
 
 let depthTexture: GPUTexture;
 let offscreenDepthTexture: GPUTexture;
@@ -120,11 +119,6 @@ var options: RenderOptions = {
   },
 };
 
-var mb3001d: number[] = [];
-var mb5001d: number[] = [];
-var mb7001d: number[] = [];
-var mb9001d: number[] = [];
-
 var visibility: number = 0.0;
 var tweenedVisibility = tweened(visibility, {
   duration: 3500,
@@ -137,8 +131,6 @@ tweenedVisibility.subscribe((value) => {
 const pipeline: GPURenderPipeline[] = [];
 const bindGroup: GPUBindGroup[] = [];
 const buffers: GPUBuffer[][] = [];
-
-var elapsed = 0;
 
 const displayError = (message: string) => {
   var counter = 0;
@@ -215,6 +207,8 @@ async function InitializeScene() {
     'Vertex Data'
   );
 
+  let cubeData = generateCubeData(2.5);
+
   let texture = await executePromise(
     'texture',
     loadImage('/textures/nasa-texture.jpg'),
@@ -232,16 +226,9 @@ async function InitializeScene() {
     '3d noise textures'
   );
 
-  let blueNoise = await executePromise(
-    'blueNoise',
-    loadImage('/textures/BlueNoise64Tiled.jpg'),
-    'blue noise'
-  );
-
   const textureV = await GetPartitionedTexture(device, texture);
   const lightMapV = await GetPartitionedTexture(device, lightmap);
   const noiseV = Create3DTextureFromData(device, noise);
-  const blueNoiseV = await GetTexture(device, blueNoise);
 
   const presentationFormat = navigator.gpu.getPreferredCanvasFormat();
 
@@ -284,7 +271,7 @@ async function InitializeScene() {
   const normalMatrix = mat4.create();
   const modelMatrix = mat4.create();
 
-  var parsed3DGribTexture: {
+  var parsedGribTexture: {
     texture: GPUTexture;
     sampler: GPUSampler;
   };
@@ -338,7 +325,7 @@ async function InitializeScene() {
     const mb900R = await mb900RD.json();
 
     if (setTextures) {
-      parsed3DGribTexture = await Get3DTextureFromGribData(device, [
+      parsedGribTexture = await Get4LayerTextureFromGribData(device, [
         mb300,
         mb500,
         mb700,
@@ -346,10 +333,10 @@ async function InitializeScene() {
       ]);
     }
 
-    mb3001d = parseEncodedToFlattened(mb300R);
-    mb5001d = parseEncodedToFlattened(mb500R);
-    mb7001d = parseEncodedToFlattened(mb700R);
-    mb9001d = parseEncodedToFlattened(mb900R);
+    const mb3001d = parseEncodedToFlattened(mb300R);
+    const mb5001d = parseEncodedToFlattened(mb500R);
+    const mb7001d = parseEncodedToFlattened(mb700R);
+    const mb9001d = parseEncodedToFlattened(mb900R);
 
     return {
       mb300: mb3001d,
@@ -359,23 +346,16 @@ async function InitializeScene() {
     };
   };
 
-  const use3DTexture = true;
-
   if (dev) {
-    if (use3DTexture) {
-      parsed3DGribTexture = await Get3DTextureFromGribData(device, [
-        mb300,
-        mb500,
-        mb700,
-        mb900,
-      ]);
-    } else {
-      parsed3DGribTexture = await GetTextureFromGribData(device, mb700);
-    }
+    parsedGribTexture = await Get4LayerTextureFromGribData(device, [
+      mb300,
+      mb500,
+      mb700,
+      mb900,
+    ]);
   } else {
     const { mb300, mb500, mb700, mb900 } = await fetchTextures();
-
-    parsed3DGribTexture = await Get3DTextureFromGribData(device, [
+    parsedGribTexture = await Get4LayerTextureFromGribData(device, [
       mb300,
       mb500,
       mb700,
@@ -543,16 +523,13 @@ async function InitializeScene() {
       binding: 4,
       resource: worleyNoiseTexture.sampler,
     },
-
     {
       binding: 5,
-      resource: parsed3DGribTexture.texture.createView(
-        use3DTexture ? { dimension: '3d' } : {}
-      ),
+      resource: parsedGribTexture.texture.createView(),
     },
     {
       binding: 6,
-      resource: parsed3DGribTexture.sampler,
+      resource: parsedGribTexture.sampler,
     },
   ];
 
@@ -586,14 +563,6 @@ async function InitializeScene() {
       binding: 1,
       resource: sampler,
     },
-    {
-      binding: 2,
-      resource: blueNoiseV.texture.createView(),
-    },
-    {
-      binding: 3,
-      resource: blueNoiseV.sampler,
-    },
   ];
 
   pipeline[0] = CreatePipeline(
@@ -608,6 +577,7 @@ async function InitializeScene() {
     device.createShaderModule({ code: cloudShader }),
     {
       ...options,
+      cullmode: 'none',
     },
     presentationFormat
   );
@@ -633,6 +603,16 @@ async function InitializeScene() {
 
   buffers[0] = CreateVertexBuffers(device, data);
   WriteVertexBuffers(device, buffers[0][0], buffers[0][1], buffers[0][2], data);
+
+  buffers[1] = CreateVertexBuffers(device, cubeData);
+
+  WriteVertexBuffers(
+    device,
+    buffers[1][0],
+    buffers[1][1],
+    buffers[1][2],
+    cubeData
+  );
 
   loading.update((current) => ({
     ...current,
@@ -662,8 +642,13 @@ async function InitializeScene() {
 
     if (!context) return;
     canvasTexture = context.getCurrentTexture();
-    offscreenWidth = Math.floor(canvasTexture.width / 2);
-    offscreenHeight = Math.floor(canvasTexture.height / 2);
+    if (options.halfRes) {
+      offscreenWidth = Math.floor(canvasTexture.width / 2);
+      offscreenHeight = Math.floor(canvasTexture.height / 2);
+    } else {
+      offscreenWidth = canvasTexture.width;
+      offscreenHeight = canvasTexture.height;
+    }
 
     if (!options.isDragging) {
       var newYaw = options.yaw + options.rotationSpeed / 10;
@@ -734,14 +719,6 @@ async function InitializeScene() {
         tweenedVisibility.set(1.0);
       });
     }
-
-    cloudBindings[5].resource = parsed3DGribTexture.texture.createView(
-      use3DTexture
-        ? {
-            dimension: '3d',
-          }
-        : {}
-    );
 
     var lightPosition = vec3.create();
     vec3.set(
@@ -831,6 +808,7 @@ async function InitializeScene() {
       192,
       cameraPosition as ArrayBuffer
     );
+
     device.queue.writeBuffer(earthUniBuffer, 0, earthUniValues as ArrayBuffer);
     device.queue.writeBuffer(cloudUniBuffer, 0, cloudUniValues as ArrayBuffer);
     device.queue.writeBuffer(lightUniBuffer, 0, lightUniValues as ArrayBuffer);
@@ -841,24 +819,22 @@ async function InitializeScene() {
   }
 
   function draw() {
-    if (options.halfRes) {
-      const firstCommandEncoder = device.createCommandEncoder();
-      const passEncoder = firstCommandEncoder.beginRenderPass(
-        offscreenPassDescriptor as GPURenderPassDescriptor
-      );
-      if (visibility > 0) {
-        passEncoder.setPipeline(pipeline[1]);
-        passEncoder.setVertexBuffer(0, buffers[0][0]);
-        passEncoder.setVertexBuffer(1, buffers[0][1]);
-        passEncoder.setVertexBuffer(2, buffers[0][2]);
-        passEncoder.setBindGroup(0, bindGroup[1]);
+    const firstCommandEncoder = device.createCommandEncoder();
+    const passEncoder = firstCommandEncoder.beginRenderPass(
+      offscreenPassDescriptor as GPURenderPassDescriptor
+    );
+    if (visibility > 0) {
+      passEncoder.setPipeline(pipeline[1]);
+      passEncoder.setVertexBuffer(0, buffers[1][0]);
+      passEncoder.setVertexBuffer(1, buffers[1][1]);
+      passEncoder.setVertexBuffer(2, buffers[1][2]);
+      passEncoder.setBindGroup(0, bindGroup[1]);
 
-        passEncoder.draw(options.amountOfVertices);
-      }
-
-      passEncoder.end();
-      device.queue.submit([firstCommandEncoder.finish()]);
+      passEncoder.draw(36);
     }
+
+    passEncoder.end();
+    device.queue.submit([firstCommandEncoder.finish()]);
 
     const commandEncoder = device.createCommandEncoder();
     const renderPass = commandEncoder.beginRenderPass(
@@ -874,21 +850,12 @@ async function InitializeScene() {
     renderPass.draw(options.amountOfVertices);
 
     if (visibility > 0) {
-      if (options.halfRes) {
-        renderPass.setPipeline(pipeline[3]);
-        renderPass.setBindGroup(0, bindGroup[3]);
+      renderPass.setPipeline(pipeline[3]);
+      renderPass.setBindGroup(0, bindGroup[3]);
 
-        renderPass.draw(6);
-      } else {
-        renderPass.setPipeline(pipeline[1]);
-        renderPass.setVertexBuffer(0, buffers[0][0]);
-        renderPass.setVertexBuffer(1, buffers[0][1]);
-        renderPass.setVertexBuffer(2, buffers[0][2]);
-        renderPass.setBindGroup(0, bindGroup[1]);
-
-        renderPass.draw(options.amountOfVertices);
-      }
+      renderPass.draw(6);
     }
+
     if (options.layer.atmo > 0) {
       renderPass.setPipeline(pipeline[2]);
       renderPass.setVertexBuffer(0, buffers[0][0]);

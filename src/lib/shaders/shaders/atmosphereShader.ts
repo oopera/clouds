@@ -34,7 +34,7 @@ struct Output {
 @group(0) @binding(1) var<uniform> atmopshereUniforms: AtmosphereUniforms;
 @group(0) @binding(2) var<uniform> lightUni: LightUniforms;
 
-const radius = 0.0075;
+const radius = 0.27;
 const PI: f32 = 3.141592653589793;
 
 
@@ -69,11 +69,10 @@ return (3.0 / 4.0) * (1.0 + cos(theta) * cos(theta));
 @fragment fn fs(output: Output) -> @location(0) vec4<f32> {
   let viewDirection: vec3<f32> = normalize(uni.cameraPosition.xyz - output.vPosition.xyz);
   let visibility = atmopshereUniforms.visibility;
-
-
   let dotProduct = dot(lightUni.lightPosition, output.vNormal.xyz);
   let scaledDotProduct: f32 = dotProduct * 10.0;
   var lightness: f32 = 1.0 - (1.0 / (1.0 + exp(-scaledDotProduct)));
+
   if(lightUni.lightType == 0.0){
     lightness = 0.5;
   }else if(lightUni.lightType == 1.0){
@@ -85,8 +84,6 @@ return (3.0 / 4.0) * (1.0 + cos(theta) * cos(theta));
   let blendRadius = 0.1; 
   let mask = smoothstep(0.0, blendRadius, edge);
 
-// COMMON LIGHT CALCS
-
   var rim: f32 = 1.0 - dot(viewDirection, output.vNormal.xyz); 
   rim = pow(rim, 2.5 + 30.0 * ( 1 - lightness )); 
 
@@ -94,7 +91,7 @@ return (3.0 / 4.0) * (1.0 + cos(theta) * cos(theta));
   let orangeColor: vec4<f32> = vec4<f32>(1.0, 1.0, 1.0, rim); 
 
   let color: vec4<f32> = mix(orangeColor, blueColor, lightness);
-  let resultColor =   mask * borderColor;
+  let resultColor = mask * borderColor;
 
   return (color + resultColor);
 }
