@@ -13,41 +13,67 @@
     loadedItems = value;
   });
 
+  let frameCount: number = 0;
+  let lastTime: number = performance.now();
+  let fps: number = 0;
+
   onMount(() => {
     mounted = true;
+
+    calculateFPS();
   });
+
+  const calculateFPS = () => {
+    let currentTime = performance.now();
+    let deltaTime = currentTime - lastTime;
+
+    frameCount++;
+
+    if (deltaTime >= 50) {
+      fps = Math.round((frameCount / deltaTime) * 1000);
+      lastTime = currentTime;
+      frameCount = 0;
+    }
+
+    if (mounted) {
+      requestAnimationFrame(calculateFPS);
+    }
+  };
 </script>
 
 <Layout short align="start">
+  <p>{fps}</p>
   {#each Object.values(loadedItems) as { id, status, message, progress }}
-    <Layout horizontal align="center" justify="start" gap="2">
-      <Layout horizontal align="start" justify="between" gap="2">
-        <Text vertical delay={id} text={message} />
-        <Text
-          vertical
-          text={progress + '%'}
-          secondary={progress !== 100}
-          tertiary={progress === 100}
-          delay={id + 1}
-        />
+    {#if id !== 0}
+      <Layout horizontal align="center" justify="start" gap="2">
+        <Layout horizontal align="start" justify="between" gap="2">
+          <Text vertical delay={id} text={message} />
+          <Text
+            vertical
+            text={progress + '%'}
+            secondary={progress !== 100}
+            tertiary={progress === 100}
+            delay={id + 1}
+          />
+        </Layout>
+        {#if status && mounted}
+          <span
+            in:fly={{
+              delay: id + 2 * 125,
+              duration: 350,
+              x: 15,
+              easing: quintOut,
+            }}
+            out:fly={{
+              delay: id + 2 * 125,
+              duration: 350,
+              x: 15,
+              easing: quintOut,
+            }}
+          />
+        {/if}
       </Layout>
-      {#if status && mounted}
-        <span
-          in:fly={{
-            delay: id + 2 * 125,
-            duration: 350,
-            x: 15,
-            easing: quintOut,
-          }}
-          out:fly={{
-            delay: id + 2 * 125,
-            duration: 350,
-            x: 15,
-            easing: quintOut,
-          }}
-        />
-      {/if}
-    </Layout>
+    {/if}
   {/each}
 </Layout>
 

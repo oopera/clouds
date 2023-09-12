@@ -50,8 +50,6 @@
         options={['day_cycle', 'full_day', 'full_night']}
       />
       <Layout horizontal justify="end" gap="1">
-        <Checkbox delay={5} title="mb300" />
-        <Checkbox delay={8} title="atmo" />
         <Checkbox delay={5} title="half_res" />
       </Layout>
     </Layout>
@@ -113,15 +111,22 @@
           delay={8}
           title="cloud_density"
           min={0}
-          max={1.0}
-          step={0.02}
+          max={3.0}
+          step={0.1}
         />
         <Range_Input
           delay={8}
           title="raymarch_steps"
           min={1}
-          max={199}
-          step={1}
+          max={299}
+          step={5}
+        />
+        <Range_Input
+          delay={8}
+          title="raymarch_length"
+          min={0}
+          max={1}
+          step={0.05}
         />
         <Text accent vertical delay={9} text={'FORM'} />
 

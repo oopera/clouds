@@ -1,18 +1,16 @@
 <script lang="ts">
-  import { tweened } from 'svelte/motion';
   import { setZoom, tweenedZoom, zoom } from '../stores/stores.js';
-  import { quintOut } from 'svelte/easing';
   import Text from './Text.svelte';
 
   export let step: number = 1;
-  export let min: number = 2.25;
-  export let max: number = 7.25;
+  export let min: number = 3.25;
+  export let max: number = 13.25;
   export let delay: number = 0;
 
   const handleInput = (e: Event) => {
     let finalZoom = Math.max(
-      2.25,
-      Math.min(Number((e.target as HTMLInputElement).value), 7.25)
+      min,
+      Math.min(Number((e.target as HTMLInputElement).value), max)
     );
     setZoom(finalZoom, true);
   };

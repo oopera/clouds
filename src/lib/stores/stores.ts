@@ -6,12 +6,12 @@ import { tweened } from 'svelte/motion';
 export const amount_of_points = writable(250);
 export const scale = writable(0.05);
 
-export const cloud_density = writable(0.5);
+export const cloud_density = writable(2);
 
-export const sun_transmittance = writable(0.05);
-export const rayleigh_intensity = writable(0.6);
+export const sun_transmittance = writable(0.1);
+export const rayleigh_intensity = writable(0.4);
 
-export const raymarch_length = writable(0.0025);
+export const raymarch_length = writable(0.3);
 export const raymarch_steps = writable(100);
 export const rotation_speed = writable(0.05);
 

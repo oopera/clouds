@@ -142,15 +142,18 @@ export default function InitStores(
     options.coords.y = value.y;
   });
 
+  const max_zoom = 13.25;
+  const min_zoom = 3.25;
+
   const handleScroll = (e: WheelEvent) => {
     e.preventDefault();
 
     let newZoom = options.zoom + e.deltaY * 0.0025;
-    if (newZoom > 2.25 && newZoom < 7.25) {
-      newZoom = options.zoom + e.deltaY * 0.0025 * (options.zoom / 7.25);
+    if (newZoom > min_zoom && newZoom < max_zoom) {
+      newZoom = options.zoom + e.deltaY * 0.0025 * (options.zoom / max_zoom);
     }
 
-    let finalZoom = Math.max(2.25, Math.min(newZoom, 7.25));
+    let finalZoom = Math.max(min_zoom, Math.min(newZoom, max_zoom));
 
     setZoom(finalZoom, true);
   };
@@ -159,12 +162,13 @@ export default function InitStores(
     e.preventDefault();
 
     let newZoom = options.zoom + e.touches[0].clientY * 0.0025;
-    if (newZoom > 2.25 && newZoom < 7.25) {
+    if (newZoom > min_zoom && newZoom < max_zoom) {
       newZoom =
-        options.zoom + e.touches[0].clientY * 0.0025 * (options.zoom / 7.25);
+        options.zoom +
+        e.touches[0].clientY * 0.0025 * (options.zoom / max_zoom);
     }
 
-    let finalZoom = Math.max(2.25, Math.min(newZoom, 7.25));
+    let finalZoom = Math.max(min_zoom, Math.min(newZoom, max_zoom));
 
     setZoom(finalZoom, true);
   };
@@ -178,7 +182,6 @@ export default function InitStores(
   const handlemouseup = (e: MouseEvent) => {
     options.isDragging = false;
 
-    // Calculate the distance moved during the drag
     const distance = Math.sqrt(
       Math.pow(e.clientX - initialX, 2) + Math.pow(e.clientY - initialY, 2)
     );

@@ -23,6 +23,7 @@ import {
   parseEncodedToFlattened,
   Get4LayerTextureFromGribData,
   GetDepthTexture,
+  downloadData,
 } from './utils/helper/textureHelper.js';
 
 import type { RenderOptions, HasChanged } from '$lib/types/types.js';
@@ -207,7 +208,7 @@ async function InitializeScene() {
     'Vertex Data'
   );
 
-  let cubeData = generateCubeData(2.5);
+  let cubeData = generateCubeData(2.9);
 
   let texture = await executePromise(
     'texture',
@@ -624,7 +625,7 @@ async function InitializeScene() {
   }));
 
   setYaw(360, true);
-  setZoom(3, true);
+  setZoom(4, true);
   setPitch(0, true);
   tweenedVisibility.set(1.0);
 
