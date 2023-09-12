@@ -32,19 +32,22 @@
     border-radius: 150px;
     z-index: 1;
     position: absolute;
-    background: var(--dark-gradient);
-    display: flex;
+    // background: var(--dark-gradient);
+    display: none;
     backdrop-filter: blur(gap(3));
     pointer-events: all;
     left: 50%;
     transform: translateX(-50%);
-    box-shadow: inset 0 0 10px 2px var(--c-tertiary);
+    // box-shadow: inset 0 0 10px 2px var(--c-tertiary);
 
     transition: box-shadow 350ms var(--ease);
     &:hover {
       .viewfinder__tick__text {
         opacity: 1;
       }
+    }
+    @include l {
+      display: flex;
     }
   }
 

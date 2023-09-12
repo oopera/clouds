@@ -55,7 +55,7 @@ export function CalculateIntersection(
   );
 
   const sphereCenter = vec3.fromValues(0, 0, 0);
-  const sphereRadius = 2.005; // Make sure this is consistent with your rendering code
+  const sphereRadius = 2.005;
 
   const rayOriginToSphereCenter = vec3.sub(
     vec3.create(),

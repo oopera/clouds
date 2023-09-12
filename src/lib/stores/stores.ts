@@ -6,13 +6,16 @@ import { tweened } from 'svelte/motion';
 export const amount_of_points = writable(250);
 export const scale = writable(0.05);
 
-export const cloud_density = writable(0.15);
-export const sun_transmittance = writable(0.015);
-export const rayleigh_intensity = writable(0.3);
-export const raymarch_length = writable(0.0001);
-export const raymarch_steps = writable(60);
-export const rotation_speed = writable(0.5);
-export const half_res = writable(false);
+export const cloud_density = writable(0.5);
+
+export const sun_transmittance = writable(0.05);
+export const rayleigh_intensity = writable(0.6);
+
+export const raymarch_length = writable(0.0025);
+export const raymarch_steps = writable(100);
+export const rotation_speed = writable(0.05);
+
+export const half_res = writable(true);
 export const projection_date = writable({ day: '0', month: '0', year: '0' });
 export const light_type = writable<'day_cycle' | 'full_day' | 'full_night'>(
   'day_cycle'
