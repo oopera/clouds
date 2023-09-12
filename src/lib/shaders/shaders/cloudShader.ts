@@ -95,7 +95,8 @@ fn is_point_in_front_of_sphere(point: vec3<f32>, camera_position: vec3<f32>) -> 
 }
 
 fn calculate_height(min_layer_sphere_radius: f32, max_layer_sphere_radius: f32, scaling_factor: f32, noise: f32, detail_noise: f32) -> vec2<f32> {
-  let maxheight = ReMap((noise * scaling_factor * 0.5) + 0.5, 0.0, 1.5, min_layer_sphere_radius, (max_layer_sphere_radius - sphere_radius));
+  var maxheight = ReMap((noise * scaling_factor), 0.0, 1.5, min_layer_sphere_radius, (max_layer_sphere_radius - sphere_radius));
+  maxheight = ReMap(detail_noise, 0.0, 1.0, min_layer_sphere_radius, maxheight);
   var minheight = ReMap(1 - detail_noise, 0.0, 1.0, 0.0, .5);
   minheight = ReMap(minheight, 0.0, 1.0, min_layer_sphere_radius, (max_layer_sphere_radius - sphere_radius));
   return vec2<f32>(minheight, maxheight);
@@ -141,6 +142,7 @@ fn calculate_height(min_layer_sphere_radius: f32, max_layer_sphere_radius: f32, 
     );
 
     var noise = textureSample(noise_texture, noise_sampler, inner_sphere_point);
+    var high_noise = textureSample(noise_texture, noise_sampler, inner_sphere_point / 2);
     let coverage = textureSample(cloud_texture, cloud_sampler, sphere_uv);
     let coverage_mb300 = coverage.r;
     let coverage_mb500 = coverage.g;
@@ -150,10 +152,10 @@ fn calculate_height(min_layer_sphere_radius: f32, max_layer_sphere_radius: f32, 
     var is_infront = is_point_in_front_of_sphere(current_point, ray_origin);
 
     if(is_infront){
-      var heights_mb300: vec2<f32> = calculate_height(layer_1_offset, layer_2_sphere_radius, .7, noise.r, noise.g);
-      var heights_mb500: vec2<f32> = calculate_height(layer_2_offset, layer_3_sphere_radius, .6, noise.g, noise.b);
-      var heights_mb700: vec2<f32> = calculate_height(layer_3_offset, layer_4_sphere_radius, .7, noise.b, noise.a);
-      var heights_mb900: vec2<f32> = calculate_height(layer_4_offset, outer_sphere_radius, .9, noise.a, noise.a);
+      var heights_mb300: vec2<f32> = calculate_height(layer_1_offset, layer_2_sphere_radius, .6, noise.r + 0.2, high_noise.r + 0.2);
+      var heights_mb500: vec2<f32> = calculate_height(layer_2_offset, layer_3_sphere_radius, .9, noise.g + 0.2, high_noise.b + 0.2);
+      var heights_mb700: vec2<f32> = calculate_height(layer_3_offset, layer_4_sphere_radius, .9, noise.b + 0.2, high_noise.b + 0.2);
+      var heights_mb900: vec2<f32> = calculate_height(layer_4_offset, outer_sphere_radius, .9, noise.a + 0.2, high_noise.a + 0.2);
 
       let distance_to_inner_sphere = length(current_point - inner_sphere_point);
 
@@ -199,15 +201,17 @@ fn calculate_height(min_layer_sphere_radius: f32, max_layer_sphere_radius: f32, 
       var is_infront = is_point_in_front_of_sphere(sun_point, ray_origin);
 
       if(is_infront){
-        var heights_mb300: vec2<f32> = calculate_height(layer_1_offset, layer_2_sphere_radius, .9, noise.r, noise.g);
-        var heights_mb500: vec2<f32> = calculate_height(layer_2_offset, layer_3_sphere_radius, .9, noise.g, noise.b);
-        var heights_mb700: vec2<f32> = calculate_height(layer_3_offset, layer_4_sphere_radius, .9, noise.b, noise.a);
-        var heights_mb900: vec2<f32> = calculate_height(layer_4_offset, outer_sphere_radius, .9, noise.a, noise.a);
+        var heights_mb300: vec2<f32> = calculate_height(layer_1_offset, layer_2_sphere_radius, .9, noise.r, high_noise.g);
+        var heights_mb500: vec2<f32> = calculate_height(layer_2_offset, layer_3_sphere_radius, .9, noise.g, high_noise.b);
+        var heights_mb700: vec2<f32> = calculate_height(layer_3_offset, layer_4_sphere_radius, .9, noise.b, high_noise.a);
+        var heights_mb900: vec2<f32> = calculate_height(layer_4_offset, outer_sphere_radius, .9, noise.a, high_noise.a);
 
         let distance_to_inner_sphere = length(sun_point - inner_sphere_point);
 
         var theta = dot(normalize(current_point), normalize(sun_point));
         light = mieScattering(theta) * lightUniforms.rayleighIntensity;
+
+        if(cloud_density < 10.0){
       
         if (distance_to_center < outer_sphere_radius) {
           if(distance_to_center > layer_4_sphere_radius) {
@@ -229,6 +233,7 @@ fn calculate_height(min_layer_sphere_radius: f32, max_layer_sphere_radius: f32, 
           }
         }
       }
+    }
     }
   } 
   

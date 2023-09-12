@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { setZoom, tweenedZoom, zoom } from '../stores/stores.js';
+  import { setZoom, zoom } from '../stores/stores.js';
   import Text from './Text.svelte';
 
   export let step: number = 1;
