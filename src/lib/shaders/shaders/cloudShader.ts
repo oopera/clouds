@@ -101,7 +101,7 @@ fn is_point_occluded_by_sphere(point: vec3<f32>, camera_position: vec3<f32>) -> 
   let distance_to_sphere = length(closest_point - sphere_center);
 
   // Check if the closest point is inside the sphere
-  return distance_to_sphere > sphere_radius || length(camera_to_point) < outer_sphere_radius;
+  return distance_to_sphere > sphere_radius || length(camera_to_point) < length(camera_to_sphere);
 }
 
 fn calculate_height(min_layer_sphere_radius: f32, max_layer_sphere_radius: f32, scaling_factor: f32, noise: f32, detail_noise: f32) -> vec2<f32> {
@@ -161,7 +161,7 @@ fn calculate_height(min_layer_sphere_radius: f32, max_layer_sphere_radius: f32, 
     var is_infront = is_point_occluded_by_sphere(current_point, ray_origin);
 
     if(is_infront){
-      var heights_mb300: vec2<f32> = calculate_height(layer_1_offset, layer_2_sphere_radius, .9, noise.r, noise.r + noise.g);
+      var heights_mb300: vec2<f32> = calculate_height(layer_1_offset, layer_2_sphere_radius , .9, noise.r, noise.r + noise.g);
       var heights_mb500: vec2<f32> = calculate_height(layer_2_offset, layer_3_sphere_radius, .8, noise.g, noise.g + noise.g);
       var heights_mb700: vec2<f32> = calculate_height(layer_3_offset, layer_4_sphere_radius, .7, noise.b,noise.b + noise.g);
       var heights_mb900: vec2<f32> = calculate_height(layer_4_offset, outer_sphere_radius, .6, noise.a, noise.a + noise.g);
