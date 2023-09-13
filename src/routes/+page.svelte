@@ -36,13 +36,10 @@
   <Layout padding="m" horizontal justify="between" align="start" gap="2">
     <Layout align="start" gap="1">
       <Loading />
-      <Tag>
-        <Text text={'All Systems Operational'} />
-        <span data-indicator />
-      </Tag>
     </Layout>
 
     <Layout align="end" gap="1" fit>
+      <Text accent vertical delay={9} text={'META OPTIONS'} />
       <DateInput />
       <Radio_Button
         delay={5}
@@ -111,7 +108,7 @@
           delay={8}
           title="cloud_density"
           min={0}
-          max={3.0}
+          max={1.0}
           step={0.1}
         />
         <Range_Input

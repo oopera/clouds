@@ -135,42 +135,38 @@ const buffers: GPUBuffer[][] = [];
 
 const displayError = (message: string) => {
   var counter = 0;
-  var interval = setInterval(() => {
-    if (counter === 0) {
-      loading.set({
-        welcome: {
-          id: 0,
-          status: true,
-          message: 'oh-oh',
 
-          progress: 0,
-        },
-      });
-    }
-    counter++;
-
-    loading.update((current) => {
-      const id = Object.keys(current).length;
-      return {
-        ...current,
-        [`Error-${id}`]: {
-          id,
-          status: true,
-          message: counter % 2 === 0 ? 'ERROR ERROR ERROR' : message,
-          progress: 0,
-        },
-      };
+  if (counter === 0) {
+    loading.set({
+      welcome: {
+        id: 0,
+        status: true,
+        message: 'error',
+        progress: 0,
+      },
     });
-    if (counter > 5) {
-      clearInterval(interval);
-    }
-  }, 500);
+  }
+  counter++;
+
+  loading.update((current) => {
+    const id = Object.keys(current).length;
+    return {
+      ...current,
+      [`Error-${id}`]: {
+        id,
+        status: true,
+        message: counter % 2 === 0 ? 'ERROR ERROR ERROR' : message,
+        progress: 0,
+      },
+    };
+  });
+
   throw new Error(message);
 };
 
 async function InitializeScene() {
   if (!navigator.gpu) {
-    displayError('You need a browser that supports WebGPU');
+    displayError('You need a browser or device that supports WebGPU');
     return;
   }
 
@@ -208,7 +204,7 @@ async function InitializeScene() {
     'Vertex Data'
   );
 
-  let cubeData = generateCubeData(2.9);
+  let cubeData = generateCubeData(2.65);
 
   let texture = await executePromise(
     'texture',

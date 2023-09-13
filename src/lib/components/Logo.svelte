@@ -18,7 +18,7 @@
     loaded = true;
   }
 
-  $: if ($loading.welcome.message === 'oh-oh') {
+  $: if ($loading.welcome.message === 'error') {
     deviceFailed = true;
   }
 </script>
@@ -140,11 +140,11 @@
 {#if deviceFailed}
   <span class="error">
     <Layout>
-      <Text vertical delay={4} text={'Attaching to GPU Failed.'} />
+      <Text nowrap vertical delay={0} text={'Attaching to GPU Failed.'} />
       <Text
         vertical
         tertiary
-        delay={4}
+        delay={6}
         text={'You need to use Chrome 113 onwards.'}
       />
     </Layout>
@@ -159,6 +159,21 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
+    border: 1px solid var(--c-accent);
+    padding: 12px;
+    animation: blink 0.15s var(--ease) 6 alternate;
+  }
+
+  @keyframes blink {
+    0% {
+      border: 1px solid var(--c-accent);
+    }
+    50% {
+      border: 0;
+    }
+    100% {
+      border: 1px solid var(--c-accent);
+    }
   }
   .crosshair {
     height: 28px;

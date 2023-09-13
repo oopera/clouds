@@ -68,16 +68,16 @@
   input {
     appearance: none;
     -webkit-appearance: none;
-    height: 28px;
     width: 156px;
     margin: 0;
     background-color: transparent;
     border: 1pt solid var(--c-tertiary);
     border-radius: 24px;
-    padding: 8px 12px;
+    padding: 4px 12px;
     box-sizing: border-box;
     font-family: var(--font-family-mono);
-
+    vertical-align: baseline;
+    text-align: center;
     background-position: right 12px center;
     outline: none;
     accent-color: white;

@@ -3,6 +3,8 @@
   import Text from './Text.svelte';
   import type { Stores } from '$lib/types/types';
   import Layout from './Layout.svelte';
+  import { cubicBezier } from '$lib/shaders/utils/cubicBezier';
+  import { fly } from 'svelte/transition';
 
   export let title: Stores;
 
@@ -37,25 +39,39 @@
 <div class="range-input">
   <Layout gap="1" align="end" justify="between">
     {#if mounted}
-      {#each Array.from({ length: steps }, (_, i) => i + 1) as step}
+      {#each Array.from({ length: steps }, (_, i) => i++) as step}
         <div
+          in:fly={{
+            delay: (25 / steps) * step * 25,
+            duration: 350,
+            x: -15,
+            easing: cubicBezier,
+          }}
+          out:fly={{
+            delay: (100 / step) * 25,
+            duration: 350,
+            x: 15,
+            easing: cubicBezier,
+          }}
           class="step {step % 2 === 0 ? 'even' : 'odd'}"
           style="--i: {step}; --steps: {steps}"
           class:mounted
         />
       {/each}
     {/if}
-    <input
-      data-interactable
-      {disabled}
-      {min}
-      {max}
-      {step}
-      {title}
-      value={$store}
-      on:input={handleInput}
-      type="range"
-    />
+    {#if mounted}
+      <input
+        data-interactable
+        {disabled}
+        {min}
+        {max}
+        {step}
+        {title}
+        value={$store}
+        on:input={handleInput}
+        type="range"
+      />
+    {/if}
 
     <Layout horizontal gap="1" align="end" justify="between">
       <Text {delay} secondary text={min.toFixed(2).toString()} vertical />
@@ -116,22 +132,17 @@
   }
   input::-webkit-slider-thumb {
     animation: blink2 1.5s var(--ease) infinite alternate;
-    height: 24px;
+    height: 12px;
     width: 24px;
-    border-radius: 15px;
-    border: 1pt solid var(--c-g);
+    background-color: var(--c-tertiary);
     -webkit-appearance: none;
-    margin-top: 4px;
+    transform: translateY(8px);
     transition: 100ms var(--ease);
     transform-origin: center;
-    backdrop-filter: blur(8px);
-    background: var(--blue-gradient);
   }
   input:hover::-webkit-slider-thumb,
   input:focus-visible::-webkit-slider-thumb {
-    height: 24px;
-    width: 24px;
-    margin-top: 4px;
+    transform: translateY(2px);
     border: 1pt solid white;
   }
 </style>

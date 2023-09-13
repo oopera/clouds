@@ -6,6 +6,7 @@
   import { quintOut } from 'svelte/easing';
   import { fly } from 'svelte/transition';
   import { onMount } from 'svelte';
+  import Tag from './Tag.svelte';
 
   let loadedItems: LoadingStore;
   let mounted: boolean = false;
@@ -16,12 +17,16 @@
   let frameCount: number = 0;
   let lastTime: number = performance.now();
   let fps: number = 0;
+  let deviceFailed: boolean = false;
 
   onMount(() => {
     mounted = true;
-
     calculateFPS();
   });
+
+  $: if ($loading.welcome.message === 'error') {
+    deviceFailed = true;
+  }
 
   const calculateFPS = () => {
     let currentTime = performance.now();
@@ -41,49 +46,69 @@
   };
 </script>
 
-<Layout short align="start">
-  <p>{fps}</p>
-  {#each Object.values(loadedItems) as { id, status, message, progress }}
-    {#if id !== 0}
-      <Layout horizontal align="center" justify="start" gap="2">
-        <Layout horizontal align="start" justify="between" gap="2">
-          <Text vertical delay={id} text={message} />
-          <Text
-            vertical
-            text={progress + '%'}
-            secondary={progress !== 100}
-            tertiary={progress === 100}
-            delay={id + 1}
-          />
+<Layout short align="start" gap="2">
+  <Layout horizontal justify="between">
+    <Text vertical text={fps.toString()} />
+    <Tag red={deviceFailed}>
+      <Text
+        nowrap
+        text={deviceFailed
+          ? 'Systems Not Operational'
+          : 'All Systems Operational'}
+      />
+      <span class="y" class:deviceFailed data-indicator />
+    </Tag>
+  </Layout>
+  <Layout short align="start">
+    {#each Object.values(loadedItems) as { id, status, message, progress }}
+      {#if id !== 0}
+        <Layout horizontal align="center" justify="start" gap="2">
+          <Layout horizontal align="start" justify="between" gap="2">
+            <Text vertical delay={id} text={message} />
+            <Text
+              vertical
+              nowrap
+              text={progress + '%'}
+              secondary={progress !== 100}
+              tertiary={progress === 100}
+              delay={id + 1}
+            />
+          </Layout>
+          {#if status && mounted}
+            <span
+              data-indicator
+              class="indicator"
+              in:fly={{
+                delay: id + 2 * 125,
+                duration: 350,
+                x: 15,
+                easing: quintOut,
+              }}
+              out:fly={{
+                delay: id + 2 * 125,
+                duration: 350,
+                x: 15,
+                easing: quintOut,
+              }}
+            />
+          {/if}
         </Layout>
-        {#if status && mounted}
-          <span
-            in:fly={{
-              delay: id + 2 * 125,
-              duration: 350,
-              x: 15,
-              easing: quintOut,
-            }}
-            out:fly={{
-              delay: id + 2 * 125,
-              duration: 350,
-              x: 15,
-              easing: quintOut,
-            }}
-          />
-        {/if}
-      </Layout>
-    {/if}
-  {/each}
+      {/if}
+    {/each}
+  </Layout>
 </Layout>
 
 <style lang="scss">
   @import '$lib/styles/mixins.scss';
 
-  span {
-    @include indicator;
+  .indicator {
     background-color: var(--c-accent);
-    position: absolute;
+  }
+  .y {
+    background-color: var(--c-g);
+  }
+  .deviceFailed {
+    background-color: var(--c-secondary);
   }
 
   @keyframes blink {

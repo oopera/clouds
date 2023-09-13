@@ -23,7 +23,7 @@
     {#each indicatorArray as i}
       <div style="--i: {i}; " class="zoom__indicator">
         <Text
-          tertiary={($zoom - 2.25) * 2 >= i && ($zoom - 2.25) * 2 <= i + 1}
+          tertiary={$zoom - min + 1 >= i && $zoom - min + 1 <= i + 1}
           text={`${i.toFixed(4)}`}
           delay={i + delay}
           mini

@@ -51,18 +51,19 @@ struct Output {
 
 const sphere_center = vec3<f32>(0.0, 0.0, 0.0);
 const sphere_radius: f32 = 2.5;
+const cube_offset: f32 = 0.15;
 
-const layer_1_offset = 0.05;
-const layer_2_offset = 0.25;
-const layer_3_offset = 0.32;
-const layer_4_offset = 0.37;
+const layer_1_offset = 0.02;
+const layer_2_offset = 0.07;
+const layer_3_offset = 0.10;
+const layer_4_offset = 0.13;
 
 const layer_1_sphere_radius: f32 = sphere_radius + layer_1_offset;
 const layer_2_sphere_radius: f32 = sphere_radius + layer_2_offset;
 const layer_3_sphere_radius: f32 = sphere_radius + layer_3_offset;
 const layer_4_sphere_radius: f32 = sphere_radius + layer_4_offset;
 
-const outer_sphere_radius: f32 = sphere_radius + 0.4;
+const outer_sphere_radius: f32 = sphere_radius + cube_offset;
 
 const PI: f32 = 3.141592653589793;
 const N: f32 = 2.545e25;  
@@ -86,18 +87,27 @@ fn ReMap(value: f32, old_low: f32, old_high: f32, new_low: f32, new_high: f32) -
 fn mieScattering(theta: f32) -> f32 {
   return (3.0 / 4.0) * (1.0 + cos(theta) * cos(theta));
 }
+const fov = 1.5;
+fn is_point_occluded_by_sphere(point: vec3<f32>, camera_position: vec3<f32>) -> bool {
+  // Calculate vector from the camera to the point and from the camera to the sphere
+  let camera_to_point = point - camera_position;
+  let camera_to_sphere = sphere_center - camera_position;
 
-fn is_point_in_front_of_sphere(point: vec3<f32>, camera_position: vec3<f32>) -> bool {
-  let sphere_to_point: vec3<f32> = point;
-  let sphere_to_camera: vec3<f32> = camera_position; 
-  let dot_product = dot(sphere_to_point, sphere_to_camera);
-  return dot_product > (sphere_radius - 0.25) * sphere_radius;
+  // Project camera_to_sphere onto camera_to_point to find the point on the line through camera_position and point that is closest to sphere_position
+  let t = dot(camera_to_sphere, camera_to_point) / dot(camera_to_point, camera_to_point);
+  let closest_point = camera_position + t * camera_to_point;
+
+  // Calculate the distance from the closest point to the sphere's center
+  let distance_to_sphere = length(closest_point - sphere_center);
+
+  // Check if the closest point is inside the sphere
+  return distance_to_sphere > sphere_radius || length(camera_to_point) < outer_sphere_radius;
 }
 
 fn calculate_height(min_layer_sphere_radius: f32, max_layer_sphere_radius: f32, scaling_factor: f32, noise: f32, detail_noise: f32) -> vec2<f32> {
-  var maxheight = ReMap((noise * scaling_factor), 0.0, 1.5, min_layer_sphere_radius, (max_layer_sphere_radius - sphere_radius));
+  var maxheight = ReMap((noise * scaling_factor), 0.0, 1.0, min_layer_sphere_radius, (max_layer_sphere_radius - sphere_radius));
   maxheight = ReMap(detail_noise, 0.0, 1.0, min_layer_sphere_radius, maxheight);
-  var minheight = ReMap(1 - detail_noise, 0.0, 1.0, 0.0, .5);
+  var minheight = ReMap(2 - detail_noise, 0.0, 2.0, 0.0, .5);
   minheight = ReMap(minheight, 0.0, 1.0, min_layer_sphere_radius, (max_layer_sphere_radius - sphere_radius));
   return vec2<f32>(minheight, maxheight);
 }
@@ -141,21 +151,20 @@ fn calculate_height(min_layer_sphere_radius: f32, max_layer_sphere_radius: f32, 
       0.5 - asin((inner_sphere_point.y - sphere_center.y) / sphere_radius) / PI
     );
 
-    var noise = textureSample(noise_texture, noise_sampler, inner_sphere_point);
-    var high_noise = textureSample(noise_texture, noise_sampler, inner_sphere_point / 2);
+    var noise = textureSample(noise_texture, noise_sampler, inner_sphere_point);    
     let coverage = textureSample(cloud_texture, cloud_sampler, sphere_uv);
     let coverage_mb300 = coverage.r;
     let coverage_mb500 = coverage.g;
     let coverage_mb700 = coverage.b;
     let coverage_mb900 = coverage.a;
 
-    var is_infront = is_point_in_front_of_sphere(current_point, ray_origin);
+    var is_infront = is_point_occluded_by_sphere(current_point, ray_origin);
 
     if(is_infront){
-      var heights_mb300: vec2<f32> = calculate_height(layer_1_offset, layer_2_sphere_radius, .6, noise.r + 0.2, high_noise.r + 0.2);
-      var heights_mb500: vec2<f32> = calculate_height(layer_2_offset, layer_3_sphere_radius, .9, noise.g + 0.2, high_noise.b + 0.2);
-      var heights_mb700: vec2<f32> = calculate_height(layer_3_offset, layer_4_sphere_radius, .9, noise.b + 0.2, high_noise.b + 0.2);
-      var heights_mb900: vec2<f32> = calculate_height(layer_4_offset, outer_sphere_radius, .9, noise.a + 0.2, high_noise.a + 0.2);
+      var heights_mb300: vec2<f32> = calculate_height(layer_1_offset, layer_2_sphere_radius, .9, noise.r, noise.r + noise.g);
+      var heights_mb500: vec2<f32> = calculate_height(layer_2_offset, layer_3_sphere_radius, .8, noise.g, noise.g + noise.g);
+      var heights_mb700: vec2<f32> = calculate_height(layer_3_offset, layer_4_sphere_radius, .7, noise.b,noise.b + noise.g);
+      var heights_mb900: vec2<f32> = calculate_height(layer_4_offset, outer_sphere_radius, .6, noise.a, noise.a + noise.g);
 
       let distance_to_inner_sphere = length(current_point - inner_sphere_point);
 
@@ -172,7 +181,8 @@ fn calculate_height(min_layer_sphere_radius: f32, max_layer_sphere_radius: f32, 
           if((distance_to_inner_sphere > heights_mb500[0] && distance_to_inner_sphere < heights_mb500[1])){
             cloud_density += coverage_mb500 * cloudUniforms.density;
           }
-        } else if (distance_to_center > layer_1_sphere_radius) {
+        } else 
+        if (distance_to_center > layer_1_sphere_radius) {
           if((distance_to_inner_sphere > heights_mb300[0] && distance_to_inner_sphere < heights_mb300[1])){
             cloud_density += coverage_mb300 * cloudUniforms.density;
           }
@@ -196,39 +206,40 @@ fn calculate_height(min_layer_sphere_radius: f32, max_layer_sphere_radius: f32, 
       let coverage_mb700 = coverage.b;
       let coverage_mb900 = coverage.a;
 
-      var noise = textureSample(noise_texture, noise_sampler, inner_sphere_point / 2);
+      var noise = textureSample(noise_texture, noise_sampler, inner_sphere_point);
       
-      var is_infront = is_point_in_front_of_sphere(sun_point, ray_origin);
+      var is_infront = is_point_occluded_by_sphere(sun_point, ray_origin);
 
       if(is_infront){
-        var heights_mb300: vec2<f32> = calculate_height(layer_1_offset, layer_2_sphere_radius, .9, noise.r, high_noise.g);
-        var heights_mb500: vec2<f32> = calculate_height(layer_2_offset, layer_3_sphere_radius, .9, noise.g, high_noise.b);
-        var heights_mb700: vec2<f32> = calculate_height(layer_3_offset, layer_4_sphere_radius, .9, noise.b, high_noise.a);
-        var heights_mb900: vec2<f32> = calculate_height(layer_4_offset, outer_sphere_radius, .9, noise.a, high_noise.a);
+      var heights_mb300: vec2<f32> = calculate_height(layer_1_offset, layer_2_sphere_radius, .9, noise.r, noise.r + noise.g);
+      var heights_mb500: vec2<f32> = calculate_height(layer_2_offset, layer_3_sphere_radius, .8, noise.g, noise.g + noise.g);
+      var heights_mb700: vec2<f32> = calculate_height(layer_3_offset, layer_4_sphere_radius, .7, noise.b,noise.b + noise.g);
+      var heights_mb900: vec2<f32> = calculate_height(layer_4_offset, outer_sphere_radius, .6, noise.a, noise.a + noise.g);
 
         let distance_to_inner_sphere = length(sun_point - inner_sphere_point);
 
         var theta = dot(normalize(current_point), normalize(sun_point));
         light = mieScattering(theta) * lightUniforms.rayleighIntensity;
 
-        if(cloud_density < 10.0){
+        if(cloud_density < (layer_2_offset - layer_1_offset) / (cube_offset - layer_4_offset)){
       
         if (distance_to_center < outer_sphere_radius) {
           if(distance_to_center > layer_4_sphere_radius) {
             if((distance_to_inner_sphere > heights_mb900[0] && distance_to_inner_sphere < heights_mb900[1])){
-              sun_density += coverage_mb900 * cloudUniforms.sunDensity * light;
+              sun_density += coverage_mb900 * cloudUniforms.sunDensity * light * (layer_2_offset - layer_1_offset) / (cube_offset - layer_4_offset) * (ReMap(distance_to_center, layer_4_sphere_radius, outer_sphere_radius, 0.0, 1.0));
               }
           } else if (distance_to_center > layer_3_sphere_radius) {
             if((distance_to_inner_sphere > heights_mb700[0] && distance_to_inner_sphere < heights_mb700[1])){
-              sun_density += coverage_mb700 * cloudUniforms.sunDensity * light;
+              sun_density += coverage_mb700 * cloudUniforms.sunDensity * light * (layer_2_offset - layer_1_offset) / (layer_4_offset - layer_3_offset) * (ReMap(distance_to_center, layer_3_sphere_radius, layer_4_sphere_radius, 0.0, 1.0));
               }
           } else if (distance_to_center > layer_2_sphere_radius) {
             if((distance_to_inner_sphere > heights_mb500[0] && distance_to_inner_sphere < heights_mb500[1])){ 
-              sun_density += coverage_mb500 * cloudUniforms.sunDensity * light;
+              sun_density += coverage_mb500 * cloudUniforms.sunDensity * light * (layer_2_offset - layer_1_offset) / (layer_3_offset - layer_2_offset) * (ReMap(distance_to_center, layer_2_sphere_radius, layer_3_sphere_radius, 0.0, 1.0));
             }
-          } else if (distance_to_center > layer_1_sphere_radius) {
+          } else 
+          if (distance_to_center > layer_1_sphere_radius) {
             if((distance_to_inner_sphere > heights_mb300[0] && distance_to_inner_sphere < heights_mb300[1])){
-              sun_density += coverage_mb300 * cloudUniforms.sunDensity * light;
+              sun_density += coverage_mb300 * cloudUniforms.sunDensity * light * (ReMap(distance_to_center, layer_1_sphere_radius, layer_2_sphere_radius, 0.0, 1.0));
             }
           }
         }
@@ -238,6 +249,6 @@ fn calculate_height(min_layer_sphere_radius: f32, max_layer_sphere_radius: f32, 
   } 
   
   output_color += sun_density * highlight_color * light;
-  return vec4<f32>(output_color, cloud_density) * cloudUniforms.visibility;
+  return vec4<f32>(output_color, cloud_density * cloudUniforms.visibility);
   }
 `;

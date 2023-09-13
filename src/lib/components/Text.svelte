@@ -79,7 +79,6 @@
   .mini {
     max-width: 16px;
   }
-
   .nowrap {
     white-space: nowrap;
   }
