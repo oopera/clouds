@@ -40,6 +40,7 @@ import { tweened } from 'svelte/motion';
 import { fullScreenQuadShader } from './shaders/quadShader.js';
 import { cubicBezier } from '$lib/shaders/utils/cubicBezier.js';
 import { generateCubeData } from './primitives/cubeData.js';
+import { getCloudCoverageByCoordinates } from './utils/calculateIntersection.js';
 
 let depthTexture: GPUTexture;
 let offscreenDepthTexture: GPUTexture;
@@ -765,6 +766,10 @@ async function InitializeScene() {
       options.coords.x,
       options.coords.y,
     ]);
+
+    console.log(
+      getCloudCoverageByCoordinates(mb300, options.coords.x, options.coords.y)
+    );
 
     quadBindings[0].resource = offscreenTextureResolve.createView();
     bindGroup[0] = CreateBindGroup(device, pipeline[0], earthBindings);

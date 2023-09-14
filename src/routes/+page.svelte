@@ -17,6 +17,7 @@
   import Tag from '$lib/components/Tag.svelte';
   import DateInput from '$lib/components/Date_Input.svelte';
   import Checkbox from '$lib/components/Checkbox.svelte';
+  import MouseIntersect from '$lib/components/Mouse_Intersect.svelte';
 
   inject({ mode: dev ? 'development' : 'production' });
 </script>
@@ -40,6 +41,7 @@
 
     <Layout align="end" gap="1" fit>
       <Text accent vertical delay={9} text={'META OPTIONS'} />
+      <MouseIntersect />
       <DateInput />
       <Radio_Button
         delay={5}

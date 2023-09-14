@@ -55,7 +55,7 @@ export function CalculateIntersection(
   );
 
   const sphereCenter = vec3.fromValues(0, 0, 0);
-  const sphereRadius = 2.005;
+  const sphereRadius = 2.5;
 
   const rayOriginToSphereCenter = vec3.sub(
     vec3.create(),
@@ -79,7 +79,6 @@ export function CalculateIntersection(
       vec3.scale(vec3.create(), rayDirection, t)
     );
 
-    // Directly use the intersection point, no need to rotate
     const azimuth = Math.atan2(intersectionPoint[2], intersectionPoint[0]);
     const polar = Math.asin(intersectionPoint[1] / sphereRadius);
 
@@ -99,6 +98,25 @@ export function CalculateIntersection(
   } else {
     return { u: 0, v: 0, discriminant, longitude: 0, latitude: 0 };
   }
+}
+
+const width = 1440;
+const height = 721;
+
+export function getCloudCoverageByCoordinates(
+  data: number[],
+  longitude: number,
+  latitude: number
+): number | null {
+  const normalizedLong = Math.floor(((longitude + 180) / 360) * width);
+  const normalizedLat = Math.floor(((latitude + 90) / 180) * height);
+  const index = normalizedLat * width + normalizedLong;
+
+  if (index < 0 || index >= data.length) {
+    return null;
+  }
+
+  return data[index];
 }
 
 export default CalculateIntersection;

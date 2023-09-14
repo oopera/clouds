@@ -94,7 +94,7 @@
     appearance: none;
     -webkit-appearance: none;
     height: 46px;
-    width: 224px;
+    width: 473px;
     margin: 0;
     background-color: transparent;
     rotate: 90deg;
@@ -104,7 +104,7 @@
     &::-webkit-slider-runnable-track {
       opacity: 1;
       height: 46px;
-      width: 224px;
+      width: 473px;
     }
     &::-webkit-slider-thumb {
       opacity: 0;
