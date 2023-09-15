@@ -20,9 +20,9 @@
     mounted = true;
   });
 
-  // $: {
-  //   splitText = text?.split('');
-  // }
+  $: {
+    splitText = text?.split('');
+  }
 </script>
 
 <p class:mini class:nowrap class:secondary class:tertiary class:accent>
