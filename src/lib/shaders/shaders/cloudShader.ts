@@ -71,10 +71,13 @@ const n: f32 = 1.0003;
 
 @vertex fn vs(input: Input, @builtin(vertex_index) vertexIndex: u32) -> Output {
   var output: Output;
-
-  output.Position = uni.viewProjectionMatrix * (uni.modelMatrix * input.position);
-  output.vPosition = input.position; 
-  output.vNormal = uni.normalMatrix * input.normal;
+  let mPosition: vec4<f32> = uni.modelMatrix * input.position;
+  let displacement: vec4<f32> = vec4<f32>(normalize(mPosition.xyz) * cube_offset, 0.0);
+  let worldPosition: vec4<f32> = mPosition + displacement;
+  
+  output.Position = uni.viewProjectionMatrix * worldPosition;
+  output.vPosition = worldPosition;
+  output.vNormal = normalize(uni.normalMatrix * input.normal);
   output.vUV = input.uv;
   return output;
 } 

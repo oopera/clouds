@@ -827,12 +827,12 @@ async function InitializeScene() {
     );
     if (visibility > 0) {
       passEncoder.setPipeline(pipeline[1]);
-      passEncoder.setVertexBuffer(0, buffers[1][0]);
-      passEncoder.setVertexBuffer(1, buffers[1][1]);
-      passEncoder.setVertexBuffer(2, buffers[1][2]);
+      passEncoder.setVertexBuffer(0, buffers[0][0]);
+      passEncoder.setVertexBuffer(1, buffers[0][1]);
+      passEncoder.setVertexBuffer(2, buffers[0][2]);
       passEncoder.setBindGroup(0, bindGroup[1]);
 
-      passEncoder.draw(36);
+      passEncoder.draw(options.amountOfVertices);
     }
 
     passEncoder.end();
