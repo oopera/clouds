@@ -125,7 +125,7 @@
 
   .card {
     z-index: 1;
-    background-color: rgba(255, 255, 255, 0.15);
+    // background-color: rgba(255, 255, 255, 0.05);
     padding: 24px;
     border-radius: 24px;
     backdrop-filter: blur(16px);
@@ -138,7 +138,7 @@
       height: 150px;
       z-index: -1;
       filter: blur(125px);
-      right: 0;
+
       top: 0;
       background-color: var(--c-secondary);
     }
