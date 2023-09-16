@@ -9,6 +9,7 @@
   export let marginTop: boolean = false;
   export let stretch: boolean = false;
   export let swap: boolean = false;
+  export let card: boolean = false;
 </script>
 
 <div
@@ -19,6 +20,7 @@
   class:margin-top={marginTop}
   class:stretch
   class:swap
+  class:card
 >
   <slot />
 </div>
@@ -119,5 +121,26 @@
   }
   .gap-10 {
     gap: gap(10);
+  }
+
+  .card {
+    z-index: 1;
+    background-color: rgba(255, 255, 255, 0.15);
+    padding: 24px;
+    border-radius: 24px;
+    backdrop-filter: blur(16px);
+    overflow: hidden;
+
+    &::after {
+      content: '';
+      position: absolute;
+      width: 50px;
+      height: 150px;
+      z-index: -1;
+      filter: blur(125px);
+      right: 0;
+      top: 0;
+      background-color: var(--c-secondary);
+    }
   }
 </style>

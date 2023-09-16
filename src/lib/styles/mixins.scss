@@ -57,6 +57,12 @@ $gap: 8px;
   }
 }
 
+@mixin desktop() {
+  @media only screen and (min-width: map-get($grid-breakpoints, md)) and (min-height: map-get($grid-breakpoints, md)) {
+    @content;
+  }
+}
+
 @mixin type-xs {
   font-family: var(--font-family-mono);
   font-size: var(--font-size-xs);
@@ -125,7 +131,7 @@ $gap: 8px;
   align-items: center;
   background-color: var(--c-accent);
   color: var(--c-g);
-  padding: 4px 8px;
+  padding: 4px 12px;
   text-align: center;
   margin: 0;
   gap: gap(0.5);

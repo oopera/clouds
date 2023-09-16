@@ -20,6 +20,10 @@
   import MouseIntersect from '$lib/components/Mouse_Intersect.svelte';
 
   inject({ mode: dev ? 'development' : 'production' });
+
+  const onclick = () => {
+    console.log('test');
+  };
 </script>
 
 <svelte:head>
@@ -33,29 +37,33 @@
 <Cursor />
 <Logo />
 
+<!-- <button style={'z-index: 1;'} id="download" on:click={onclick}>
+  <Tag>
+    <Text secondary text={'download'} />
+  </Tag>
+</button> -->
+
 <main>
   <Layout padding="m" horizontal justify="between" align="start" gap="2">
     <Layout align="start" gap="1">
       <Loading />
     </Layout>
-
-    <Layout align="end" gap="1" fit>
-      <Text accent vertical delay={9} text={'META OPTIONS'} />
-      <MouseIntersect />
-      <DateInput />
-      <Radio_Button
-        delay={5}
-        title="light_type"
-        options={['day_cycle', 'full_day', 'full_night']}
-      />
-      <Layout horizontal justify="end" gap="1">
-        <Checkbox delay={5} title="half_res" />
+    <div class="desktop">
+      <Layout align="end" gap="1" fit card>
+        <Radio_Button
+          delay={5}
+          title="light_type"
+          options={['day_cycle', 'full_day', 'full_night']}
+        />
+        <Layout horizontal justify="end" gap="1">
+          <Checkbox delay={5} title="half_res" />
+        </Layout>
       </Layout>
-    </Layout>
+    </div>
   </Layout>
 
   <Layout padding="m" horizontal justify="between" align="end" gap="2">
-    <Layout align="start" gap="6" fit>
+    <Layout align="start" gap="6" fit card>
       <Layout align="start" gap="0" fit>
         <Text tertiary text={'B.sc. Human Computer Interaction'} delay={10} />
         <Layout horizontal gap="1" justify="start">
@@ -104,7 +112,7 @@
       </Layout>
     </Layout>
     <Axis_Indicator />
-    <Layout align="end" gap="2" fit horizontal>
+    <Layout align="end" gap="2" fit horizontal card>
       <Layout align="end" gap="1" fit>
         <Range_Input
           delay={8}
@@ -174,5 +182,12 @@
   }
   span {
     background-color: var(--c-g);
+  }
+
+  .desktop {
+    display: none;
+    @include desktop {
+      display: block;
+    }
   }
 </style>

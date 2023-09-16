@@ -620,6 +620,21 @@ async function InitializeScene() {
       status: false,
     },
   }));
+  document?.getElementById('download')?.addEventListener('click', function (e) {
+    console.log('test');
+    // Convert our canvas to a data URL
+    let canvasUrl = canvas.toDataURL();
+    // Create an anchor, and set the href value to our data URL
+    const createEl = document.createElement('a');
+    createEl.href = canvasUrl;
+
+    // This is the name of our downloaded file
+    createEl.download = 'Canvas.png';
+
+    // Click the download button, causing a download, and then remove it
+    createEl.click();
+    createEl.remove();
+  });
 
   setYaw(360, true);
   setZoom(4, true);
@@ -766,10 +781,6 @@ async function InitializeScene() {
       options.coords.x,
       options.coords.y,
     ]);
-
-    console.log(
-      getCloudCoverageByCoordinates(mb300, options.coords.x, options.coords.y)
-    );
 
     quadBindings[0].resource = offscreenTextureResolve.createView();
     bindGroup[0] = CreateBindGroup(device, pipeline[0], earthBindings);

@@ -39,7 +39,7 @@
           type="radio"
           class="radio"
         />
-        <Text tertiary={value === text} delay={delay + i} {text} />
+        <Text nowrap tertiary={value === text} delay={delay + i} {text} />
       </Layout>
     {/each}
   </Layout>

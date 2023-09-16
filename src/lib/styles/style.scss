@@ -38,6 +38,7 @@ body {
   --color-grey-darkest: #0b0b0b;
 
   --c-g: #212121;
+  --c-ghover: #524c4c;
   --c-secondary: #dadada;
   --c-tertiary: #c4d7ff;
 
@@ -82,7 +83,6 @@ body {
   font-weight: 400;
   color-scheme: light;
   color: inherit;
-  background-color: var(--color-grey-lightest);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -146,6 +146,7 @@ p {
 }
 
 button {
+  pointer-events: all;
   position: relative;
   overflow: visible;
   background-color: transparent;
