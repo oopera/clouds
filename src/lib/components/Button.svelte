@@ -12,6 +12,7 @@
     @include tag;
     background-color: var(--c-g);
     z-index: 1;
+    border-radius: 0;
     :hover {
       background-color: var(--c-ghover);
     }

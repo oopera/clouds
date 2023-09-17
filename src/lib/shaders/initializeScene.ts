@@ -13,7 +13,7 @@ import {
 } from './utils/helper/matrixHelper.js';
 import { earthShader } from './shaders/earthShader.js';
 import { loading, setZoom, setPitch, setYaw } from '$lib/stores/stores.js';
-import { cloudShader } from './shaders/cloudShader.js';
+import { cloudShader } from './shaders/cloudShader_realistic.js';
 
 import {
   GetPartitionedTexture,
@@ -274,10 +274,10 @@ async function InitializeScene() {
     sampler: GPUSampler;
   };
 
-  const generateNewNoiseTexture = false;
+  const generateWorleyTexture = false;
   var worleyNoiseTexture;
 
-  if (generateNewNoiseTexture) {
+  if (generateWorleyTexture) {
     worleyNoiseTexture = await executePromise(
       'worleyNoiseTexture',
       (await Get3DNoiseTexture(device)) as any,

@@ -61,7 +61,7 @@
 
 <div class="loading">
   <Layout short align="start" gap="2">
-    <Layout horizontal justify="between" gap="4">
+    <Layout short horizontal justify="between" gap="4">
       <Text nowrap vertical text={fps.toString()} />
       <Tag red={deviceFailed}>
         <Text

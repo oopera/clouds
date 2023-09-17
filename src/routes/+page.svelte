@@ -56,6 +56,7 @@
           options={['day_cycle', 'full_day', 'full_night']}
         />
         <Layout horizontal justify="end" gap="1">
+          <Checkbox delay={5} title="atmo" />
           <Checkbox delay={5} title="half_res" />
         </Layout>
       </Layout>
@@ -63,7 +64,7 @@
   </Layout>
 
   <Layout padding="m" horizontal justify="between" align="end" gap="2">
-    <Layout align="start" gap="6" fit card>
+    <Layout align="start" gap="6" fit>
       <Layout align="start" gap="0" fit>
         <Text tertiary text={'B.sc. Human Computer Interaction'} delay={10} />
         <Layout horizontal gap="1" justify="start">
@@ -118,7 +119,7 @@
           delay={8}
           title="cloud_density"
           min={0}
-          max={1.0}
+          max={2.0}
           step={0.1}
         />
         <Range_Input
