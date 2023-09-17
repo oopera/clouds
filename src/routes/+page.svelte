@@ -129,13 +129,6 @@
           max={299}
           step={5}
         />
-        <Range_Input
-          delay={8}
-          title="raymarch_length"
-          min={0}
-          max={1}
-          step={0.05}
-        />
         <Text accent vertical delay={9} text={'FORM'} />
 
         <Range_Input
@@ -149,7 +142,7 @@
           delay={8}
           title="sun_transmittance"
           min={0}
-          max={0.25}
+          max={0.5}
           step={0.005}
         />
         <Text accent vertical delay={9} text={'LIGHT'} />

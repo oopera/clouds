@@ -99,13 +99,10 @@ fn is_point_occluded_by_sphere(point: vec3<f32>, camera_position: vec3<f32>) -> 
   // Project camera_to_sphere onto camera_to_point to find the point on the line through camera_position and point that is closest to sphere_position
   let t = dot(camera_to_sphere, camera_to_point) / dot(camera_to_point, camera_to_point);
   let closest_point = camera_position + t * camera_to_point;
-
-  // Calculate the distance from the closest point to the sphere's center
   let distance_to_sphere = length(closest_point - sphere_center);
-
-  // Check if the closest point is inside the sphere
   return distance_to_sphere > sphere_radius || length(camera_to_point) < length(camera_to_sphere);
 }
+
 
 fn calculate_height(min_layer_sphere_radius: f32, max_layer_sphere_radius: f32, scaling_factor: f32, noise: f32, detail_noise: f32) -> vec2<f32> {
   var maxheight = ReMap((noise * scaling_factor), 0.0, 1.0, min_layer_sphere_radius, (max_layer_sphere_radius - sphere_radius));
@@ -116,36 +113,99 @@ fn calculate_height(min_layer_sphere_radius: f32, max_layer_sphere_radius: f32, 
 }
 
 
+fn calculateStepLength(ro: vec3<f32>, rd: vec3<f32>) -> f32 {
+  var oc: vec3<f32> = -ro;
+  var b: f32 = dot(oc, rd);
+  var c: f32 = dot(oc, oc) - sphere_radius * sphere_radius;
+  var discriminant: f32 = b * b - c;
+
+  var closest_intersection: f32 = -1.0;
+
+  if (discriminant > 0.0) {
+      let t1: f32 = b - sqrt(discriminant);
+      let t2: f32 = b + sqrt(discriminant);
+
+      if (t1 > 0.0 && (t1 < closest_intersection || closest_intersection < 0.0)) {
+          closest_intersection = t1;
+      }
+
+      if (t2 > 0.0 && (t2 < closest_intersection || closest_intersection < 0.0)) {
+          closest_intersection = t2;
+      }
+  }
+
+  let outer_sphere_radius: f32 = sphere_radius + cube_offset;
+  c = dot(oc, oc) - outer_sphere_radius * outer_sphere_radius;
+  discriminant = b * b - c;
+
+  if (discriminant > 0.0) {
+      let t1: f32 = b - sqrt(discriminant);
+      let t2: f32 = b + sqrt(discriminant);
+
+
+      if (t2 > 0.0 && (t2 < closest_intersection || closest_intersection < 0.0)) {
+          closest_intersection = t2;
+      }
+  }
+
+  return closest_intersection;
+}
+
+fn lerp(a: f32, b: f32, t: f32) -> f32 {
+  return (1.0 - t) * a + t * b;
+}
+
+
+fn getDensity(current_point: vec3<f32>, distance_to_center: f32, distance_to_inner_sphere:f32, coverage: vec4<f32>, noise: vec4<f32>, reverse: bool) -> f32 {
+  var heights_mb300: vec2<f32> = calculate_height(layer_1_offset, layer_2_sphere_radius , .9, noise.r, noise.r + noise.g);
+  var heights_mb500: vec2<f32> = calculate_height(layer_2_offset, layer_3_sphere_radius, .8, noise.g, noise.g + noise.g);
+  var heights_mb700: vec2<f32> = calculate_height(layer_3_offset, layer_4_sphere_radius, .7, noise.b,noise.b + noise.g);
+  var heights_mb900: vec2<f32> = calculate_height(layer_4_offset, outer_sphere_radius, .6, noise.a, noise.a + noise.g);
+  var offset_scale =(ReMap(distance_to_center, sphere_radius, outer_sphere_radius, 0.5, 1.0));
+
+  if(reverse){
+    offset_scale = 1.0 - offset_scale;
+  }
+
+  if (distance_to_center < outer_sphere_radius && distance_to_center > sphere_radius) {
+    if(distance_to_center > layer_4_sphere_radius) {
+      if((distance_to_inner_sphere > heights_mb900[0] && distance_to_inner_sphere < heights_mb900[1])){
+        return coverage.a * offset_scale;
+      }
+    } else if (distance_to_center > layer_3_sphere_radius) {
+      if((distance_to_inner_sphere > heights_mb700[0] && distance_to_inner_sphere < heights_mb700[1])){
+        return coverage.b * offset_scale;
+      }
+    } else if (distance_to_center > layer_2_sphere_radius) {
+      if((distance_to_inner_sphere > heights_mb500[0] && distance_to_inner_sphere < heights_mb500[1])){
+        return coverage.g * offset_scale;
+      }
+    } else if (distance_to_center > layer_1_sphere_radius) {
+      if((distance_to_inner_sphere > heights_mb300[0] && distance_to_inner_sphere < heights_mb300[1])){
+        return coverage.r * offset_scale;
+      }
+    }
+  }
+
+  return 0.0;
+}
+
 @fragment fn fs(output: Output) -> @location(0) vec4<f32> {
   var output_color: vec3<f32> = vec3<f32>(0.62, 0.63, 0.67);
-  var highlight_color: vec3<f32> = vec3<f32>(0.89, 0.87, 0.90);
-
+  var highlight_color: vec3<f32> = vec3<f32>(0.09, 0.07, 0.12);
 
   var light: f32 = 0.0;
   var sun_density: f32 = 0.0;
   var cloud_density: f32 = 0.0;
 
-  let ray_origin = uni.cameraPosition.xyz;
-  let ray_direction = normalize(output.vPosition.xyz - ray_origin);
-  let sun_ray_direction = normalize(output.vPosition.xyz - lightUniforms.lightPosition);
-  
-  let oc = ray_origin - sphere_center;
-  let a = dot(ray_direction, ray_direction);
-  let b = 2.0 * dot(oc, ray_direction);
-  let c = dot(oc, oc) - (outer_sphere_radius * outer_sphere_radius);
+  let ray_origin = output.vPosition.xyz;
+  let ray_direction = normalize(ray_origin - uni.cameraPosition.xyz);
 
-  let discriminant = b * b - 4.0 * a * c;
-
-  let t1: f32 = (-b - sqrt(discriminant)) / (2.0 * a);
-  let t2: f32 = (-b + sqrt(discriminant)) / (2.0 * a);
-  let t: f32 = min(t1, t2);
-
-  let start_point: vec3<f32> = ray_origin + t * ray_direction;
   let steps = cloudUniforms.raymarchSteps;
-  let step_length = ReMap(cloudUniforms.raymarchLength, 0.0, 1.0, 0, 2 * outer_sphere_radius)    / steps;
+  let step_length = calculateStepLength(ray_origin, ray_direction) / (steps + 1);
 
   for (var i: f32 = 0.0; i < steps; i += 1.0) {
-    let current_point = start_point + i * ray_direction * step_length;
+    let current_point = output.vPosition.xyz + i * ray_direction * step_length;
     let distance_to_center = length(current_point - sphere_center);
     let inner_sphere_point = sphere_center + normalize(current_point - sphere_center) * sphere_radius;
   
@@ -156,102 +216,43 @@ fn calculate_height(min_layer_sphere_radius: f32, max_layer_sphere_radius: f32, 
 
     var noise = textureSample(noise_texture, noise_sampler, inner_sphere_point);    
     let coverage = textureSample(cloud_texture, cloud_sampler, sphere_uv);
-    let coverage_mb300 = coverage.r;
-    let coverage_mb500 = coverage.g;
-    let coverage_mb700 = coverage.b;
-    let coverage_mb900 = coverage.a;
 
     var is_infront = is_point_occluded_by_sphere(current_point, ray_origin);
 
     if(is_infront){
-      var heights_mb300: vec2<f32> = calculate_height(layer_1_offset, layer_2_sphere_radius , .9, noise.r, noise.r + noise.g);
-      var heights_mb500: vec2<f32> = calculate_height(layer_2_offset, layer_3_sphere_radius, .8, noise.g, noise.g + noise.g);
-      var heights_mb700: vec2<f32> = calculate_height(layer_3_offset, layer_4_sphere_radius, .7, noise.b,noise.b + noise.g);
-      var heights_mb900: vec2<f32> = calculate_height(layer_4_offset, outer_sphere_radius, .6, noise.a, noise.a + noise.g);
-
-      let distance_to_inner_sphere = length(current_point - inner_sphere_point);
-
-      if (distance_to_center < outer_sphere_radius) {
-        if(distance_to_center > layer_4_sphere_radius) {
-          if((distance_to_inner_sphere > heights_mb900[0] && distance_to_inner_sphere < heights_mb900[1])){
-            cloud_density += coverage_mb900 * cloudUniforms.density;
-            }
-        } else if (distance_to_center > layer_3_sphere_radius) {
-          if((distance_to_inner_sphere > heights_mb700[0] && distance_to_inner_sphere < heights_mb700[1])){
-            cloud_density += coverage_mb700 * cloudUniforms.density;
-          }
-        } else if (distance_to_center > layer_2_sphere_radius) {
-          if((distance_to_inner_sphere > heights_mb500[0] && distance_to_inner_sphere < heights_mb500[1])){
-            cloud_density += coverage_mb500 * cloudUniforms.density;
-          }
-        } else 
-        if (distance_to_center > layer_1_sphere_radius) {
-          if((distance_to_inner_sphere > heights_mb300[0] && distance_to_inner_sphere < heights_mb300[1])){
-            cloud_density += coverage_mb300 * cloudUniforms.density;
-          }
-        }
-      }
+      cloud_density += clamp(getDensity(current_point, distance_to_center, length(current_point - inner_sphere_point), coverage, noise, false) * cloudUniforms.density, 0.0, 0.2);
     }
       
     for(var k: f32 = 0.0; k < 1; k += 0.5){
+      let sun_ray_direction = normalize(current_point - lightUniforms.lightPosition);
       let sun_point: vec3<f32> = current_point + k * sun_ray_direction * step_length;
       let distance_to_center = length(sun_point - sphere_center);
       let inner_sphere_point = sphere_center + normalize(sun_point - sphere_center) * sphere_radius;
-    
+  
       let sphere_uv = vec2<f32>(
         0.5 + atan2(inner_sphere_point.z - sphere_center.z, inner_sphere_point.x - sphere_center.x) / (2.0 * PI),
         0.5 - asin((inner_sphere_point.y - sphere_center.y) / sphere_radius) / PI
       );
     
       let coverage = textureSample(cloud_texture, cloud_sampler, sphere_uv);
-      let coverage_mb300 = coverage.r;
-      let coverage_mb500 = coverage.g;
-      let coverage_mb700 = coverage.b;
-      let coverage_mb900 = coverage.a;
-
       var noise = textureSample(noise_texture, noise_sampler, inner_sphere_point);
       
       var is_infront = is_point_occluded_by_sphere(sun_point, ray_origin);
 
       if(is_infront){
-      var heights_mb300: vec2<f32> = calculate_height(layer_1_offset, layer_2_sphere_radius, .9, noise.r, noise.r + noise.g);
-      var heights_mb500: vec2<f32> = calculate_height(layer_2_offset, layer_3_sphere_radius, .8, noise.g, noise.g + noise.g);
-      var heights_mb700: vec2<f32> = calculate_height(layer_3_offset, layer_4_sphere_radius, .7, noise.b,noise.b + noise.g);
-      var heights_mb900: vec2<f32> = calculate_height(layer_4_offset, outer_sphere_radius, .6, noise.a, noise.a + noise.g);
-
         let distance_to_inner_sphere = length(sun_point - inner_sphere_point);
 
         var theta = dot(normalize(current_point), normalize(sun_point));
         light = mieScattering(theta) * lightUniforms.rayleighIntensity;
 
-        if(cloud_density < (layer_2_offset - layer_1_offset) / (cube_offset - layer_4_offset)){
-      
-        if (distance_to_center < outer_sphere_radius) {
-          if(distance_to_center > layer_4_sphere_radius) {
-            if((distance_to_inner_sphere > heights_mb900[0] && distance_to_inner_sphere < heights_mb900[1])){
-              sun_density += coverage_mb900 * cloudUniforms.sunDensity * light * (layer_2_offset - layer_1_offset) / (cube_offset - layer_4_offset) * (ReMap(distance_to_center, layer_4_sphere_radius, outer_sphere_radius, 0.0, 1.0));
-              }
-          } else if (distance_to_center > layer_3_sphere_radius) {
-            if((distance_to_inner_sphere > heights_mb700[0] && distance_to_inner_sphere < heights_mb700[1])){
-              sun_density += coverage_mb700 * cloudUniforms.sunDensity * light * (layer_2_offset - layer_1_offset) / (layer_4_offset - layer_3_offset) * (ReMap(distance_to_center, layer_3_sphere_radius, layer_4_sphere_radius, 0.0, 1.0));
-              }
-          } else if (distance_to_center > layer_2_sphere_radius) {
-            if((distance_to_inner_sphere > heights_mb500[0] && distance_to_inner_sphere < heights_mb500[1])){ 
-              sun_density += coverage_mb500 * cloudUniforms.sunDensity * light * (layer_2_offset - layer_1_offset) / (layer_3_offset - layer_2_offset) * (ReMap(distance_to_center, layer_2_sphere_radius, layer_3_sphere_radius, 0.0, 1.0));
-            }
-          } else 
-          if (distance_to_center > layer_1_sphere_radius) {
-            if((distance_to_inner_sphere > heights_mb300[0] && distance_to_inner_sphere < heights_mb300[1])){
-              sun_density += coverage_mb300 * cloudUniforms.sunDensity * light * (ReMap(distance_to_center, layer_1_sphere_radius, layer_2_sphere_radius, 0.0, 1.0));
-            }
-          }
-        }
+        if(cloud_density < 1.0){
+          sun_density += getDensity(sun_point, distance_to_center, distance_to_inner_sphere, coverage, noise, false)* cloudUniforms.sunDensity * light;
       }
     }
     }
   } 
-  
-  output_color += sun_density * highlight_color * light;
+
+  output_color += sun_density * highlight_color;
   return vec4<f32>(output_color, cloud_density * cloudUniforms.visibility);
   }
 `;

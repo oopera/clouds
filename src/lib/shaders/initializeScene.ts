@@ -13,7 +13,7 @@ import {
 } from './utils/helper/matrixHelper.js';
 import { earthShader } from './shaders/earthShader.js';
 import { loading, setZoom, setPitch, setYaw } from '$lib/stores/stores.js';
-import { cloudShader } from './shaders/cloudShader_realistic.js';
+import { cloudShader } from './shaders/cloudShader_artistic.js';
 
 import {
   GetPartitionedTexture,

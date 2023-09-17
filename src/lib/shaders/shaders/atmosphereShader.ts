@@ -83,6 +83,7 @@ return (3.0 / 4.0) * (1.0 + cos(theta) * cos(theta));
   let borderColor = vec4(1.0, 0.92, 0.95, 1.0);
   let blendRadius = 0.1; 
   let mask = smoothstep(0.0, blendRadius, edge);
+  let resultColor = mask * borderColor;
 
   var rim: f32 = 1.0 - dot(viewDirection, output.vNormal.xyz); 
   rim = pow(rim, 2.5 + 30.0 * ( 1 - lightness )); 
@@ -91,8 +92,6 @@ return (3.0 / 4.0) * (1.0 + cos(theta) * cos(theta));
   let orangeColor: vec4<f32> = vec4<f32>(1.0, 1.0, 1.0, rim); 
 
   let color: vec4<f32> = mix(orangeColor, blueColor, lightness);
-  let resultColor = mask * borderColor;
-
   return (color + resultColor);
 }
 `;

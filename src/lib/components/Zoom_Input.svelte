@@ -3,8 +3,8 @@
   import Text from './Text.svelte';
 
   export let step: number = 1;
-  export let min: number = 3.25;
-  export let max: number = 13.25;
+  export let min: number = 2.65;
+  export let max: number = 12.65;
   export let delay: number = 0;
 
   const handleInput = (e: Event) => {

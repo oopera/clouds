@@ -142,8 +142,8 @@ export default function InitStores(
     options.coords.y = value.y;
   });
 
-  const max_zoom = 13.25;
-  const min_zoom = 3.25;
+  const max_zoom = 12.65;
+  const min_zoom = 2.65;
 
   const handleScroll = (e: WheelEvent) => {
     e.preventDefault();
