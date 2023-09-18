@@ -225,6 +225,12 @@ async function InitializeScene() {
     '3d noise textures'
   );
 
+  let detail_noise = await executePromise(
+    'detail_noise',
+    loadBinaryData('/textures/detail_noise.bin'),
+    '3d detail noise textures'
+  );
+
   let bluenoise = await executePromise(
     'bluenoise',
     loadImage('/textures/BlueNoise64Tiled.jpg'),
@@ -235,6 +241,7 @@ async function InitializeScene() {
   const lightMapV = await GetPartitionedTexture(device, lightmap);
   const noiseV = Create3DTextureFromData(device, noise);
   const bluenoiseV = await GetTexture(device, bluenoise);
+  const detailnoiseV = Create3DTextureFromData(device, detail_noise);
 
   const presentationFormat = navigator.gpu.getPreferredCanvasFormat();
 
@@ -284,11 +291,12 @@ async function InitializeScene() {
 
   const generateWorleyTexture = false;
   var worleyNoiseTexture;
+  var detailNoiseTexture = detailnoiseV;
 
   if (generateWorleyTexture) {
     worleyNoiseTexture = await executePromise(
       'worleyNoiseTexture',
-      (await Get3DNoiseTexture(device)) as any,
+      (await Get3DNoiseTexture(device), 64, 64, 64) as any,
       '3D Noise Texture'
     );
   } else {
@@ -545,6 +553,22 @@ async function InitializeScene() {
       binding: 8,
       resource: bluenoiseV.sampler,
     },
+    {
+      binding: 9,
+      resource: detailNoiseTexture.texture.createView({ dimension: '3d' }),
+    },
+    {
+      binding: 10,
+      resource: detailNoiseTexture.sampler,
+    },
+    // {
+    //   binding: 11,
+    //   resource: offscreenDepth.texture.createView(),
+    // },
+    // {
+    //   binding: 12,
+    //   resource: offscreenDepth.sampler,
+    // },
   ];
 
   const atmoBindings = [

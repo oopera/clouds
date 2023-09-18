@@ -46,7 +46,8 @@ struct Output {
 @group(0) @binding(4) var noise_sampler: sampler;
 @group(0) @binding(5) var cloud_texture: texture_2d<f32>;
 @group(0) @binding(6) var cloud_sampler: sampler;
-
+@group(0) @binding(7) var bluenoise_texture: texture_2d<f32>;
+@group(0) @binding(8) var bluenoise_sampler: sampler;
 
 
 const sphere_center = vec3<f32>(0.0, 0.0, 0.0);

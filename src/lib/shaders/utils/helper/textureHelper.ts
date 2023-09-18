@@ -291,13 +291,7 @@ export const Get3DNoiseTexture = async (
   addressModeV = 'repeat',
   addressModeW = 'repeat'
 ) => {
-  const perlinNoiseData_01 = generatePerlinFbmNoise(
-    width,
-    height,
-    depth,
-    25,
-    25
-  );
+  const perlinNoiseData_01 = generatePerlinFbmNoise(width, height, depth, 4, 8);
   const noiseData_01 = generateWorleyFbmNoise(width, height, depth, 4);
   const noiseData_02 = generateWorleyFbmNoise(width, height, depth, 8);
   const noiseData_03 = generateWorleyFbmNoise(width, height, depth, 12);
