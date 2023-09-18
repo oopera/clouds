@@ -12,7 +12,7 @@ export const sun_transmittance = writable(0.44);
 export const rayleigh_intensity = writable(1.3);
 
 export const raymarch_length = writable(0.3);
-export const raymarch_steps = writable(99);
+export const raymarch_steps = writable(50);
 export const rotation_speed = writable(0.05);
 
 export const half_res = writable(true);

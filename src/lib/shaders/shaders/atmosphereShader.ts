@@ -86,7 +86,7 @@ return (3.0 / 4.0) * (1.0 + cos(theta) * cos(theta));
   let resultColor = mask * borderColor;
 
   var rim: f32 = 1.0 - dot(viewDirection, output.vNormal.xyz); 
-  rim = pow(rim, 2.5 + 30.0 * ( 1 - lightness )); 
+  rim = pow(rim, 2.65 + 30.0 * ( 1 - lightness )); 
 
   let blueColor: vec4<f32> = vec4<f32>(0.6, 0.8, 1.0, rim); 
   let orangeColor: vec4<f32> = vec4<f32>(1.0, 1.0, 1.0, rim); 

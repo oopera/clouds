@@ -24,6 +24,7 @@ import {
   Get4LayerTextureFromGribData,
   GetDepthTexture,
   downloadData,
+  GetTexture,
 } from './utils/helper/textureHelper.js';
 
 import type { RenderOptions, HasChanged } from '$lib/types/types.js';
@@ -224,9 +225,16 @@ async function InitializeScene() {
     '3d noise textures'
   );
 
+  let bluenoise = await executePromise(
+    'bluenoise',
+    loadImage('/textures/BlueNoise64Tiled.jpg'),
+    'bluenoise textures'
+  );
+
   const textureV = await GetPartitionedTexture(device, texture);
   const lightMapV = await GetPartitionedTexture(device, lightmap);
   const noiseV = Create3DTextureFromData(device, noise);
+  const bluenoiseV = await GetTexture(device, bluenoise);
 
   const presentationFormat = navigator.gpu.getPreferredCanvasFormat();
 
@@ -529,6 +537,14 @@ async function InitializeScene() {
       binding: 6,
       resource: parsedGribTexture.sampler,
     },
+    {
+      binding: 7,
+      resource: bluenoiseV.texture.createView(),
+    },
+    {
+      binding: 8,
+      resource: bluenoiseV.sampler,
+    },
   ];
 
   const atmoBindings = [
@@ -575,7 +591,7 @@ async function InitializeScene() {
     device.createShaderModule({ code: cloudShader }),
     {
       ...options,
-      cullmode: 'none',
+      cullmode: 'back',
     },
     presentationFormat
   );
