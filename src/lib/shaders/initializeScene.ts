@@ -31,10 +31,9 @@ import type { RenderOptions, HasChanged } from '$lib/types/types.js';
 import { atmosphereShader } from './shaders/atmosphereShader.js';
 import { executePromise, loadImage } from './utils/executeAndUpdate.js';
 
-import { mb300 } from '$lib/assets/mb300.js';
-import { mb500 } from '$lib/assets/mb500.js';
-import { mb700 } from '$lib/assets/mb700.js';
-import { mb900 } from '$lib/assets/mb900.js';
+import { local_low } from '$lib/assets/low.js';
+import { local_mid } from '$lib/assets/mid.js';
+import { local_high } from '$lib/assets/high.js';
 
 import { dev } from '$app/environment';
 import { tweened } from 'svelte/motion';
@@ -309,71 +308,49 @@ async function InitializeScene() {
       options.projectionDate.month +
       options.projectionDate.day;
 
-    const mb300RD = await executePromise(
-      'mb300RD',
-      fetch(`/api/cloud-texture?level_mb=300_mb&date=${dateString}`),
-      '300 millibar cloud-data'
+    const cloudLayers = await executePromise(
+      'clouds',
+      fetch(`/api/cloud-texture?date=${dateString}`),
+      'cloud-data'
     );
 
-    const mb500RD = await executePromise(
-      'mb500RD',
-      fetch(`/api/cloud-texture?level_mb=500_mb&date=${dateString}`),
-      '500 millibar cloud-data'
-    );
+    const cloudLayersJ = await cloudLayers.json();
 
-    const mb700RD = await executePromise(
-      'mb700RD',
-      fetch(`/api/cloud-texture?level_mb=700_mb&date=${dateString}`),
-      '700 millibar cloud-data'
-    );
-
-    const mb900RD = await executePromise(
-      'mb800RD',
-      fetch(`/api/cloud-texture?level_mb=900_mb&date=${dateString}`),
-      '900 millibar cloud-data'
-    );
-
-    const mb300R = await mb300RD.json();
-    const mb500R = await mb500RD.json();
-    const mb700R = await mb700RD.json();
-    const mb900R = await mb900RD.json();
+    const low = parseEncodedToFlattened(cloudLayersJ.lowCloud);
+    const middle = parseEncodedToFlattened(cloudLayersJ.middleCloud);
+    const high = parseEncodedToFlattened(cloudLayersJ.highCloud);
 
     if (setTextures) {
       parsedGribTexture = await Get4LayerTextureFromGribData(device, [
-        mb300,
-        mb500,
-        mb700,
-        mb900,
+        low,
+        middle,
+        high,
+        high,
       ]);
     }
 
-    const mb3001d = parseEncodedToFlattened(mb300R);
-    const mb5001d = parseEncodedToFlattened(mb500R);
-    const mb7001d = parseEncodedToFlattened(mb700R);
-    const mb9001d = parseEncodedToFlattened(mb900R);
-
     return {
-      mb300: mb3001d,
-      mb500: mb5001d,
-      mb700: mb7001d,
-      mb900: mb9001d,
+      low: low,
+      middle: middle,
+      high: high,
     };
   };
 
-  if (dev) {
+  if (!dev) {
     parsedGribTexture = await Get4LayerTextureFromGribData(device, [
-      mb300,
-      mb500,
-      mb700,
-      mb900,
+      local_low,
+      local_mid,
+      local_high,
+      local_high,
     ]);
   } else {
-    const { mb300, mb500, mb700, mb900 } = await fetchTextures();
+    const { low, middle, high } = await fetchTextures();
+
     parsedGribTexture = await Get4LayerTextureFromGribData(device, [
-      mb300,
-      mb500,
-      mb700,
-      mb900,
+      low,
+      middle,
+      high,
+      high,
     ]);
   }
 
@@ -561,14 +538,6 @@ async function InitializeScene() {
       binding: 10,
       resource: detailNoiseTexture.sampler,
     },
-    // {
-    //   binding: 11,
-    //   resource: offscreenDepth.texture.createView(),
-    // },
-    // {
-    //   binding: 12,
-    //   resource: offscreenDepth.sampler,
-    // },
   ];
 
   const atmoBindings = [
