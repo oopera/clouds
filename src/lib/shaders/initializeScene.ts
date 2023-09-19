@@ -336,7 +336,7 @@ async function InitializeScene() {
     };
   };
 
-  if (!dev) {
+  if (dev) {
     parsedGribTexture = await Get4LayerTextureFromGribData(device, [
       local_low,
       local_mid,
