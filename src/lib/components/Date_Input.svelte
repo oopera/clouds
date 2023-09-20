@@ -3,6 +3,7 @@
   import Layout from './Layout.svelte';
   import { projection_date } from '$lib/stores/stores';
   import { dev } from '$app/environment';
+  import Tooltip from './Tooltip.svelte';
 
   const getDateValues = (date: Date) => {
     var day = ('0' + date.getDate()).slice(-2);
@@ -52,25 +53,26 @@
   };
 </script>
 
-<input
-  data-interactable
-  on:input={oninput}
-  value={getDateString(current_date)}
-  max={getDateString(max_date)}
-  min={getDateString(min_date)}
-  type="date"
-/>
+<Tooltip text="Projection Date">
+  <input
+    data-interactable
+    on:input={oninput}
+    value={getDateString(current_date)}
+    max={getDateString(max_date)}
+    min={getDateString(min_date)}
+    type="date"
+  />
+</Tooltip>
 
 <style lang="scss">
   input {
     appearance: none;
     -webkit-appearance: none;
-    width: 156px;
+
     margin: 0;
     background-color: var(--c-g);
     border: none;
-    border-radius: 24px;
-    padding: 4px 12px;
+    padding: 4px 8px;
     box-sizing: border-box;
     font-family: var(--font-family-mono);
     vertical-align: baseline;
@@ -81,17 +83,12 @@
     color: var(--c-tertiary);
     transition: background-color 150ms var(--ease), color 150ms var(--ease);
     font-size: 12px;
+    gap: 8px;
     &:hover {
       background-color: var(--c-ghover);
     }
     &::-webkit-calendar-picker-indicator {
-      background: url(https://mywildalberta.ca/images/GFX-MWA-Parks-Reservations.png)
-        no-repeat;
-      background-position: right 8px center;
-      color: rgba(255, 255, 255, 1);
-      opacity: 1;
-      width: 28px;
-      border-radius: 24px;
+      filter: invert(1);
     }
   }
 

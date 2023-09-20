@@ -7,6 +7,7 @@
   import Tag from './Tag.svelte';
   import Button from './Button.svelte';
   import Line from './Line.svelte';
+  import DateInput from './Date_Input.svelte';
 
   let loadedItems: LoadingStore;
   let mounted: boolean = false;
@@ -59,6 +60,7 @@
     <Layout align="start" justify="between" gap="2">
       <Layout horizontal align="center" gap="2" justify="between">
         <Button {onclick}><p>{showDownloads ? 'hide' : 'show'}</p></Button>
+        <DateInput />
         <p>{fps.toString()}</p>
       </Layout>
       {#if showDownloads}
