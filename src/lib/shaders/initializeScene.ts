@@ -134,7 +134,7 @@ const pipeline: GPURenderPipeline[] = [];
 const bindGroup: GPUBindGroup[] = [];
 const buffers: GPUBuffer[][] = [];
 
-const displayError = (message: string) => {
+export const displayError = (message: string) => {
   var counter = 0;
 
   if (counter === 0) {
