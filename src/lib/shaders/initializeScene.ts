@@ -308,17 +308,30 @@ async function InitializeScene() {
       options.projectionDate.month +
       options.projectionDate.day;
 
-    const cloudLayers = await executePromise(
-      'clouds',
-      fetch(`/api/cloud-texture?date=${dateString}`),
-      'cloud-data'
+    const lowD = await executePromise(
+      'mb300RD',
+      fetch(`/api/cloud-texture?level=low&date=${dateString}`),
+      'low-level cloud-data'
+    );
+    const midD = await executePromise(
+      'mb500RD',
+      fetch(`/api/cloud-texture?level=high&date=${dateString}`),
+      'mid-level cloud-data'
     );
 
-    const cloudLayersJ = await cloudLayers.json();
+    const highD = await executePromise(
+      'mb700RD',
+      fetch(`/api/cloud-texture?level=middle&date=${dateString}`),
+      'high-levl cloud-data'
+    );
 
-    const low = parseEncodedToFlattened(cloudLayersJ.lowCloud);
-    const middle = parseEncodedToFlattened(cloudLayersJ.middleCloud);
-    const high = parseEncodedToFlattened(cloudLayersJ.highCloud);
+    const lowJ = await lowD.json();
+    const middleJ = await midD.json();
+    const highJ = await highD.json();
+
+    const low = parseEncodedToFlattened(lowJ);
+    const middle = parseEncodedToFlattened(middleJ);
+    const high = parseEncodedToFlattened(highJ);
 
     if (setTextures) {
       parsedGribTexture = await Get4LayerTextureFromGribData(device, [
@@ -336,7 +349,7 @@ async function InitializeScene() {
     };
   };
 
-  if (dev) {
+  if (!dev) {
     parsedGribTexture = await Get4LayerTextureFromGribData(device, [
       local_low,
       local_mid,

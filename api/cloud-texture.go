@@ -11,35 +11,93 @@ import (
 	"github.com/amsokol/go-grib2"
 )
 
-type CloudData struct {
-	LowCloud    [][2]int `json:"lowCloud"`
-	MiddleCloud [][2]int `json:"middleCloud"`
-	HighCloud   [][2]int `json:"highCloud"`
+type EncodedRun struct {
+	V int `json:"V"`
+	C int `json:"C"`
 }
 
-func getEncodedRun(url string) ([][2]int, error) {
+func Handler(w http.ResponseWriter, r *http.Request) {
+
+	defer func() {
+		if r := recover(); r != nil {
+			log.Println("Recovered from panic:", r)
+			http.Error(w, "Server error", http.StatusInternalServerError)
+		}
+	}()
+
+	params := r.URL.Query()
+	level := params.Get("level") // e.g., "high"
+	date := params.Get("date")
+	hour := params.Get("hour") // e.g., "12"
+
+	var varType, levType string
+
+	if level == "high" {
+		varType = "var_HCDC"
+		levType = "lev_high_cloud_layer"
+	} else if level == "middle" {
+		varType = "var_MCDC"
+		levType = "lev_middle_cloud_layer"
+	} else if level == "low" {
+		varType = "var_LCDC"
+		levType = "lev_low_cloud_layer"
+	} else {
+		http.Error(w, "Invalid level parameter", http.StatusBadRequest)
+		return
+	}
+
+	if date == "" {
+		// If no date is provided, use today's date
+		date = time.Now().Format("20060102")
+	}
+	if hour == "" {
+		// If no hour is provided, use default hour "12"
+		hour = "12"
+	}
+
+	url := fmt.Sprintf("https://nomads.ncep.noaa.gov/cgi-bin/filter_gfs_0p25_1hr.pl?dir=%%2Fgfs.%s%%2F%s%%2Fatmos&file=gfs.t%sz.pgrb2.0p25.f000&%s=on&%s=on&subregion=&toplat=90&leftlon=0&rightlon=360&bottomlat=-90", date, hour, hour, varType, levType)
+	log.Println("URL is: ", url)
+
 	res, err := http.Get(url)
 	if err != nil {
-		return nil, err
+		log.Println("Error getting data:", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	log.Println("Response status code:", res.StatusCode)
+	if res.StatusCode != 200 {
+		log.Println("Non-OK HTTP status:", res.Status)
+		bodyBytes, _ := ioutil.ReadAll(res.Body)
+		log.Println("Response body:", string(bodyBytes))
+		http.Error(w, "Server returned non-OK status", http.StatusInternalServerError)
+		return
 	}
 	defer res.Body.Close()
-
-	if res.StatusCode != 200 {
-		return nil, fmt.Errorf("Server returned non-OK status: %s", res.Status)
-	}
+	log.Println("Data downloaded")
 
 	data, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		return nil, err
+		log.Println("Error reading data:", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
+	log.Println("Data size:", len(data))
+	log.Println("First 10 bytes of data:", data[:10])
 
 	gribs, err := grib2.Read(data)
 	if err != nil {
-		return nil, err
+		log.Println("Error reading GRIB2 data:", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
+	log.Printf("Source package contains %d GRIB2 file(s)\n", len(gribs))
 
 	var encodedRuns [][2]int
+
 	for _, g := range gribs {
+		log.Printf("Published='%s', Forecast='%s', Parameter='%s', Unit='%s', Description='%s'\n",
+			g.RefTime.Format("2006-01-02 15:04:05"), g.VerfTime.Format("2006-01-02 15:04:05"), g.Name, g.Unit, g.Description)
+
 		var currentValue int
 		var currentCount int
 
@@ -62,54 +120,8 @@ func getEncodedRun(url string) ([][2]int, error) {
 		}
 	}
 
-	return encodedRuns, nil
-}
-
-func Handler(w http.ResponseWriter, r *http.Request) {
-	defer func() {
-		if r := recover(); r != nil {
-			log.Println("Recovered from panic:", r)
-			http.Error(w, "Server error", http.StatusInternalServerError)
-		}
-	}()
-	
-	params := r.URL.Query()
-	date := params.Get("date")
-	if date == "" {
-		date = time.Now().Format("20060102")
-	}
-	hour := "00"
-
-	lowCloudURL := fmt.Sprintf("https://nomads.ncep.noaa.gov/cgi-bin/filter_gfs_0p25_1hr.pl?dir=%%2Fgfs.%s%%2F%s%%2Fatmos&file=gfs.t%sz.pgrb2.0p25.f000&var_LCDC=on&lev_low_cloud_layer=on&subregion=&toplat=90&leftlon=0&rightlon=360&bottomlat=-90", date, hour, hour)
-	middleCloudURL := fmt.Sprintf("https://nomads.ncep.noaa.gov/cgi-bin/filter_gfs_0p25_1hr.pl?dir=%%2Fgfs.%s%%2F%s%%2Fatmos&file=gfs.t%sz.pgrb2.0p25.f000&var_MCDC=on&lev_middle_cloud_layer=on&subregion=&toplat=90&leftlon=0&rightlon=360&bottomlat=-90", date, hour, hour)
-	highCloudURL := fmt.Sprintf("https://nomads.ncep.noaa.gov/cgi-bin/filter_gfs_0p25_1hr.pl?dir=%%2Fgfs.%s%%2F%s%%2Fatmos&file=gfs.t%sz.pgrb2.0p25.f000&var_HCDC=on&lev_high_cloud_layer=on&subregion=&toplat=90&leftlon=0&rightlon=360&bottomlat=-90", date, hour, hour)
-
-	lowCloudData, err := getEncodedRun(lowCloudURL)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	middleCloudData, err := getEncodedRun(middleCloudURL)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	highCloudData, err := getEncodedRun(highCloudURL)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	cloudData := CloudData{
-		LowCloud:    lowCloudData,
-		MiddleCloud: middleCloudData,
-		HighCloud:   highCloudData,
-	}
-
 	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(cloudData); err != nil {
+	if err := json.NewEncoder(w).Encode(encodedRuns); err != nil {
 		log.Fatalln("error writing values to json:", err)
 	}
 }

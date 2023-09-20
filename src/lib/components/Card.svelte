@@ -3,6 +3,7 @@
   import Button from './Button.svelte';
   import { loading } from '$lib/stores/stores';
   import type { LoadingStore } from '$lib/types/types';
+  export let show: boolean | null;
 
   let loadedItems: LoadingStore;
   loading.subscribe((value: LoadingStore) => {
@@ -17,7 +18,9 @@
   $: if ($loading.welcome.status) {
     inview = false;
   } else {
-    inview = true;
+    if (show) {
+      inview = true;
+    }
   }
 
   onMount(() => {
@@ -51,9 +54,10 @@
     transform: translateY(calc(100% - 25px));
   }
   .card {
-    // padding: 24px;
-    backdrop-filter: blur(16px);
+    padding: 24px;
+    backdrop-filter: blur(64px);
     overflow: hidden;
+    border-radius: 24px;
     * {
       pointer-events: none;
     }

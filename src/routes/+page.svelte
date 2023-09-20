@@ -73,8 +73,8 @@
     </Layout>
     <Axis_Indicator />
     <div class="desktop">
-      <Card>
-        <Layout align="end" gap="1" fit card>
+      <Card show={false}>
+        <Layout align="end" gap="1" fit>
           <Radio_Button
             delay={5}
             title="light_type"
@@ -90,8 +90,8 @@
         </Layout>
       </Card>
 
-      <Card>
-        <Layout align="end" gap="2" fit horizontal card>
+      <Card show>
+        <Layout align="end" gap="2" fit horizontal>
           <Layout align="end" gap="1" fit>
             <Range_Input
               delay={0}

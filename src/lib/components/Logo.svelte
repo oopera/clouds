@@ -42,6 +42,7 @@
             text={'Clouds is a WEBGPU application to render meteorologically accurate cloud cover'}
           />
           <Line />
+          <Text delay={4} secondary={true} text={'v0.0.0'} />
         </Layout>
       </span>
     {/if}
@@ -205,35 +206,5 @@
     font-size: clamp(24px, 5vw, 48px);
     font-weight: 900;
     letter-spacing: -4px;
-  }
-
-  .letter:nth-child(1) {
-    transition-delay: 0.4s;
-    transition-duration: 0.5s;
-  }
-
-  .letter:nth-child(2) {
-    transition-delay: 0.1s;
-    transition-duration: 0.6s;
-  }
-
-  .letter:nth-child(3) {
-    transition-delay: 0.2s;
-    transition-duration: 0.7s;
-  }
-
-  .letter:nth-child(4) {
-    transition-delay: 0.3s;
-    transition-duration: 0.9s;
-  }
-
-  .letter:nth-child(5) {
-    transition-delay: 0.2s;
-    transition-duration: 0.7s;
-  }
-
-  .letter:nth-child(6) {
-    transition-delay: 0.5s;
-    transition-duration: 1.14s;
   }
 </style>
