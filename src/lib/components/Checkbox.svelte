@@ -37,14 +37,11 @@
       on:input={handleInput}
     />
 
-    <Text secondary={!$store} vertical {delay} text={title} nowrap />
+    <Text secondary={!$store} {delay} text={title} nowrap />
   </Layout>
 </div>
 
 <style>
-  div {
-    z-index: 1;
-  }
   input {
     position: relative;
     -webkit-appearance: none;

@@ -9,6 +9,7 @@
   export let marginTop: boolean = false;
   export let stretch: boolean = false;
   export let swap: boolean = false;
+  export let card: boolean = false;
 </script>
 
 <div
@@ -19,6 +20,7 @@
   class:margin-top={marginTop}
   class:stretch
   class:swap
+  class:card
 >
   <slot />
 </div>
@@ -33,6 +35,7 @@
     width: 100%;
     box-sizing: border-box;
     pointer-events: none;
+    z-index: 1;
   }
 
   .margin-top {

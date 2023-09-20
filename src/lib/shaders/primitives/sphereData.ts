@@ -17,7 +17,7 @@ const SpherePosition = (
   );
 };
 const SphereData = (
-  radius: number = 2,
+  radius: number = 10,
   u: number = 20,
   v: number = 15,
   center: vec3 = [0, 0, 0]
@@ -124,7 +124,7 @@ const SphereData = (
 
 onmessage = function (event: any) {
   var numFs = event.data.numFs;
-  var sphereData = SphereData(2, numFs, numFs);
+  var sphereData = SphereData(2.5, numFs, numFs);
 
   postMessage(sphereData);
 };

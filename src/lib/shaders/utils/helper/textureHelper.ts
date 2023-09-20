@@ -291,30 +291,41 @@ export const Get3DNoiseTexture = async (
   addressModeV = 'repeat',
   addressModeW = 'repeat'
 ) => {
-  const perlinNoiseData_01 = generatePerlinFbmNoise(
-    width,
-    height,
-    depth,
-    25,
-    25
-  );
-  const noiseData_01 = generateWorleyFbmNoise(width, height, depth, 6);
-  const noiseData_02 = generateWorleyFbmNoise(width, height, depth, 12);
+  const perlinNoiseData_01 = generatePerlinFbmNoise(width, height, depth, 4, 8);
+  const noiseData_01 = generateWorleyFbmNoise(width, height, depth, 4);
+  const noiseData_02 = generateWorleyFbmNoise(width, height, depth, 8);
+  const noiseData_03 = generateWorleyFbmNoise(width, height, depth, 12);
+
   const rgbaData = new Uint8Array(noiseData_01.length * 4);
 
   function mix(a: number, b: number, t: number): number {
     return a * (1 - t) + b * t;
   }
 
+  function reMap(
+    value: number,
+    old_low: number,
+    old_high: number,
+    new_low: number,
+    new_high: number
+  ) {
+    var ret_val: number =
+      new_low +
+      ((value - old_low) * (new_high - new_low)) / (old_high - old_low);
+    return ret_val;
+  }
+
   for (let i = 0; i < noiseData_01.length; i++) {
     const index = i * 4;
-    let pfbm = mix(noiseData_01[i], perlinNoiseData_01[i], 0.25);
-    const billowyPerlinData = Math.abs(pfbm * 2.0 - 1.0);
+    let pfbm = mix(noiseData_01[i], perlinNoiseData_01[i], 0.5);
+    const billowyPerlinData = reMap(pfbm, 0.0, 1.0, noiseData_02[i], 1.0);
 
-    rgbaData[index] = perlinNoiseData_01[i] * 255; // R
-    rgbaData[index + 1] = noiseData_01[i] * 255; // G
-    rgbaData[index + 2] = noiseData_02[i] * 255; // B
-    rgbaData[index + 3] = billowyPerlinData * 255; // A
+    // rgbaData[index] = perlinNoiseData_01[i] * 255; // R
+    rgbaData[index] = billowyPerlinData * 255; // G
+    rgbaData[index + 1] = noiseData_01[i] * 255; // B
+    rgbaData[index + 2] = noiseData_02[i] * 255; // G
+    rgbaData[index + 3] = noiseData_03[i] * 255; // B
+    // rgbaData[index + 3] = billowyPerlinData * 255; // A
   }
 
   const sampler = device.createSampler({

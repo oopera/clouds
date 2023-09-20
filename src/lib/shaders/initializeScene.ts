@@ -13,7 +13,7 @@ import {
 } from './utils/helper/matrixHelper.js';
 import { earthShader } from './shaders/earthShader.js';
 import { loading, setZoom, setPitch, setYaw } from '$lib/stores/stores.js';
-import { cloudShader } from './shaders/cloudShader.js';
+import { cloudShader } from './shaders/cloudShader_artistic.js';
 
 import {
   GetPartitionedTexture,
@@ -23,22 +23,24 @@ import {
   parseEncodedToFlattened,
   Get4LayerTextureFromGribData,
   GetDepthTexture,
+  downloadData,
+  GetTexture,
 } from './utils/helper/textureHelper.js';
 
 import type { RenderOptions, HasChanged } from '$lib/types/types.js';
 import { atmosphereShader } from './shaders/atmosphereShader.js';
 import { executePromise, loadImage } from './utils/executeAndUpdate.js';
 
-import { mb300 } from '$lib/assets/mb300.js';
-import { mb500 } from '$lib/assets/mb500.js';
-import { mb700 } from '$lib/assets/mb700.js';
-import { mb900 } from '$lib/assets/mb900.js';
-
 import { dev } from '$app/environment';
 import { tweened } from 'svelte/motion';
 import { fullScreenQuadShader } from './shaders/quadShader.js';
 import { cubicBezier } from '$lib/shaders/utils/cubicBezier.js';
 import { generateCubeData } from './primitives/cubeData.js';
+import { getCloudCoverageByCoordinates } from './utils/calculateIntersection.js';
+
+import { local_low } from '$lib/assets/low.js';
+import { local_mid } from '$lib/assets/mid.js';
+import { local_high } from '$lib/assets/high.js';
 
 let depthTexture: GPUTexture;
 let offscreenDepthTexture: GPUTexture;
@@ -132,44 +134,40 @@ const pipeline: GPURenderPipeline[] = [];
 const bindGroup: GPUBindGroup[] = [];
 const buffers: GPUBuffer[][] = [];
 
-const displayError = (message: string) => {
+export const displayError = (message: string) => {
   var counter = 0;
-  var interval = setInterval(() => {
-    if (counter === 0) {
-      loading.set({
-        welcome: {
-          id: 0,
-          status: true,
-          message: 'oh-oh',
 
-          progress: 0,
-        },
-      });
-    }
-    counter++;
-
-    loading.update((current) => {
-      const id = Object.keys(current).length;
-      return {
-        ...current,
-        [`Error-${id}`]: {
-          id,
-          status: true,
-          message: counter % 2 === 0 ? 'ERROR ERROR ERROR' : message,
-          progress: 0,
-        },
-      };
+  if (counter === 0) {
+    loading.set({
+      welcome: {
+        id: 0,
+        status: true,
+        message: 'error',
+        progress: 0,
+      },
     });
-    if (counter > 5) {
-      clearInterval(interval);
-    }
-  }, 500);
+  }
+  counter++;
+
+  loading.update((current) => {
+    const id = Object.keys(current).length;
+    return {
+      ...current,
+      [`Error-${id}`]: {
+        id,
+        status: true,
+        message: counter % 2 === 0 ? 'ERROR ERROR ERROR' : message,
+        progress: 0,
+      },
+    };
+  });
+
   throw new Error(message);
 };
 
 async function InitializeScene() {
   if (!navigator.gpu) {
-    displayError('You need a browser that supports WebGPU');
+    displayError('You need a browser or device that supports WebGPU');
     return;
   }
 
@@ -207,7 +205,7 @@ async function InitializeScene() {
     'Vertex Data'
   );
 
-  let cubeData = generateCubeData(2.5);
+  let cubeData = generateCubeData(2.65);
 
   let texture = await executePromise(
     'texture',
@@ -226,9 +224,23 @@ async function InitializeScene() {
     '3d noise textures'
   );
 
+  let detail_noise = await executePromise(
+    'detail_noise',
+    loadBinaryData('/textures/detail_noise.bin'),
+    '3d detail noise textures'
+  );
+
+  let bluenoise = await executePromise(
+    'bluenoise',
+    loadImage('/textures/BlueNoise64Tiled.jpg'),
+    'bluenoise textures'
+  );
+
   const textureV = await GetPartitionedTexture(device, texture);
   const lightMapV = await GetPartitionedTexture(device, lightmap);
   const noiseV = Create3DTextureFromData(device, noise);
+  const bluenoiseV = await GetTexture(device, bluenoise);
+  const detailnoiseV = Create3DTextureFromData(device, detail_noise);
 
   const presentationFormat = navigator.gpu.getPreferredCanvasFormat();
 
@@ -276,13 +288,14 @@ async function InitializeScene() {
     sampler: GPUSampler;
   };
 
-  const generateNewNoiseTexture = false;
+  const generateWorleyTexture = false;
   var worleyNoiseTexture;
+  var detailNoiseTexture = detailnoiseV;
 
-  if (generateNewNoiseTexture) {
+  if (generateWorleyTexture) {
     worleyNoiseTexture = await executePromise(
       'worleyNoiseTexture',
-      (await Get3DNoiseTexture(device)) as any,
+      (await Get3DNoiseTexture(device), 64, 64, 64) as any,
       '3D Noise Texture'
     );
   } else {
@@ -295,71 +308,62 @@ async function InitializeScene() {
       options.projectionDate.month +
       options.projectionDate.day;
 
-    const mb300RD = await executePromise(
+    const lowD = await executePromise(
       'mb300RD',
-      fetch(`/api/cloud-texture?level_mb=300_mb&date=${dateString}`),
-      '300 millibar cloud-data'
+      fetch(`/api/cloud-texture?level=low&date=${dateString}`),
+      'low-level cloud-data'
     );
-
-    const mb500RD = await executePromise(
+    const midD = await executePromise(
       'mb500RD',
-      fetch(`/api/cloud-texture?level_mb=500_mb&date=${dateString}`),
-      '500 millibar cloud-data'
+      fetch(`/api/cloud-texture?level=high&date=${dateString}`),
+      'mid-level cloud-data'
     );
 
-    const mb700RD = await executePromise(
+    const highD = await executePromise(
       'mb700RD',
-      fetch(`/api/cloud-texture?level_mb=700_mb&date=${dateString}`),
-      '700 millibar cloud-data'
+      fetch(`/api/cloud-texture?level=middle&date=${dateString}`),
+      'high-levl cloud-data'
     );
 
-    const mb900RD = await executePromise(
-      'mb800RD',
-      fetch(`/api/cloud-texture?level_mb=900_mb&date=${dateString}`),
-      '900 millibar cloud-data'
-    );
+    const lowJ = await lowD.json();
+    const middleJ = await midD.json();
+    const highJ = await highD.json();
 
-    const mb300R = await mb300RD.json();
-    const mb500R = await mb500RD.json();
-    const mb700R = await mb700RD.json();
-    const mb900R = await mb900RD.json();
+    const low = parseEncodedToFlattened(lowJ);
+    const middle = parseEncodedToFlattened(middleJ);
+    const high = parseEncodedToFlattened(highJ);
 
     if (setTextures) {
       parsedGribTexture = await Get4LayerTextureFromGribData(device, [
-        mb300,
-        mb500,
-        mb700,
-        mb900,
+        low,
+        middle,
+        high,
+        high,
       ]);
     }
 
-    const mb3001d = parseEncodedToFlattened(mb300R);
-    const mb5001d = parseEncodedToFlattened(mb500R);
-    const mb7001d = parseEncodedToFlattened(mb700R);
-    const mb9001d = parseEncodedToFlattened(mb900R);
-
     return {
-      mb300: mb3001d,
-      mb500: mb5001d,
-      mb700: mb7001d,
-      mb900: mb9001d,
+      low: low,
+      middle: middle,
+      high: high,
     };
   };
 
   if (dev) {
     parsedGribTexture = await Get4LayerTextureFromGribData(device, [
-      mb300,
-      mb500,
-      mb700,
-      mb900,
+      local_low,
+      local_mid,
+      local_high,
+      local_high,
     ]);
   } else {
-    const { mb300, mb500, mb700, mb900 } = await fetchTextures();
+    const { low, middle, high } = await fetchTextures();
+
     parsedGribTexture = await Get4LayerTextureFromGribData(device, [
-      mb300,
-      mb500,
-      mb700,
-      mb900,
+      low,
+      middle,
+      high,
+      high,
     ]);
   }
 
@@ -531,6 +535,22 @@ async function InitializeScene() {
       binding: 6,
       resource: parsedGribTexture.sampler,
     },
+    {
+      binding: 7,
+      resource: bluenoiseV.texture.createView(),
+    },
+    {
+      binding: 8,
+      resource: bluenoiseV.sampler,
+    },
+    {
+      binding: 9,
+      resource: detailNoiseTexture.texture.createView({ dimension: '3d' }),
+    },
+    {
+      binding: 10,
+      resource: detailNoiseTexture.sampler,
+    },
   ];
 
   const atmoBindings = [
@@ -577,7 +597,7 @@ async function InitializeScene() {
     device.createShaderModule({ code: cloudShader }),
     {
       ...options,
-      cullmode: 'none',
+      cullmode: 'back',
     },
     presentationFormat
   );
@@ -622,9 +642,17 @@ async function InitializeScene() {
       status: false,
     },
   }));
+  document?.getElementById('download')?.addEventListener('click', function (e) {
+    let canvasUrl = canvas.toDataURL();
+    const createEl = document.createElement('a');
+    createEl.href = canvasUrl;
+    createEl.download = 'Canvas.png';
+    createEl.click();
+    createEl.remove();
+  });
 
   setYaw(360, true);
-  setZoom(3, true);
+  setZoom(4, true);
   setPitch(0, true);
   tweenedVisibility.set(1.0);
 
@@ -825,12 +853,12 @@ async function InitializeScene() {
     );
     if (visibility > 0) {
       passEncoder.setPipeline(pipeline[1]);
-      passEncoder.setVertexBuffer(0, buffers[1][0]);
-      passEncoder.setVertexBuffer(1, buffers[1][1]);
-      passEncoder.setVertexBuffer(2, buffers[1][2]);
+      passEncoder.setVertexBuffer(0, buffers[0][0]);
+      passEncoder.setVertexBuffer(1, buffers[0][1]);
+      passEncoder.setVertexBuffer(2, buffers[0][2]);
       passEncoder.setBindGroup(0, bindGroup[1]);
 
-      passEncoder.draw(36);
+      passEncoder.draw(options.amountOfVertices);
     }
 
     passEncoder.end();

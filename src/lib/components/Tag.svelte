@@ -1,7 +1,8 @@
 <script lang="ts">
+  export let red: boolean = false;
 </script>
 
-<span>
+<span class:red>
   <slot />
 </span>
 
@@ -9,5 +10,9 @@
   @import '$lib/styles/mixins.scss';
   span {
     @include tag;
+  }
+  .red {
+    background-color: rgb(255, 0, 0);
+    color: white;
   }
 </style>

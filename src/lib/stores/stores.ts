@@ -3,16 +3,18 @@ import { derived, writable, type Writable } from 'svelte/store';
 import { cubicBezier } from '../shaders/utils/cubicBezier';
 import { tweened } from 'svelte/motion';
 
+export const has_initialized = writable(false);
+
 export const amount_of_points = writable(250);
 export const scale = writable(0.05);
 
-export const cloud_density = writable(0.5);
+export const cloud_density = writable(0.75);
 
-export const sun_transmittance = writable(0.05);
-export const rayleigh_intensity = writable(0.6);
+export const sun_transmittance = writable(0.44);
+export const rayleigh_intensity = writable(0.3);
 
-export const raymarch_length = writable(0.0025);
-export const raymarch_steps = writable(100);
+export const raymarch_length = writable(0.3);
+export const raymarch_steps = writable(50);
 export const rotation_speed = writable(0.05);
 
 export const half_res = writable(true);

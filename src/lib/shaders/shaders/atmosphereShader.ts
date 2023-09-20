@@ -34,7 +34,7 @@ struct Output {
 @group(0) @binding(1) var<uniform> atmopshereUniforms: AtmosphereUniforms;
 @group(0) @binding(2) var<uniform> lightUni: LightUniforms;
 
-const radius = 0.27;
+const radius = 0.15;
 const PI: f32 = 3.141592653589793;
 
 
@@ -83,16 +83,15 @@ return (3.0 / 4.0) * (1.0 + cos(theta) * cos(theta));
   let borderColor = vec4(1.0, 0.92, 0.95, 1.0);
   let blendRadius = 0.1; 
   let mask = smoothstep(0.0, blendRadius, edge);
+  let resultColor = mask * borderColor;
 
   var rim: f32 = 1.0 - dot(viewDirection, output.vNormal.xyz); 
-  rim = pow(rim, 2.5 + 30.0 * ( 1 - lightness )); 
+  rim = pow(rim, 2.65 + 30.0 * ( 1 - lightness )); 
 
   let blueColor: vec4<f32> = vec4<f32>(0.6, 0.8, 1.0, rim); 
   let orangeColor: vec4<f32> = vec4<f32>(1.0, 1.0, 1.0, rim); 
 
   let color: vec4<f32> = mix(orangeColor, blueColor, lightness);
-  let resultColor = mask * borderColor;
-
   return (color + resultColor);
 }
 `;

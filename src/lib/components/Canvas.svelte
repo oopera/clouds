@@ -1,11 +1,8 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
   import InitializeScene from '$lib/shaders/initializeScene';
+  import { onMount } from 'svelte';
 
-  let hasInitialized = false;
   onMount(() => {
-    if (hasInitialized) return;
-    hasInitialized = true;
     InitializeScene();
   });
 </script>
@@ -14,21 +11,12 @@
 
 <style lang="scss">
   canvas {
-    position: fixed;
+    position: absolute;
     left: 0;
     top: 0;
-    width: calc(100vw);
-    height: calc(100vh);
+    width: 100%;
+    height: 100%;
     opacity: 1;
-  }
-
-  svg {
-    height: 50vh;
-    aspect-ratio: 1 / 1;
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    z-index: -1;
+    z-index: 0;
   }
 </style>

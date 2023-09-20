@@ -52,40 +52,37 @@
   };
 </script>
 
-<div class="date-input">
-  <Layout gap="1" align="end" justify="between">
-    <input
-      on:input={oninput}
-      value={getDateString(current_date)}
-      max={getDateString(max_date)}
-      min={getDateString(min_date)}
-      type="date"
-    />
-  </Layout>
-</div>
+<input
+  data-interactable
+  on:input={oninput}
+  value={getDateString(current_date)}
+  max={getDateString(max_date)}
+  min={getDateString(min_date)}
+  type="date"
+/>
 
 <style lang="scss">
   input {
     appearance: none;
     -webkit-appearance: none;
-    height: 28px;
     width: 156px;
     margin: 0;
-    background-color: transparent;
-    border: 1pt solid var(--c-tertiary);
+    background-color: var(--c-g);
+    border: none;
     border-radius: 24px;
-    padding: 8px 12px;
+    padding: 4px 12px;
     box-sizing: border-box;
     font-family: var(--font-family-mono);
-
+    vertical-align: baseline;
+    text-align: center;
     background-position: right 12px center;
     outline: none;
     accent-color: white;
     color: var(--c-tertiary);
     transition: background-color 150ms var(--ease), color 150ms var(--ease);
+    font-size: 12px;
     &:hover {
-      background-color: var(--c-tertiary);
-      color: var(--c-g);
+      background-color: var(--c-ghover);
     }
     &::-webkit-calendar-picker-indicator {
       background: url(https://mywildalberta.ca/images/GFX-MWA-Parks-Reservations.png)

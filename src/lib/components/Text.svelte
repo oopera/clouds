@@ -1,72 +1,125 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
-  import { fly } from 'svelte/transition';
   import { cubicBezier } from '$lib/shaders/utils/cubicBezier';
+  import { onMount } from 'svelte';
+  import { quintOut } from 'svelte/easing';
+  import { fly } from 'svelte/transition';
 
   export let delay: number = 0;
   export let secondary = false;
   export let tertiary = false;
   export let accent = false;
-  export let vertical = false;
   export let nowrap = false;
   export let text = '';
-  export let mini: boolean = false;
+  export let type: 'p' | 'h1' = 'p';
+  export let end = false;
 
-  let splitText = text?.split('');
+  let wordArray = text?.split(' ');
 
   let mounted = false;
 
-  onMount(() => {
-    mounted = true;
-  });
-
   $: {
-    splitText = text?.split('');
+    wordArray = text?.split(' ');
   }
+
+  onMount(() => {
+    setTimeout(() => {
+      mounted = true;
+    }, 1);
+  });
 </script>
 
-<p class:mini class:nowrap class:secondary class:tertiary class:accent>
-  {#each splitText as letter, i}
-    {#if mounted}
-      <span
-        in:fly={{
-          delay: delay * 125 + i * 25,
-          duration: 350,
-          x: vertical ? -15 : 0,
-          y: !vertical ? -15 : 0,
-          easing: cubicBezier,
-        }}
-        out:fly={{
-          delay: 1 * 125 + i * 25,
-          duration: 350,
-          x: vertical ? 15 : 0,
-          y: !vertical ? 15 : 0,
-          easing: cubicBezier,
-        }}
-      >
-        {letter === ' ' ? '\u00A0' : letter}
+{#if type === 'p'}
+  <p
+    class:nowrap
+    class:secondary
+    class:tertiary
+    class:accent
+    class:end
+    out:fly={{
+      delay: delay * 25,
+      duration: 150,
+      y: 15,
+      easing: cubicBezier,
+    }}
+  >
+    {#each wordArray as word, i}
+      <span class="outer">
+        {#each word.split('') as letter, j}
+          <span class="inner" class:mounted style={`--i: ${j + i + delay}`}>
+            {letter}
+          </span>
+        {/each}
       </span>
-    {/if}
-  {/each}
-</p>
+      {#if i !== wordArray.length - 1}
+        {` `}
+      {/if}
+    {/each}
+  </p>
+{:else if type === 'h1'}
+  <h1
+    class:nowrap
+    class:secondary
+    class:tertiary
+    class:accent
+    out:fly={{
+      delay: delay * 25,
+      duration: 150,
+      y: 15,
+      easing: cubicBezier,
+    }}
+  >
+    {#each wordArray as word, i}
+      <span class="outer">
+        {#each word.split('') as letter, j}
+          <span class="inner" class:mounted style={`--i: ${j + i + delay}`}>
+            {letter}
+          </span>
+        {/each}
+      </span>
+      {#if i !== wordArray.length - 1}
+        {` `}
+      {/if}
+    {/each}
+  </h1>
+{/if}
 
 <style lang="scss">
-  p {
-    vertical-align: baseline;
-    &::after {
-      content: '';
-      display: inline-block;
-      height: 1em;
-    }
-  }
   span {
     display: inline-block;
-    padding: -2px;
+    position: relative;
+    vertical-align: top;
+    padding: 0;
     margin: 0;
-    box-sizing: border-box;
-    transition: color 128ms var(--ease);
-    will-change: color, transform;
   }
+  .end {
+    text-align: end;
+  }
+
+  .outer {
+    overflow: hidden;
+    display: inline-block;
+    white-space: nowrap;
+    padding-bottom: 0.2rem;
+  }
+  h1 .inner {
+    line-height: 1em;
+    transform: translateY(-125%);
+    transition: transform 500ms var(--ease) calc(var(--i) * 65ms);
+  }
+  p .inner {
+    line-height: 1em;
+    transform: translateY(125%);
+    transition: transform 500ms var(--ease) calc(var(--i) * 65ms);
+  }
+  p .mounted {
+    transition: transform 500ms var(--ease) calc(var(--i) * 25ms);
+    transform: translateY(0%);
+  }
+  h1 .mounted {
+    transition: transform 500ms var(--ease) calc(var(--i) * 75ms);
+    transform: translateY(0%);
+  }
+
   .secondary {
     color: var(--c-secondary);
   }
@@ -75,9 +128,6 @@
   }
   .accent {
     color: var(--c-accent);
-  }
-  .mini {
-    max-width: 16px;
   }
 
   .nowrap {

@@ -1,5 +1,36 @@
 import { loading } from '$lib/stores/stores';
 
+const displayError = (message: string) => {
+  var counter = 0;
+
+  if (counter === 0) {
+    loading.set({
+      welcome: {
+        id: 0,
+        status: true,
+        message: 'error',
+        progress: 0,
+      },
+    });
+  }
+  counter++;
+
+  loading.update((current) => {
+    const id = Object.keys(current).length;
+    return {
+      ...current,
+      [`Error-${id}`]: {
+        id,
+        status: true,
+        message: counter % 2 === 0 ? 'ERROR ERROR ERROR' : message,
+        progress: 0,
+      },
+    };
+  });
+
+  throw new Error(message);
+};
+
 export async function executePromise(
   key: string,
   promise: Promise<any>,
@@ -24,6 +55,7 @@ export async function executePromise(
   try {
     data = await promise;
   } catch (error) {
+    displayError(`Error while executing promise for key: ${key}`);
     console.error(`Error while executing promise for key: ${key}`, error);
   }
 

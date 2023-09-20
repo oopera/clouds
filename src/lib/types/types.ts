@@ -6,6 +6,7 @@ export type Stores =
   | 'raymarch_steps'
   | 'rotation_speed'
   | 'zoom'
+  | 'tweenedZoom'
   | 'scale'
 
   // Light and atmosphere related

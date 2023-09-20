@@ -26,14 +26,37 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	params := r.URL.Query()
-	level_mb := params.Get("level_mb")
+	level := params.Get("level") // e.g., "high"
 	date := params.Get("date")
+	hour := params.Get("hour") // e.g., "12"
+
+	var varType, levType string
+
+	if level == "high" {
+		varType = "var_HCDC"
+		levType = "lev_high_cloud_layer"
+	} else if level == "middle" {
+		varType = "var_MCDC"
+		levType = "lev_middle_cloud_layer"
+	} else if level == "low" {
+		varType = "var_LCDC"
+		levType = "lev_low_cloud_layer"
+	} else {
+		http.Error(w, "Invalid level parameter", http.StatusBadRequest)
+		return
+	}
+
 	if date == "" {
 		// If no date is provided, use today's date
 		date = time.Now().Format("20060102")
 	}
-	url := fmt.Sprintf("https://nomads.ncep.noaa.gov/cgi-bin/filter_gfs_0p25_1hr.pl?dir=%%2Fgfs.%s%%2F00%%2Fatmos&file=gfs.t00z.pgrb2.0p25.f000&var_TCDC=on&lev_%s=on&subregion=&toplat=90&leftlon=0&rightlon=360&bottomlat=-90", date, level_mb)
-		log.Println("URL is: ", url)
+	if hour == "" {
+		// If no hour is provided, use default hour "12"
+		hour = "00"
+	}
+
+	url := fmt.Sprintf("https://nomads.ncep.noaa.gov/cgi-bin/filter_gfs_0p25_1hr.pl?dir=%%2Fgfs.%s%%2F%s%%2Fatmos&file=gfs.t%sz.pgrb2.0p25.f000&%s=on&%s=on&subregion=&toplat=90&leftlon=0&rightlon=360&bottomlat=-90", date, hour, hour, varType, levType)
+	log.Println("URL is: ", url)
 
 	res, err := http.Get(url)
 	if err != nil {
@@ -79,7 +102,6 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		var currentCount int
 
 		for _, v := range g.Values {
-			// Convert the float32 value to int and append it to the slice
 			intValue := int(v.Value)
 
 			if len(encodedRuns) == 0 || intValue != currentValue {
@@ -98,7 +120,6 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Output the slice in JSON format
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(encodedRuns); err != nil {
 		log.Fatalln("error writing values to json:", err)

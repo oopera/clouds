@@ -3,6 +3,8 @@
   import Text from './Text.svelte';
   import type { Stores } from '$lib/types/types';
   import Layout from './Layout.svelte';
+  import { cubicBezier } from '$lib/shaders/utils/cubicBezier';
+  import { fly } from 'svelte/transition';
 
   export let title: Stores;
 
@@ -37,7 +39,7 @@
 <div class="range-input">
   <Layout gap="1" align="end" justify="between">
     {#if mounted}
-      {#each Array.from({ length: steps }, (_, i) => i + 1) as step}
+      {#each Array.from({ length: steps }, (_, i) => i++) as step}
         <div
           class="step {step % 2 === 0 ? 'even' : 'odd'}"
           style="--i: {step}; --steps: {steps}"
@@ -45,24 +47,26 @@
         />
       {/each}
     {/if}
-    <input
-      data-interactable
-      {disabled}
-      {min}
-      {max}
-      {step}
-      {title}
-      value={$store}
-      on:input={handleInput}
-      type="range"
-    />
+    {#if mounted}
+      <input
+        data-interactable
+        {disabled}
+        {min}
+        {max}
+        {step}
+        {title}
+        value={$store}
+        on:input={handleInput}
+        type="range"
+      />
+    {/if}
 
     <Layout horizontal gap="1" align="end" justify="between">
-      <Text {delay} secondary text={min.toFixed(2).toString()} vertical />
-      <Text {delay} tertiary text={$store?.toFixed(2).toString()} vertical />
-      <Text {delay} secondary text={max.toFixed(2).toString()} vertical />
+      <p>{min.toFixed(2).toString()}</p>
+      <p>{$store?.toFixed(2).toString()}</p>
+      <p>{max.toFixed(2).toString()}</p>
     </Layout>
-    <Text {delay} {text} vertical />
+    <p>{text}</p>
   </Layout>
 </div>
 
@@ -71,7 +75,6 @@
     min-width: 144px;
     white-space: nowrap;
     box-sizing: border-box;
-    z-index: 2;
   }
 
   input {
@@ -116,22 +119,17 @@
   }
   input::-webkit-slider-thumb {
     animation: blink2 1.5s var(--ease) infinite alternate;
-    height: 24px;
+    height: 12px;
     width: 24px;
-    border-radius: 15px;
-    border: 1pt solid var(--c-g);
+    background-color: var(--text-color);
     -webkit-appearance: none;
-    margin-top: 4px;
+    transform: translateY(8px);
     transition: 100ms var(--ease);
     transform-origin: center;
-    backdrop-filter: blur(8px);
-    background: var(--blue-gradient);
   }
   input:hover::-webkit-slider-thumb,
   input:focus-visible::-webkit-slider-thumb {
-    height: 24px;
-    width: 24px;
-    margin-top: 4px;
+    transform: translateY(2px);
     border: 1pt solid white;
   }
 </style>
