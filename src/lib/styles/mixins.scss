@@ -58,7 +58,10 @@ $gap: 8px;
 }
 
 @mixin desktop() {
-  @media only screen and (min-width: map-get($grid-breakpoints, md)) and (min-height: map-get($grid-breakpoints, md)) {
+  // @media only screen and (min-width: map-get($grid-breakpoints, md)) and (min-height: map-get($grid-breakpoints, md)) {
+  //   @content;
+  // }
+  @media only screen and (min-width: map-get($grid-breakpoints, md)) {
     @content;
   }
 }
@@ -115,7 +118,6 @@ $gap: 8px;
   color: var(--c-accent);
   accent-color: var(--c-accent);
   transition: color 0.2s var(--ease);
-  z-index: 1;
 
   &:hover {
     color: var(--c-accent-hover);
@@ -133,6 +135,7 @@ $gap: 8px;
   color: var(--c-g);
   padding: 4px 12px;
   text-align: center;
+  min-height: 25px;
   margin: 0;
   gap: gap(0.5);
   border-radius: 24px;

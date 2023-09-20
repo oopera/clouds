@@ -41,18 +41,6 @@
     {#if mounted}
       {#each Array.from({ length: steps }, (_, i) => i++) as step}
         <div
-          in:fly={{
-            delay: (25 / steps) * step * 25,
-            duration: 350,
-            x: -15,
-            easing: cubicBezier,
-          }}
-          out:fly={{
-            delay: (100 / step) * 25,
-            duration: 350,
-            x: 15,
-            easing: cubicBezier,
-          }}
           class="step {step % 2 === 0 ? 'even' : 'odd'}"
           style="--i: {step}; --steps: {steps}"
           class:mounted
@@ -74,11 +62,11 @@
     {/if}
 
     <Layout horizontal gap="1" align="end" justify="between">
-      <Text {delay} secondary text={min.toFixed(2).toString()} vertical />
-      <Text {delay} tertiary text={$store?.toFixed(2).toString()} vertical />
-      <Text {delay} secondary text={max.toFixed(2).toString()} vertical />
+      <p>{min.toFixed(2).toString()}</p>
+      <p>{$store?.toFixed(2).toString()}</p>
+      <p>{max.toFixed(2).toString()}</p>
     </Layout>
-    <Text {delay} {text} vertical />
+    <p>{text}</p>
   </Layout>
 </div>
 
@@ -87,7 +75,6 @@
     min-width: 144px;
     white-space: nowrap;
     box-sizing: border-box;
-    z-index: 2;
   }
 
   input {
@@ -134,7 +121,7 @@
     animation: blink2 1.5s var(--ease) infinite alternate;
     height: 12px;
     width: 24px;
-    background-color: var(--c-tertiary);
+    background-color: var(--text-color);
     -webkit-appearance: none;
     transform: translateY(8px);
     transition: 100ms var(--ease);

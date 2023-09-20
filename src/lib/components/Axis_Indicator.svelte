@@ -1,8 +1,16 @@
 <script lang="ts">
   import { zoom, pitch, yaw } from '$lib/stores/stores';
+  import { onMount } from 'svelte';
+
+  let mounted: boolean = false;
+  onMount(() => {
+    setTimeout(() => {
+      mounted = true;
+    }, 1);
+  });
 </script>
 
-<div class="viewfinder">
+<div class="viewfinder" class:mounted>
   {#each Array.from(Array(181)) as _, i}
     <div class={`viewfinder__tick ${i % 10 === 0 ? 'even' : 'odd'}`}>
       {#if i % 10 === 0}
@@ -26,21 +34,19 @@
   @import '$lib/styles/mixins.scss';
   .viewfinder {
     margin-bottom: gap(3);
-    width: 160px;
-    height: 160px;
+    width: 140px;
+    height: 140px;
     aspect-ratio: 1/1;
     border-radius: 150px;
     z-index: 1;
+    opacity: 0;
     position: absolute;
-    // background: var(--dark-gradient);
     display: none;
-    backdrop-filter: blur(gap(3));
+    backdrop-filter: blur(64px);
     pointer-events: all;
     left: 50%;
-    transform: translateX(-50%);
-    // box-shadow: inset 0 0 10px 2px var(--c-tertiary);
-
-    transition: box-shadow 350ms var(--ease);
+    transform: translateX(-50%) translateY(100%);
+    transition: transform 750ms var(--ease), opacity 750ms var(--ease);
     &:hover {
       .viewfinder__tick__text {
         opacity: 1;
@@ -50,7 +56,11 @@
       display: flex;
     }
   }
-
+  .mounted {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0%);
+    transition: transform 750ms var(--ease), opacity 750ms var(--ease);
+  }
   .viewfinder__tick {
     width: gap(2);
     height: 1px;
@@ -59,6 +69,7 @@
     top: 50%; /* Center vertically */
     left: 50%; /* Center horizontally */
     transform-origin: top left;
+    transition: 350ms var(--ease);
   }
   .viewfinder__tick__text {
     color: var(--c-tertiary);
@@ -78,8 +89,8 @@
 
   @for $i from 1 through 360 {
     .viewfinder__tick:nth-of-type(#{$i}) {
-      transform: rotate(calc(0.99447513812154696132596685082873deg * #{$i}))
-        translateX(80px);
+      rotate: calc(0.99447513812154696132596685082873deg * #{$i});
+      transform: translateX(70px);
     }
   }
   .hud {
@@ -87,7 +98,6 @@
     height: 100%;
     position: relative;
     overflow: hidden;
-
     border-radius: 160px;
   }
 

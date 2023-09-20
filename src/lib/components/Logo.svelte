@@ -5,13 +5,18 @@
   import { fly } from 'svelte/transition';
   import Text from './Text.svelte';
   import Layout from './Layout.svelte';
+  import Line from './Line.svelte';
+  import Tag from './Tag.svelte';
+  import Button from './Button.svelte';
 
   let mounted = false;
   let loaded = false;
   let deviceFailed = false;
 
   onMount(() => {
-    mounted = true;
+    setTimeout(() => {
+      mounted = true;
+    }, 1);
   });
 
   $: if (!$loading.welcome.status) {
@@ -23,115 +28,26 @@
   }
 </script>
 
-{#if mounted && !deviceFailed && !loaded}
-  <span class="parent">
-    <span
-      in:fly={{
-        delay: 4 * 125,
-        duration: 350,
-        y: 15,
-        easing: quintOut,
-      }}
-      out:fly={{
-        delay: 2 * 125,
-        duration: 350,
-        y: -15,
-        easing: quintOut,
-      }}
-      class:loaded
-      class="letter">C</span
-    >
-    <span
-      in:fly={{
-        delay: 1.5 * 125,
-        duration: 350,
-        y: -15,
-        easing: quintOut,
-      }}
-      out:fly={{
-        delay: 3.0 * 125,
-        duration: 350,
-        y: 15,
-        easing: quintOut,
-      }}
-      class:loaded
-      class="letter">L</span
-    >
-    <span
-      in:fly={{
-        delay: 0.5 * 125,
-        duration: 350,
-        y: 15,
-        easing: quintOut,
-      }}
-      out:fly={{
-        delay: 1.0 * 125,
-        duration: 350,
-        y: -15,
-        easing: quintOut,
-      }}
-      class:loaded
-      class="letter">O</span
-    >
-    <span
-      in:fly={{
-        delay: 3 * 125,
-        duration: 350,
-        y: -15,
-        easing: quintOut,
-      }}
-      out:fly={{
-        delay: 6 * 125,
-        duration: 350,
-        y: 15,
-        easing: quintOut,
-      }}
-      class:loaded
-      class="letter">U</span
-    >
-    <span
-      in:fly={{
-        delay: 1 * 125,
-        duration: 350,
-        y: 15,
-        easing: quintOut,
-      }}
-      out:fly={{
-        delay: 2 * 125,
-        duration: 350,
-        y: -15,
-        easing: quintOut,
-      }}
-      class:loaded
-      class="letter">D</span
-    >
-    <span
-      in:fly={{
-        delay: 2 * 125,
-        duration: 350,
-        y: -15,
-        easing: quintOut,
-      }}
-      out:fly={{
-        delay: 4 * 125,
-        duration: 350,
-        y: 15,
-        easing: quintOut,
-      }}
-      class:loaded
-      class="letter">S</span
-    >
+<div class="slider" class:mounted />
 
-    <div class="crosshair">
-      <div
-        class:loaded_hor={mounted && !loaded}
-        class="crosshair__horizontal"
-      />
-      <div class:loaded_ver={mounted && !loaded} class="crosshair__vertical" />
-    </div>
+{#if mounted && !deviceFailed}
+  <span class="parent" class:loaded>
+    <Text type="h1" delay={4} secondary={true} text={'CLOUDS'} />
+    {#if mounted && loaded}
+      <span class="text">
+        <Layout gap="1" align="end">
+          <Text
+            delay={4}
+            secondary={true}
+            text={'Clouds is a WEBGPU application to render meteorologically accurate cloud cover'}
+          />
+          <Line />
+        </Layout>
+      </span>
+    {/if}
     {#if mounted && !loaded}
       <span class="loading">
-        <Text vertical delay={4} secondary={true} text={'loading'} />
+        <Text delay={4} secondary={true} text={'loading'} />
       </span>
     {/if}
   </span>
@@ -140,13 +56,8 @@
 {#if deviceFailed}
   <span class="error">
     <Layout>
-      <Text nowrap vertical delay={0} text={'Attaching to GPU Failed.'} />
-      <Text
-        vertical
-        tertiary
-        delay={6}
-        text={'You need to use Chrome 113 onwards.'}
-      />
+      <Text nowrap delay={0} text={'Attaching to GPU Failed.'} />
+      <Text tertiary delay={6} text={'You need to use Chrome 113 onwards.'} />
     </Layout>
   </span>
 {/if}
@@ -175,6 +86,7 @@
       border: 1px solid var(--c-accent);
     }
   }
+
   .crosshair {
     height: 28px;
     width: 28px;
@@ -183,7 +95,9 @@
     transform-origin: center;
     top: 50%;
   }
-
+  .text {
+    max-width: 152px;
+  }
   @keyframes rotate {
     0% {
       rotate: 0deg;
@@ -260,31 +174,35 @@
     position: relative;
     height: fit-content;
     width: fit-content;
-    top: 50%;
-    transform: translate(calc(-50% - 32px), calc(-50% - 8px));
   }
 
   .parent {
     position: absolute;
-    left: 50%;
-    height: 100vh;
-    transform: translateX(-50%);
-    @media (max-width: 768px) {
-      left: 50%;
-      transform: translateX(calc(-50%));
+    display: flex;
+    flex-direction: column;
+    padding: 8px;
+    top: 50%;
+    right: 50%;
+    transform: translate(50%, -50%);
+    transition: 350ms var(--ease);
+    z-index: 1;
+  }
+
+  .loaded {
+    opacity: 0;
+    top: 0;
+    @include s {
+      opacity: 1;
+      top: 0;
+      right: 0;
+      transform: translate(0%, 0%);
     }
   }
 
   .letter {
-    display: inline-block;
-    position: relative;
-    height: fit-content;
-    width: fit-content;
-    top: 50%;
     transition: 350ms var(--ease);
-    transform: translateY(-50%);
-    font-family: 'Cirka';
-    font-size: 36px;
+    font-family: 'Pier';
+    font-size: clamp(24px, 5vw, 48px);
     font-weight: 900;
     letter-spacing: -4px;
   }

@@ -80,6 +80,7 @@
     accent-color: white;
     color: var(--c-tertiary);
     transition: background-color 150ms var(--ease), color 150ms var(--ease);
+    font-size: 12px;
     &:hover {
       background-color: var(--c-ghover);
     }

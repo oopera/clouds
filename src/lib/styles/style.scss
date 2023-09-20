@@ -1,7 +1,7 @@
 @import './mixins.scss';
 
 @font-face {
-  font-family: 'Air', monospace;
+  font-family: 'Air';
   font-weight: 500;
   letter-spacing: 0em;
   font-style: italic;
@@ -16,10 +16,10 @@
 }
 
 @font-face {
-  font-family: 'Cirka';
+  font-family: 'Pier';
   font-weight: 800;
   letter-spacing: 0.1em;
-  src: url('../assets/fonts/cirka/PPCirka-Bold.woff'); /* IE9 Compat Modes */
+  src: url('../assets/fonts/pier/PPPierSans-Black.woff'); /* IE9 Compat Modes */
 }
 
 @font-face {
@@ -38,6 +38,7 @@ body {
   --color-grey-darkest: #0b0b0b;
 
   --c-g: #212121;
+  --c-t: #ffffff;
   --c-ghover: #524c4c;
   --c-secondary: #dadada;
   --c-tertiary: #c4d7ff;
@@ -45,10 +46,14 @@ body {
   --c-blue: #00215f;
   --c-mint: #65c6b3;
   --c-accent: #dbf75f;
+  // --c-accent: #ff9900;
   --c-accent-dark: #718129;
   --c-accent-hover: var(--c-tertiary);
   --font-size-xs: 12px;
   --font-size-xl: 76px;
+
+  --bg-color: var(--color-grey-darkest);
+  --text-color: var(--c-t);
 
   --star-gradient: radial-gradient(
     circle,
@@ -72,8 +77,8 @@ body {
   );
 
   --font-family-mono: 'Supply', monospace;
-
-  --ease: cubic-bezier(0.215, 0.61, 0.355, 1);
+  --ease: cubic-bezier(0.075, 0.82, 0.165, 1);
+  // --ease: cubic-bezier(0.215, 0.61, 0.355, 1);
 
   padding: 0;
   margin: 0;
@@ -90,15 +95,9 @@ body {
   -webkit-text-size-adjust: 100%;
 }
 
-:root {
-  --bg-color: #000;
-  --line-color-1: #242424;
-  --line-color-2: #1f1f1f;
-}
-
 body {
-  background: var(--color-grey-darkest);
-  color: var(--color-grey-lightest);
+  background: var(--bg-color);
+  color: var(--text-color);
   user-select: none;
   width: 100vw;
   height: 100vh;
@@ -106,7 +105,6 @@ body {
   cursor: crosshair;
 }
 input {
-  z-index: 2;
   pointer-events: all;
 }
 a {
@@ -135,10 +133,18 @@ p {
 
 h1 {
   @include type-m;
+  font-family: 'Pier';
 }
 p {
   @include type-xs;
-  text-transform: capitalize;
+  text-transform: uppercase;
+  vertical-align: baseline;
+
+  &::after {
+    content: '';
+    display: inline-block;
+    height: 1em;
+  }
 }
 
 [data-indicator] {
@@ -152,9 +158,7 @@ button {
   background-color: transparent;
   outline: none;
   border: none;
-  width: 75px;
-  border-radius: 5px;
-  cursor: pointer;
+  cursor: crosshair;
   font-size: 10px;
   font-family: var(--font-family-mono);
 }

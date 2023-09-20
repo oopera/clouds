@@ -46,9 +46,6 @@
 </div>
 
 <style>
-  div {
-    z-index: 1;
-  }
   input {
     height: 24px;
     width: 24px;

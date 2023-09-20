@@ -1,8 +1,9 @@
 <script lang="ts">
   export let onclick: () => any = () => 0;
+  export let id: string = '';
 </script>
 
-<button data-interactable on:click={onclick}>
+<button data-interactable {id} on:click={onclick}>
   <slot />
 </button>
 
@@ -11,10 +12,13 @@
   button {
     @include tag;
     background-color: var(--c-g);
-    z-index: 1;
     border-radius: 0;
-    :hover {
+    transition: background-color 250ms var(--ease);
+    will-change: background-color;
+    &:hover,
+    &:focus-visible {
       background-color: var(--c-ghover);
     }
+    color: white;
   }
 </style>

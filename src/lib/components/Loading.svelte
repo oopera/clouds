@@ -9,6 +9,7 @@
   import Tag from './Tag.svelte';
   import Button from './Button.svelte';
   import DateInput from './Date_Input.svelte';
+  import Line from './Line.svelte';
 
   let loadedItems: LoadingStore;
   let mounted: boolean = false;
@@ -24,16 +25,14 @@
   let showDownloads: boolean = true;
 
   onMount(() => {
-    mounted = true;
+    setTimeout(() => {
+      mounted = true;
+    }, 1);
     calculateFPS();
   });
 
   $: if ($loading.welcome.message === 'error') {
     deviceFailed = true;
-  }
-
-  $: if (!$loading.welcome.status) {
-    showDownloads = false;
   }
 
   const calculateFPS = () => {
@@ -59,36 +58,32 @@
   };
 </script>
 
-<div class="loading">
+<div class="loading" class:mounted>
   <Layout short align="start" gap="2">
     <Layout short horizontal justify="between" gap="4">
-      <Text nowrap vertical text={fps.toString()} />
+      <p>{fps.toString()}</p>
       <Tag red={deviceFailed}>
-        <Text
-          nowrap
-          text={deviceFailed
-            ? 'Systems Not Operational'
-            : 'All Systems Operational'}
-        />
+        <p>
+          {deviceFailed ? 'Systems Not Operational' : 'All Systems Operational'}
+        </p>
         <span class="y" class:deviceFailed data-indicator />
       </Tag>
     </Layout>
-    <Layout short align="start" gap="2">
-      <Layout horizontal short align="start" gap="2">
-        <Button {onclick}
-          ><Text secondary text={showDownloads ? 'hide' : 'show'} /></Button
-        >
+
+    <Layout align="start" justify="between" gap="2">
+      <Layout horizontal short align="start" gap="2" justify="between">
+        <Button {onclick}><p>{showDownloads ? 'hide' : 'show'}</p></Button>
         <DateInput />
       </Layout>
       {#if showDownloads}
+        <Line />
         <Layout short align="start">
           {#each Object.values(loadedItems) as { id, status, message, progress }}
             {#if id !== 0 && !deviceFailed}
               <Layout horizontal align="center" justify="start" gap="2">
                 <Layout horizontal align="start" justify="between" gap="2">
-                  <Text vertical delay={id} text={message} />
+                  <Text delay={id} text={message} />
                   <Text
-                    vertical
                     nowrap
                     text={progress + '%'}
                     secondary={progress !== 100}
@@ -97,22 +92,7 @@
                   />
                 </Layout>
                 {#if status && mounted}
-                  <span
-                    data-indicator
-                    class="indicator"
-                    in:fly={{
-                      delay: id + 2 * 125,
-                      duration: 350,
-                      x: 15,
-                      easing: quintOut,
-                    }}
-                    out:fly={{
-                      delay: id + 2 * 125,
-                      duration: 350,
-                      x: 15,
-                      easing: quintOut,
-                    }}
-                  />
+                  <span data-indicator class="indicator" />
                 {/if}
               </Layout>
             {/if}
@@ -128,9 +108,19 @@
 
   .loading {
     top: 0;
-    position: absolute;
+
+    z-index: 1;
+    width: 400px;
+    max-width: 100%;
+    transition: transform 0.75s var(--ease);
+    transform: translateY(-100%);
   }
+  .mounted {
+    transform: translateY(0);
+  }
+
   .indicator {
+    position: absolute;
     background-color: var(--c-accent);
   }
   .y {
