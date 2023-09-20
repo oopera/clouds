@@ -3,12 +3,9 @@
   import type { LoadingStore } from '$lib/types/types'; // assuming you've defined these types in this module
   import Text from './Text.svelte';
   import Layout from './Layout.svelte';
-  import { quintOut } from 'svelte/easing';
-  import { fly } from 'svelte/transition';
   import { onMount } from 'svelte';
   import Tag from './Tag.svelte';
   import Button from './Button.svelte';
-  import DateInput from './Date_Input.svelte';
   import Line from './Line.svelte';
 
   let loadedItems: LoadingStore;
@@ -25,10 +22,10 @@
   let showDownloads: boolean = true;
 
   onMount(() => {
+    calculateFPS();
     setTimeout(() => {
       mounted = true;
     }, 1);
-    calculateFPS();
   });
 
   $: if ($loading.welcome.message === 'error') {
@@ -53,27 +50,16 @@
   };
 
   const onclick = () => {
-    console.log(showDownloads);
     showDownloads = !showDownloads;
   };
 </script>
 
 <div class="loading" class:mounted>
   <Layout align="start" gap="2">
-    <Layout horizontal justify="between" gap="4">
-      <p>{fps.toString()}</p>
-      <Tag red={deviceFailed}>
-        <p>
-          {deviceFailed ? 'Systems Not Operational' : 'All Systems Operational'}
-        </p>
-        <span class="y" class:deviceFailed data-indicator />
-      </Tag>
-    </Layout>
-
     <Layout align="start" justify="between" gap="2">
-      <Layout horizontal align="start" gap="2" justify="between">
+      <Layout horizontal align="center" gap="2" justify="between">
         <Button {onclick}><p>{showDownloads ? 'hide' : 'show'}</p></Button>
-        <DateInput />
+        <p>{fps.toString()}</p>
       </Layout>
       {#if showDownloads}
         <Line />
@@ -108,13 +94,12 @@
 
   .loading {
     top: 0;
-    width: 100%;
+
     transition: transform 0.75s var(--ease);
     transform: translateY(-100%);
-    @include s {
-      width: 300px;
-      max-width: 100%;
-    }
+
+    width: 300px;
+    max-width: 100%;
   }
   .mounted {
     transform: translateY(0);
@@ -123,23 +108,5 @@
   .indicator {
     position: absolute;
     background-color: var(--c-accent);
-  }
-  .y {
-    background-color: var(--c-g);
-  }
-  .deviceFailed {
-    background-color: var(--c-secondary);
-  }
-
-  @keyframes blink {
-    0% {
-      opacity: 1;
-    }
-    50% {
-      opacity: 0.5;
-    }
-    100% {
-      opacity: 1;
-    }
   }
 </style>

@@ -4,6 +4,7 @@
   import { loading } from '$lib/stores/stores';
   import type { LoadingStore } from '$lib/types/types';
   export let show: boolean | null;
+  export let direction: 'left' | 'down' = 'down';
 
   let loadedItems: LoadingStore;
   loading.subscribe((value: LoadingStore) => {
@@ -11,6 +12,7 @@
   });
   let inview: boolean = false;
   let mounted: boolean = false;
+
   const onclick = () => {
     inview = !inview;
   };
@@ -30,7 +32,12 @@
   });
 </script>
 
-<div class="wrapper" class:inview class:mounted>
+<div
+  class="wrapper"
+  class:inview
+  class:mounted
+  class:left={direction === 'left'}
+>
   <Button {onclick}>
     <p>{inview ? 'hide' : 'show'}</p>
   </Button>
@@ -47,19 +54,18 @@
     align-items: end;
     gap: gap(2);
     transition: transform 0.75s var(--ease), opacity 0.75s var(--ease);
-    transform: translateY(calc(100%));
+    transform: translateY(calc(100% + 25px));
   }
+
   .mounted {
     transform: translateY(calc(100% - 25px));
   }
-  .card {
-    // padding: 24px;
-    // backdrop-filter: blur(64px);
-    overflow: hidden;
-    border-radius: 24px;
-    * {
-      pointer-events: none;
-    }
+  .left {
+    flex-direction: row;
+    transform: translateX(calc(100% - 45px));
+  }
+  .left .mounted {
+    transform: translateX(calc(100% + 25px));
   }
   .inview {
     transform: translateY(0);

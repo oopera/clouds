@@ -43,14 +43,20 @@ body {
   --c-secondary: #dadada;
   --c-tertiary: #c4d7ff;
 
+  --icon: #ffffff;
+
   --c-blue: #00215f;
   --c-mint: #65c6b3;
-  --c-accent: #dbf75f;
+  --c-accent: #ffed64;
   // --c-accent: #ff9900;
   --c-accent-dark: #718129;
   --c-accent-hover: var(--c-tertiary);
   --font-size-xs: 12px;
-  --font-size-xl: 76px;
+  --font-size-s: 14px;
+  --font-size-m: 24px;
+  --font-size-l: 36px;
+  --font-size-xl: 48px;
+  --font-size-xxl: 72px;
 
   --bg-color: var(--color-grey-darkest);
   --text-color: var(--c-t);
@@ -132,7 +138,7 @@ p {
 }
 
 h1 {
-  @include type-m;
+  @include type-l;
   font-family: 'Pier';
 }
 p {
@@ -145,10 +151,6 @@ p {
     display: inline-block;
     height: 1em;
   }
-}
-
-[data-indicator] {
-  @include indicator;
 }
 
 button {

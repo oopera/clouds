@@ -101,15 +101,25 @@
     white-space: nowrap;
     padding-bottom: 0.2rem;
   }
-  .inner {
+  h1 .inner {
+    line-height: 1em;
+    transform: translateY(-125%);
+    transition: transform 500ms var(--ease) calc(var(--i) * 65ms);
+  }
+  p .inner {
     line-height: 1em;
     transform: translateY(125%);
     transition: transform 500ms var(--ease) calc(var(--i) * 65ms);
   }
-  .mounted {
+  p .mounted {
     transition: transform 500ms var(--ease) calc(var(--i) * 25ms);
     transform: translateY(0%);
   }
+  h1 .mounted {
+    transition: transform 500ms var(--ease) calc(var(--i) * 75ms);
+    transform: translateY(0%);
+  }
+
   .secondary {
     color: var(--c-secondary);
   }

@@ -79,7 +79,7 @@ $gap: 8px;
 }
 
 @mixin type-m {
-  font-size: var(--font-size-m);
+  font-size: clamp(var(--font-size-m), 5vw, var(--font-size-l));
   line-height: 1.2em;
   letter-spacing: -0.02em;
   font-size: 36px;
@@ -87,7 +87,7 @@ $gap: 8px;
 }
 
 @mixin type-l {
-  font-size: var(--font-size-l);
+  font-size: clamp(var(--font-size-xl), 5vw, var(--font-size-xxl));
   line-height: 1.1em;
   letter-spacing: -0.02em;
 }
@@ -133,10 +133,12 @@ $gap: 8px;
   align-items: center;
   background-color: var(--c-accent);
   color: var(--c-g);
-  padding: 4px 12px;
+  margin: 4px 0 4px 0;
+  padding: 4px 8px;
+
   text-align: center;
   min-height: 25px;
-  margin: 0;
+  box-sizing: border-box;
   gap: gap(0.5);
   border-radius: 24px;
   transition: color 0.2s var(--ease), background-color 0.2s var(--ease);
@@ -144,9 +146,9 @@ $gap: 8px;
 
 @mixin indicator {
   right: calc(gap(1) * -1);
-  width: gap(0.5);
-  height: gap(0.5);
-  border-radius: 50%;
+  width: 4px;
+  height: 4px;
+  border-radius: 50px;
   animation: blink 350ms var(--ease) infinite;
 }
 
