@@ -61,7 +61,7 @@ $gap: 8px;
   // @media only screen and (min-width: map-get($grid-breakpoints, md)) and (min-height: map-get($grid-breakpoints, md)) {
   //   @content;
   // }
-  @media only screen and (min-width: map-get($grid-breakpoints, md)) {
+  @media only screen and (min-width: map-get($grid-breakpoints, sm)) {
     @content;
   }
 }

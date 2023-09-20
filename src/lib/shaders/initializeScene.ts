@@ -31,16 +31,16 @@ import type { RenderOptions, HasChanged } from '$lib/types/types.js';
 import { atmosphereShader } from './shaders/atmosphereShader.js';
 import { executePromise, loadImage } from './utils/executeAndUpdate.js';
 
-import { local_low } from '$lib/assets/low.js';
-import { local_mid } from '$lib/assets/mid.js';
-import { local_high } from '$lib/assets/high.js';
-
 import { dev } from '$app/environment';
 import { tweened } from 'svelte/motion';
 import { fullScreenQuadShader } from './shaders/quadShader.js';
 import { cubicBezier } from '$lib/shaders/utils/cubicBezier.js';
 import { generateCubeData } from './primitives/cubeData.js';
 import { getCloudCoverageByCoordinates } from './utils/calculateIntersection.js';
+
+import { local_low } from '$lib/assets/low.js';
+import { local_mid } from '$lib/assets/mid.js';
+import { local_high } from '$lib/assets/high.js';
 
 let depthTexture: GPUTexture;
 let offscreenDepthTexture: GPUTexture;
@@ -349,7 +349,7 @@ async function InitializeScene() {
     };
   };
 
-  if (!dev) {
+  if (dev) {
     parsedGribTexture = await Get4LayerTextureFromGribData(device, [
       local_low,
       local_mid,

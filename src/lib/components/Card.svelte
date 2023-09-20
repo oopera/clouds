@@ -54,8 +54,8 @@
     transform: translateY(calc(100% - 25px));
   }
   .card {
-    padding: 24px;
-    backdrop-filter: blur(64px);
+    // padding: 24px;
+    // backdrop-filter: blur(64px);
     overflow: hidden;
     border-radius: 24px;
     * {

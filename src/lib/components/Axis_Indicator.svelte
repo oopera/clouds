@@ -42,7 +42,8 @@
     opacity: 0;
     position: absolute;
     display: none;
-    backdrop-filter: blur(64px);
+    backdrop-filter: blur(16px);
+    // background-color: var(--bg-color);
     pointer-events: all;
     left: 50%;
     transform: translateX(-50%) translateY(100%);

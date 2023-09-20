@@ -59,8 +59,8 @@
 </script>
 
 <div class="loading" class:mounted>
-  <Layout short align="start" gap="2">
-    <Layout short horizontal justify="between" gap="4">
+  <Layout align="start" gap="2">
+    <Layout horizontal justify="between" gap="4">
       <p>{fps.toString()}</p>
       <Tag red={deviceFailed}>
         <p>
@@ -71,15 +71,15 @@
     </Layout>
 
     <Layout align="start" justify="between" gap="2">
-      <Layout horizontal short align="start" gap="2" justify="between">
+      <Layout horizontal align="start" gap="2" justify="between">
         <Button {onclick}><p>{showDownloads ? 'hide' : 'show'}</p></Button>
         <DateInput />
       </Layout>
       {#if showDownloads}
         <Line />
-        <Layout short align="start">
+        <Layout align="start">
           {#each Object.values(loadedItems) as { id, status, message, progress }}
-            {#if id !== 0 && !deviceFailed}
+            {#if id !== 0}
               <Layout horizontal align="center" justify="start" gap="2">
                 <Layout horizontal align="start" justify="between" gap="2">
                   <Text delay={id} text={message} />
@@ -108,12 +108,14 @@
 
   .loading {
     top: 0;
-
     z-index: 1;
-    width: 400px;
-    max-width: 100%;
+    width: 100%;
     transition: transform 0.75s var(--ease);
     transform: translateY(-100%);
+    @include s {
+      width: 300px;
+      max-width: 100%;
+    }
   }
   .mounted {
     transform: translateY(0);
