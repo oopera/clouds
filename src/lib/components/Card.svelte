@@ -48,7 +48,6 @@
     gap: gap(2);
     transition: transform 0.75s var(--ease), opacity 0.75s var(--ease);
     transform: translateY(calc(100%));
-    z-index: 1;
   }
   .mounted {
     transform: translateY(calc(100% - 25px));

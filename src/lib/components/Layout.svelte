@@ -35,6 +35,7 @@
     width: 100%;
     box-sizing: border-box;
     pointer-events: none;
+    z-index: 1;
   }
 
   .margin-top {

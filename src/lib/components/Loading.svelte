@@ -108,7 +108,6 @@
 
   .loading {
     top: 0;
-    z-index: 1;
     width: 100%;
     transition: transform 0.75s var(--ease);
     transform: translateY(-100%);

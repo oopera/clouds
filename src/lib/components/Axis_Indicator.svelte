@@ -38,7 +38,6 @@
     height: 140px;
     aspect-ratio: 1/1;
     border-radius: 150px;
-    z-index: 1;
     opacity: 0;
     position: absolute;
     display: none;

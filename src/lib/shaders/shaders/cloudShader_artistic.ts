@@ -210,7 +210,11 @@ fn getDensity(current_point: vec3<f32>, distance_to_center: f32, distance_to_inn
 
   if(reverse){
     offset_scale = 1.0 - offset_scale;
+    offset_scale = clamp(offset_scale, 0.0, 0.7);
+  }else{
+    offset_scale = clamp(offset_scale, 0.3, 1.0);
   }
+
 
   if (distance_to_center < outer_sphere_radius && distance_to_center > sphere_radius) {
    if (distance_to_center > layer_3_sphere_radius) {
