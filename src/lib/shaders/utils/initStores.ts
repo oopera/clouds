@@ -2,7 +2,7 @@ import {
   amount_of_points,
   atmo,
   cameraposition,
-  light_type,
+  day_cycle,
   scale,
   mb300,
   mb500,
@@ -56,7 +56,7 @@ export default function InitStores(
     options.raymarchSteps = value;
   });
 
-  light_type.subscribe((value) => {
+  day_cycle.subscribe((value) => {
     options.lightType = value;
   });
 

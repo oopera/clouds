@@ -5,8 +5,10 @@ import { tweened } from 'svelte/motion';
 
 export const has_initialized = writable(false);
 
-export const amount_of_points = writable(250);
+export const amount_of_points = writable(50);
 export const scale = writable(0.05);
+
+export const fps = writable(0);
 
 export const cloud_density = writable(0.75);
 
@@ -19,7 +21,7 @@ export const rotation_speed = writable(0.05);
 
 export const half_res = writable(true);
 export const projection_date = writable({ day: '0', month: '0', year: '0' });
-export const light_type = writable<'day_cycle' | 'full_day' | 'full_night'>(
+export const day_cycle = writable<'day_cycle' | 'full_day' | 'full_night'>(
   'day_cycle'
 );
 
@@ -103,7 +105,7 @@ export default {
   loading,
   pitch,
   rotation_speed,
-  light_type,
+  day_cycle,
   mouse_interaction,
   yaw,
   zoom,

@@ -10,7 +10,7 @@ export type Stores =
   | 'scale'
 
   // Light and atmosphere related
-  | 'light_type'
+  | 'day_cycle'
   | 'cloud_density'
   | 'sun_transmittance'
   | 'rayleigh_intensity'

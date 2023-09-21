@@ -94,7 +94,7 @@
 
 {#if mounted && !deviceFailed}
   <span class="parent" class:loaded>
-    <Text type="h1" delay={4} secondary={true} text={'CLOUDS'} />
+    <Text type="h1" delay={4} text={'CLOUDS'} />
     {#if mounted && !loaded}
       <span class="loading">
         <p class="letter">{translationsForLoading[currentTranslation]}</p>
@@ -122,6 +122,12 @@
           <Layout horizontal gap="1" align="end" justify="end">
             <IconButton title="half_res" off_title="full_res" />
             <IconButton title="atmo" off_title="no_atmo" />
+            <IconButton
+              three
+              title="day_cycle"
+              off_title="full_day"
+              third_title="full_night"
+            />
           </Layout>
         </Layout>
       </div>

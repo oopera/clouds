@@ -45,9 +45,7 @@
       frameCount = 0;
     }
 
-    if (mounted) {
-      requestAnimationFrame(calculateFPS);
-    }
+    requestAnimationFrame(calculateFPS);
   };
 
   const onclick = () => {

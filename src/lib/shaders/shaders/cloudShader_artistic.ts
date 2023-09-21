@@ -130,12 +130,28 @@ fn rayleighScattering(theta: f32) -> f32 {
 // }
 
 fn calculate_height(min_layer_sphere_radius: f32, max_layer_sphere_radius: f32, noise: vec4<f32>, detail_noise: vec4<f32>, coverage: f32, percent_height: f32, scaling_factor: f32) -> vec2<f32> {
-  var shape_noise = noise.g * 0.625 + noise.b * 0.25 + noise.a * 0.125;
+  var shape_noise: f32;
+  if(scaling_factor == 1){
+    shape_noise  = noise.g * 0.8 + noise.b * 0.15 + noise.a * 0.05;
+  }else if(scaling_factor == 2){
+    shape_noise  = noise.b * 0.625 + noise.g * 0.25 + noise.a * 0.125;
+  }else if(scaling_factor == 3){
+    shape_noise  = noise.a * 0.625 + noise.b * 0.25 + noise.g * 0.125;
+  }
   shape_noise = -(1 - shape_noise);
   shape_noise = ReMap(noise.r, shape_noise, 1.0, 0.0, 1.0);
 
-  var detail: f32 = detail_noise.r * 0.625 + detail_noise.g * 0.25 + detail_noise.b * 0.125;
-  var detail_modifier: f32 = lerp(detail, 1.0 - detail, saturate(percent_height * 2.0));
+  var detail: f32;
+
+  if(scaling_factor == 1){
+    detail = detail_noise.r * 0.625 + detail_noise.g * 0.25 + detail_noise.b * 0.125;
+  }else if(scaling_factor == 2){
+    detail = detail_noise.g * 0.625 + detail_noise.r * 0.25 + detail_noise.b * 0.125;
+  }else if(scaling_factor == 3){
+    detail = detail_noise.b * 0.625 + detail_noise.g * 0.25 + detail_noise.r * 0.125;
+  }
+
+  var detail_modifier: f32 = lerp(detail, 1.0 - detail, saturate(percent_height));
   detail_modifier = detail_modifier * coverage;
   var final_density: f32 = ReMap(shape_noise, detail_modifier, 1.0, 0.0, 1.0);
 
@@ -202,9 +218,9 @@ fn getDensity(current_point: vec3<f32>, distance_to_center: f32, distance_to_inn
   // var heights_mb500: vec2<f32> = calculate_height(layer_2_offset, layer_3_sphere_radius, .8, samples.noise.b, samples.detail_noise.r, samples.blue_noise.g);
   // var heights_mb700: vec2<f32> = calculate_height(layer_3_offset, outer_sphere_radius, .8, samples.noise.a, samples.noise.r * samples.detail_noise.r, samples.blue_noise.b);
   var distance = ReMap(length(sphere_center - current_point), 0.0, outer_sphere_radius, 0.0, 1.0);
-  var heights_mb300: vec2<f32> = calculate_height(layer_1_offset, layer_2_sphere_radius,samples.noise, samples.noise, samples.coverage.r, distance, 0.9);
-  var heights_mb500: vec2<f32> = calculate_height(layer_2_offset, layer_3_sphere_radius, samples.noise, samples.detail_noise, samples.coverage.g, distance, 0.4);
-  var heights_mb700: vec2<f32> = calculate_height(layer_3_offset, outer_sphere_radius,samples.detail_noise, samples.detail_noise, samples.coverage.b, distance, 0.2);
+  var heights_mb300: vec2<f32> = calculate_height(layer_1_offset, layer_2_sphere_radius,samples.noise, samples.noise, samples.coverage.r, distance, 1);
+  var heights_mb500: vec2<f32> = calculate_height(layer_2_offset, layer_3_sphere_radius, samples.noise, samples.detail_noise, samples.coverage.g, distance, 2);
+  var heights_mb700: vec2<f32> = calculate_height(layer_3_offset, outer_sphere_radius,samples.detail_noise, samples.detail_noise, samples.coverage.b, distance, 3);
 
   var offset_scale =(ReMap(distance_to_center, sphere_radius, outer_sphere_radius, 0.0, 1.0));
 
@@ -310,6 +326,10 @@ fn calculate_lod() -> f32 {
   var output_color: vec3<f32> = vec3<f32>(0.62, 0.63, 0.67);
   var highlight_color: vec3<f32> = vec3<f32>(0.09, 0.07, 0.12);
 
+  let dotProduct = dot(lightUniforms.lightPosition, output.vNormal.xyz);
+  let scaledDotProduct: f32 = dotProduct * 10.0;
+  var lightness: f32 = 1.0 - (1.0 / (1.0 + exp(-scaledDotProduct)));
+
   var light: f32 = 0.0;
   var sun_density: f32 = 0.0;
   var sun_output: vec3<f32> = vec3<f32>(0.0, 0.0, 0.0);
@@ -353,8 +373,18 @@ fn calculate_lod() -> f32 {
       var theta = angleBetweenVectors(ray_direction, sun_ray_direction);
       light += mieScattering(theta) * lightUniforms.rayleighIntensity + samples.blue_noise.r * 0.05;
 
+        var lightclamp: vec2<f32>; 
+
+        if(lightUniforms.lightType == 1){
+          lightclamp = vec2(0.3,1.0);
+        }else if(lightUniforms.lightType == 0.5){
+          lightclamp = vec2(1.0, 1.0); 
+        }else if(lightUniforms.lightType == 0){
+          lightclamp = vec2(0.3, 0.3);
+        }
+
       if(cloud_density < 2.0){
-        sun_density += clamp(getDensity(sun_point, distance_to_center, distance_to_inner_sphere, samples, false), 0.0, 0.5) * cloudUniforms.sunDensity;
+        sun_density += clamp(getDensity(sun_point, distance_to_center, distance_to_inner_sphere, samples, false), 0.0, 0.5) * cloudUniforms.sunDensity * clamp(lightness, lightclamp[0], lightclamp[1]);
         // sun_output += CalculateLight(cloud_density, sun_density, theta, ReMap(distance_to_inner_sphere, 0.0, cube_offset, 0.0, 1.0), k, samples.blue_noise.r) * lightUniforms.rayleighIntensity;
     
       }
