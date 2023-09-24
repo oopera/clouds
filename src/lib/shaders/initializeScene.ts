@@ -36,7 +36,6 @@ import { tweened } from 'svelte/motion';
 import { fullScreenQuadShader } from './shaders/quadShader.js';
 import { cubicBezier } from '$lib/shaders/utils/cubicBezier.js';
 import { generateCubeData } from './primitives/cubeData.js';
-import { getCloudCoverageByCoordinates } from './utils/calculateIntersection.js';
 
 import { local_low } from '$lib/assets/low.js';
 import { local_mid } from '$lib/assets/mid.js';
@@ -186,7 +185,6 @@ async function InitializeScene() {
     displayError('Failed to get GPU device.');
     return;
   }
-
   const canvas: HTMLCanvasElement = document.getElementById(
     'canvas'
   ) as HTMLCanvasElement;
@@ -201,7 +199,7 @@ async function InitializeScene() {
     return;
   }
 
-  InitStores(options, hasChanged, canvas);
+  InitStores(options, hasChanged);
 
   let data = await executePromise(
     'sphere',

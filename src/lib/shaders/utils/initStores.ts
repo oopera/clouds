@@ -21,18 +21,13 @@ import {
   tweenedZoom,
   tweenedYaw,
   tweenedPitch,
-  mouse_interaction,
-  setZoom,
-  setPitch,
-  setYaw,
+  dragging,
 } from '$lib/stores/stores';
 import type { HasChanged, RenderOptions } from '$lib/types/types';
-import CalculateIntersection from './calculateIntersection';
 
 export default function InitStores(
   options: RenderOptions,
-  hasChanged: HasChanged,
-  canvas: HTMLCanvasElement
+  hasChanged: HasChanged
 ) {
   if (!document) return;
 
@@ -50,6 +45,10 @@ export default function InitStores(
     if (!isFirstInvocation) {
       hasChanged.resolution = true;
     }
+  });
+
+  dragging.subscribe((value) => {
+    options.isDragging = value;
   });
 
   raymarch_steps.subscribe((value) => {
@@ -136,118 +135,6 @@ export default function InitStores(
   zoom.subscribe((value) => {
     options.zoom = value;
   });
-
-  mouse_interaction.subscribe((value) => {
-    options.coords.x = value.x;
-    options.coords.y = value.y;
-  });
-
-  const max_zoom = 12.65;
-  const min_zoom = 2.65;
-
-  const handleScroll = (e: WheelEvent) => {
-    e.preventDefault();
-
-    let newZoom = options.zoom + e.deltaY * 0.0025;
-    if (newZoom > min_zoom && newZoom < max_zoom) {
-      newZoom = options.zoom + e.deltaY * 0.0025 * (options.zoom / max_zoom);
-    }
-
-    let finalZoom = Math.max(min_zoom, Math.min(newZoom, max_zoom));
-
-    setZoom(finalZoom, true);
-  };
-
-  const handleTouch = (e: TouchEvent) => {
-    e.preventDefault();
-
-    let newZoom = options.zoom + e.touches[0].clientY * 0.0025;
-    if (newZoom > min_zoom && newZoom < max_zoom) {
-      newZoom =
-        options.zoom +
-        e.touches[0].clientY * 0.0025 * (options.zoom / max_zoom);
-    }
-
-    let finalZoom = Math.max(min_zoom, Math.min(newZoom, max_zoom));
-
-    setZoom(finalZoom, true);
-  };
-
-  window.addEventListener('wheel', handleScroll, { passive: false });
-  window.addEventListener('touchmove', handleTouch, { passive: false });
-
-  let initialX = 0;
-  let initialY = 0;
-
-  const handlemouseup = (e: MouseEvent) => {
-    options.isDragging = false;
-
-    const distance = Math.sqrt(
-      Math.pow(e.clientX - initialX, 2) + Math.pow(e.clientY - initialY, 2)
-    );
-
-    if (distance < 50) {
-      const intersection_coords = CalculateIntersection(
-        e.clientX,
-        e.clientY,
-        options
-      );
-
-      const mouseInteractionData = {
-        intersected: false,
-        x: 0,
-        y: 0,
-        longitude: 0,
-        latitude: 0,
-      };
-
-      if (intersection_coords.discriminant > 0) {
-        mouseInteractionData.intersected = true;
-        mouseInteractionData.x = -intersection_coords.u;
-        mouseInteractionData.y = intersection_coords.v;
-        mouseInteractionData.longitude = intersection_coords.longitude || 0;
-        mouseInteractionData.latitude = intersection_coords.latitude || 0;
-      }
-
-      mouse_interaction.set(mouseInteractionData);
-    }
-
-    // Reset the stored initial coordinates
-    initialX = 0;
-    initialY = 0;
-  };
-
-  const handlemousemove = (e: MouseEvent) => {
-    if (options.isDragging) {
-      const changeX = e.clientX - options.coords.lastX;
-      const changeY = e.clientY - options.coords.lastY;
-
-      const newPitch =
-        options.pitch + 0.1 * changeY * Math.pow(options.zoom, 0.25);
-      const newYaw = options.yaw - 0.1 * changeX * Math.pow(options.zoom, 0.25);
-
-      options.coords.lastX = e.clientX;
-      options.coords.lastY = e.clientY;
-
-      setPitch(Math.max(-89, Math.min(89, newPitch)), false);
-      setYaw(newYaw, false);
-    }
-  };
-
-  const handlemousedown = (e: MouseEvent) => {
-    options.isDragging = true;
-
-    // Store the initial X and Y coordinates
-    initialX = e.clientX;
-    initialY = e.clientY;
-
-    options.coords.lastX = e.clientX;
-    options.coords.lastY = e.clientY;
-  };
-
-  canvas.addEventListener('mousedown', handlemousedown);
-  canvas.addEventListener('mouseup', handlemouseup);
-  canvas.addEventListener('mousemove', handlemousemove);
 
   isFirstInvocation = false;
 }

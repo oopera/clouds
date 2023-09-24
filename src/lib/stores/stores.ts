@@ -9,6 +9,7 @@ export const amount_of_points = writable(100);
 export const scale = writable(0.05);
 
 export const fps = writable(0);
+export const dragging = writable(false);
 
 export const cloud_density = writable(0.25);
 

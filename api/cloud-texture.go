@@ -11,13 +11,7 @@ import (
 	"github.com/amsokol/go-grib2"
 )
 
-type EncodedRun struct {
-	V int `json:"V"`
-	C int `json:"C"`
-}
-
 func Handler(w http.ResponseWriter, r *http.Request) {
-
 	defer func() {
 		if r := recover(); r != nil {
 			log.Println("Recovered from panic:", r)
@@ -26,9 +20,9 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	params := r.URL.Query()
-	level := params.Get("level") // e.g., "high"
-	modelRunHour := params.Get("modelrunhour") // e.g., "00"
-	forecasthour := params.Get("forecasthour") // e.g., "000"
+	level := params.Get("level")
+	modelRunHour := params.Get("modelrunhour")
+	forecasthour := params.Get("forecasthour")
 	date := params.Get("date")
 
 	var varType, levType string
@@ -92,34 +86,35 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	log.Printf("Source package contains %d GRIB2 file(s)\n", len(gribs))
+
+	if len(gribs) == 0 {
+		log.Println("No GRIB2 files found")
+		http.Error(w, "No GRIB2 files found", http.StatusInternalServerError)
+		return
+	}
+
+	firstGrib := gribs[0]
 
 	var encodedRuns [][2]int
+	var currentValue int
+	var currentCount int
 
-	for _, g := range gribs {
-		log.Printf("Published='%s', Forecast='%s', Parameter='%s', Unit='%s', Description='%s'\n",
-			g.RefTime.Format("2006-01-02 15:04:05"), g.VerfTime.Format("2006-01-02 15:04:05"), g.Name, g.Unit, g.Description)
+	for _, v := range firstGrib.Values {
+		intValue := int(v.Value)
 
-		var currentValue int
-		var currentCount int
-
-		for _, v := range g.Values {
-			intValue := int(v.Value)
-
-			if len(encodedRuns) == 0 || intValue != currentValue {
-				if currentCount > 0 {
-					encodedRuns = append(encodedRuns, [2]int{currentCount, currentValue})
-				}
-				currentValue = intValue
-				currentCount = 1
-			} else {
-				currentCount++
+		if len(encodedRuns) == 0 || intValue != currentValue {
+			if currentCount > 0 {
+				encodedRuns = append(encodedRuns, [2]int{currentCount, currentValue})
 			}
+			currentValue = intValue
+			currentCount = 1
+		} else {
+			currentCount++
 		}
+	}
 
-		if currentCount > 0 {
-			encodedRuns = append(encodedRuns, [2]int{currentCount, currentValue})
-		}
+	if currentCount > 0 {
+		encodedRuns = append(encodedRuns, [2]int{currentCount, currentValue})
 	}
 
 	w.Header().Set("Content-Type", "application/json")

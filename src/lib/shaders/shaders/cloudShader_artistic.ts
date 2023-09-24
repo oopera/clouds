@@ -63,7 +63,7 @@ const sphere_center = vec3<f32>(0.0, 0.0, 0.0);
 const sphere_radius: f32 = 5.0;
 const cube_offset: f32 = 0.25;
 
-const layer_1_offset = 0.03;
+const layer_1_offset = 0.03; 
 const layer_2_offset = 0.17;
 const layer_3_offset = 0.22;
 
@@ -156,8 +156,8 @@ fn calculate_height(min_layer_sphere_radius: f32, max_layer_sphere_radius: f32, 
   detail_modifier = detail_modifier * coverage;
   var final_density: f32 = ReMap(shape_noise, detail_modifier, 1.0, 0.0, 1.0);
 
-  var maxheight = ReMap(pow(final_density, 2), 0.0, 1.0, min_layer_sphere_radius, (max_layer_sphere_radius - sphere_radius));
-  let minheight = ReMap(ReMap(1 - final_density, 0.0, 1.0, 0.0, .25), 0.0, 1.0, min_layer_sphere_radius, (max_layer_sphere_radius - sphere_radius));
+  var maxheight = ReMap(pow(final_density, 1.0), 0.0, 1.0, min_layer_sphere_radius, (max_layer_sphere_radius - sphere_radius));
+  let minheight = ReMap(ReMap(1 - final_density, 0.0, 1.0, 0.0, .5), 0.0, 1.0, min_layer_sphere_radius, (max_layer_sphere_radius - sphere_radius));
 
   return vec2<f32>(minheight, maxheight);
 }
@@ -272,7 +272,7 @@ fn calculate_lod() -> f32 {
 
 
 @fragment fn fs(output: Output) -> @location(0) vec4<f32> {
-  var output_color: vec3<f32> = vec3<f32>(0.62, 0.63, 0.67);
+  var output_color: vec3<f32> = vec3<f32>(0.52, 0.53, 0.57);
   var highlight_color: vec3<f32> = vec3<f32>(0.09, 0.07, 0.12);
 
   let dotProduct = dot(lightUniforms.lightPosition, output.vNormal.xyz);
@@ -280,7 +280,7 @@ fn calculate_lod() -> f32 {
   var lightness: f32 = 1.0 - (1.0 / (1.0 + exp(-scaledDotProduct)));
 
   var light: f32 = 0.0;
-  var sun_density: f32 = 0.0;
+  var sun_transmittance: f32 = 0.0;
   var sun_output: vec3<f32> = vec3<f32>(0.0, 0.0, 0.0);
   var cloud_density: f32 = 0.0;
 
@@ -333,11 +333,11 @@ fn calculate_lod() -> f32 {
         }
 
       if(cloud_density < 1.25){
-        sun_density += clamp(getDensity(sun_point, distance_to_center, distance_to_inner_sphere, samples, false), 0.0, 1.0) * cloudUniforms.sunDensity * clamp(lightness, lightclamp[0], lightclamp[1]);
+        sun_transmittance += clamp(getDensity(sun_point, distance_to_center, distance_to_inner_sphere, samples, false), 0.0, 1.0) * cloudUniforms.sunDensity * clamp(lightness, lightclamp[0], lightclamp[1]);
       }
     }
   } 
-  output_color += sun_density * highlight_color  * light;
+  output_color += sun_transmittance * highlight_color  * light;
   return vec4<f32>(output_color, cloud_density * cloudUniforms.visibility);
   }
 `;
