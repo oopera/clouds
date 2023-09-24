@@ -261,8 +261,8 @@ fn angleBetweenVectors(A: vec3<f32>, B: vec3<f32>) -> f32 {
 }
 
 const high_lod: f32 = 1.2;
-const low_lod: f32 = 0.6;
-const lod_distance_threshold: f32 = 6.5; 
+const low_lod: f32 = 0.2;
+const lod_distance_threshold: f32 = 8.5; 
 
 fn calculate_lod() -> f32 {
     let distance = length(sphere_center - uni.cameraPosition.xyz);
