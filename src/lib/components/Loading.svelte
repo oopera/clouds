@@ -56,9 +56,12 @@
 <div class="loading" class:mounted>
   <Layout align="start" gap="2">
     <Layout align="start" justify="between" gap="2">
-      <Layout horizontal align="center" gap="2" justify="between">
-        <Button {onclick}><p>{showDownloads ? 'hide' : 'show'}</p></Button>
-        <DateInput />
+      <Layout horizontal align="center" justify="between" gap="2">
+        <Layout horizontal align="center" justify="start" gap="2">
+          <Button {onclick}><p>{showDownloads ? 'hide' : 'show'}</p></Button>
+          <DateInput />
+        </Layout>
+
         <p>{fps.toString()}</p>
       </Layout>
       {#if showDownloads}
@@ -91,7 +94,12 @@
 
 <style lang="scss">
   @import '$lib/styles/mixins.scss';
-
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: gap(2);
+    align-items: center;
+  }
   .loading {
     top: 0;
 

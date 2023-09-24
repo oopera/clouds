@@ -82,9 +82,13 @@ var options: RenderOptions = {
   lastElapsed: 0,
 
   projectionDate: {
-    day: '0',
-    month: '0',
-    year: '0',
+    modelRunDate: {
+      year: '2021',
+      month: '01',
+      day: '01',
+    },
+    modelRunTime: '0',
+    forecastHours: '0',
   },
 
   // Strings (enum types)
@@ -304,24 +308,33 @@ async function InitializeScene() {
 
   const fetchTextures = async (setTextures: boolean = false) => {
     const dateString =
-      options.projectionDate.year +
-      options.projectionDate.month +
-      options.projectionDate.day;
+      options.projectionDate.modelRunDate.year +
+      options.projectionDate.modelRunDate.month +
+      options.projectionDate.modelRunDate.day;
+
+    const modelHour = options.projectionDate.modelRunTime;
+    const forecastHours = options.projectionDate.forecastHours;
 
     const lowD = await executePromise(
       'mb300RD',
-      fetch(`/api/cloud-texture?level=low&date=${dateString}`),
+      fetch(
+        `/api/cloud-texture?level=low&date=${dateString}&modelrunhour=${modelHour}&forecasthour=${forecastHours}`
+      ),
       'low-level cloud-data'
     );
     const midD = await executePromise(
       'mb500RD',
-      fetch(`/api/cloud-texture?level=high&date=${dateString}`),
+      fetch(
+        `/api/cloud-texture?level=high&date=${dateString}&modelrunhour=${modelHour}&forecasthour=${forecastHours}`
+      ),
       'mid-level cloud-data'
     );
 
     const highD = await executePromise(
       'mb700RD',
-      fetch(`/api/cloud-texture?level=middle&date=${dateString}`),
+      fetch(
+        `/api/cloud-texture?level=middle&date=${dateString}&modelrunhour=${modelHour}&forecasthour=${forecastHours}`
+      ),
       'high-levl cloud-data'
     );
 

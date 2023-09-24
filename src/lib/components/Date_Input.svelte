@@ -1,54 +1,105 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import Layout from './Layout.svelte';
   import { projection_date } from '$lib/stores/stores';
-  import { dev } from '$app/environment';
   import Tooltip from './Tooltip.svelte';
 
   const getDateValues = (date: Date) => {
-    var day = ('0' + date.getDate()).slice(-2);
-    var month = ('0' + (date.getMonth() + 1)).slice(-2);
-    var year = date.getFullYear().toString();
-
+    const day = ('0' + date.getUTCDate()).slice(-2);
+    const month = ('0' + (date.getUTCMonth() + 1)).slice(-2);
+    const year = date.getUTCFullYear().toString();
     return { day, month, year };
   };
 
-  const getDateString = (date: {
-    day: string;
-    month: string;
-    year: string;
-  }) => {
-    return `${date.year}-${date.month}-${date.day}`;
+  const getTimeValues = (date: Date) => {
+    const hours = ('0' + date.getUTCHours()).slice(-2);
+    const minutes = ('0' + date.getUTCMinutes()).slice(-2);
+    return { hours, minutes };
   };
 
-  let mounted: boolean = false;
+  const getUTCDateString = (
+    date: {
+      day: string;
+      month: string;
+      year: string;
+    },
+    time: {
+      hours: string;
+      minutes: string;
+    }
+  ) => {
+    return `${date.year}-${date.month}-${date.day}T${time.hours}:${time.minutes}`;
+  };
 
-  let today = new Date(Date.now() - 1 * 24 * 60 * 60 * 1000);
+  const getNearestForecastValues = (targetDate: Date) => {
+    const now = new Date(Date.now());
+
+    let modelRunDate = targetDate;
+    let modelRunTime;
+    if (targetDate > now) {
+      modelRunDate = now;
+      modelRunTime = Math.floor(now.getUTCHours() / 6) * 6;
+    } else {
+      modelRunTime = Math.floor(targetDate.getUTCHours() / 6) * 6;
+    }
+
+    const targetTimestamp = targetDate.getTime();
+    const modelRunTimestamp = new Date(
+      Date.UTC(
+        modelRunDate.getUTCFullYear(),
+        modelRunDate.getUTCMonth(),
+        modelRunDate.getUTCDate(),
+        modelRunTime
+      )
+    ).getTime();
+    let forecastHours =
+      (targetTimestamp - modelRunTimestamp) / (1000 * 60 * 60);
+
+    // Adjust for 3-hour increments after 120 hours
+    if (forecastHours >= 120) {
+      forecastHours = Math.round(forecastHours / 3) * 3;
+    }
+
+    return {
+      modelRunDate: getDateValues(modelRunDate),
+      modelRunTime: modelRunTime.toString().padStart(2, '0'),
+      forecastHours: Math.floor(forecastHours).toString().padStart(3, '0'),
+    };
+  };
+
+  let today = new Date(Date.now());
   let tenDays = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
+  let sixteenDays = new Date(Date.now() + 16 * 24 * 60 * 60 * 1000);
 
-  let current_date = getDateValues(today);
-  let max_date = getDateValues(today);
+  let projected_date = getDateValues(today);
+  let projected_time = getTimeValues(today);
+
+  let max_date = getDateValues(sixteenDays);
   let min_date = getDateValues(tenDays);
 
-  onMount(() => {
-    mounted = true;
+  let { modelRunTime, forecastHours, modelRunDate } =
+    getNearestForecastValues(today);
 
+  onMount(() => {
     projection_date.set({
-      day: current_date.day,
-      month: current_date.month,
-      year: current_date.year,
+      modelRunDate,
+      modelRunTime,
+      forecastHours,
     });
   });
 
-  const oninput = (e: Event) => {
+  const onchange = (e: Event) => {
     if (!e.target) return;
     const date = new Date((e.target as HTMLInputElement).value);
-    if (getDateValues(date) === $projection_date) return;
-    current_date = getDateValues(date);
+    projected_date = getDateValues(date);
+    projected_time = getTimeValues(date);
+
+    let { modelRunTime, forecastHours, modelRunDate } =
+      getNearestForecastValues(date);
+    console.log(modelRunTime, forecastHours, modelRunDate, today);
     projection_date.set({
-      day: current_date.day,
-      month: current_date.month,
-      year: current_date.year,
+      modelRunDate,
+      modelRunTime,
+      forecastHours,
     });
   };
 </script>
@@ -56,11 +107,11 @@
 <Tooltip text="Projection Date">
   <input
     data-interactable
-    on:input={oninput}
-    value={getDateString(current_date)}
-    max={getDateString(max_date)}
-    min={getDateString(min_date)}
-    type="date"
+    on:change={onchange}
+    value={getUTCDateString(projected_date, projected_time)}
+    max={getUTCDateString(max_date, { hours: '00', minutes: '00' })}
+    min={getUTCDateString(min_date, { hours: '00', minutes: '00' })}
+    type="datetime-local"
   />
 </Tooltip>
 

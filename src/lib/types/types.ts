@@ -45,9 +45,13 @@ export interface RenderOptions {
   lastElapsed: number;
 
   projectionDate: {
-    day: string;
-    month: string;
-    year: string;
+    modelRunDate: {
+      year: string;
+      month: string;
+      day: string;
+    };
+    modelRunTime: string;
+    forecastHours: string;
   };
 
   // Strings (enum types)

@@ -30,7 +30,6 @@ const displayError = (message: string) => {
 
   throw new Error(message);
 };
-
 export async function executePromise(
   key: string,
   promise: Promise<any>,
@@ -54,40 +53,23 @@ export async function executePromise(
   let data;
   try {
     data = await promise;
-  } catch (error) {
-    displayError(`Error while executing promise for key: ${key}`);
-    console.error(`Error while executing promise for key: ${key}`, error);
-  }
-
-  while (!data) {
-    progress += 1;
-
     loading.update((current) => {
       return {
         ...current,
         [key]: {
           id: Object.keys(current).length,
-          status: true,
+          status: false,
           message,
-          progress,
+          progress: 100,
         },
       };
     });
-
-    await new Promise((resolve) => setTimeout(resolve, 5));
+  } catch (error) {
+    const errorMessage = `Error while executing promise for key: ${key}`;
+    displayError(errorMessage);
+    console.error(errorMessage, error);
+    return null; // Return null to indicate an error occurred
   }
-
-  loading.update((current) => {
-    return {
-      ...current,
-      [key]: {
-        id: Object.keys(current).length,
-        status: false,
-        message,
-        progress: 100,
-      },
-    };
-  });
 
   return data;
 }

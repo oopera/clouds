@@ -20,7 +20,17 @@ export const raymarch_steps = writable(50);
 export const rotation_speed = writable(0.05);
 
 export const half_res = writable(true);
-export const projection_date = writable({ day: '0', month: '0', year: '0' });
+
+export const projection_date = writable({
+  modelRunDate: {
+    year: '0',
+    month: '0',
+    day: '0',
+  },
+  modelRunTime: '0',
+  forecastHours: '0',
+});
+
 export const day_cycle = writable<'day_cycle' | 'full_day' | 'full_night'>(
   'day_cycle'
 );

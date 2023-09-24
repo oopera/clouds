@@ -27,8 +27,9 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 
 	params := r.URL.Query()
 	level := params.Get("level") // e.g., "high"
+	modelRunHour := params.Get("modelrunhour") // e.g., "00"
+	forecasthour := params.Get("forecasthour") // e.g., "000"
 	date := params.Get("date")
-	hour := params.Get("hour") // e.g., "12"
 
 	var varType, levType string
 
@@ -47,15 +48,16 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if date == "" {
-		// If no date is provided, use today's date
 		date = time.Now().Format("20060102")
 	}
-	if hour == "" {
-		// If no hour is provided, use default hour "12"
-		hour = "00"
+	if modelRunHour == "" {
+		modelRunHour = "00"
+	}
+	if forecasthour == "" {
+		forecasthour = "000"
 	}
 
-	url := fmt.Sprintf("https://nomads.ncep.noaa.gov/cgi-bin/filter_gfs_0p25_1hr.pl?dir=%%2Fgfs.%s%%2F%s%%2Fatmos&file=gfs.t%sz.pgrb2.0p25.f000&%s=on&%s=on&subregion=&toplat=90&leftlon=0&rightlon=360&bottomlat=-90", date, hour, hour, varType, levType)
+	url := fmt.Sprintf("https://nomads.ncep.noaa.gov/cgi-bin/filter_gfs_0p25_1hr.pl?dir=%%2Fgfs.%s%%2F%s%%2Fatmos&file=gfs.t%sz.pgrb2.0p25.f%s&%s=on&%s=on&subregion=&toplat=90&leftlon=0&rightlon=360&bottomlat=-90", date, modelRunHour, modelRunHour, forecasthour, varType, levType)
 	log.Println("URL is: ", url)
 
 	res, err := http.Get(url)

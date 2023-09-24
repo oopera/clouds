@@ -146,9 +146,9 @@ fn calculate_height(min_layer_sphere_radius: f32, max_layer_sphere_radius: f32, 
   if(scaling_factor == 1){
     detail = detail_noise.r * 0.625 + detail_noise.g * 0.25 + detail_noise.b * 0.125;
   }else if(scaling_factor == 2){
-    detail = detail_noise.g * 0.625 + detail_noise.r * 0.25 + detail_noise.b * 0.125;
+    detail = detail_noise.r * 0.625 + detail_noise.r * 0.25 + detail_noise.b * 0.125;
   }else if(scaling_factor == 3){
-    detail = detail_noise.b * 0.625 + detail_noise.g * 0.25 + detail_noise.r * 0.125;
+    detail = detail_noise.r * 0.625 + detail_noise.g * 0.25 + detail_noise.r * 0.125;
   }
 
   var detail_modifier: f32 = lerp(detail, 1.0 - detail, saturate(percent_height));
