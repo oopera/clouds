@@ -5,18 +5,18 @@ import { tweened } from 'svelte/motion';
 
 export const has_initialized = writable(false);
 
-export const amount_of_points = writable(50);
+export const amount_of_points = writable(100);
 export const scale = writable(0.05);
 
 export const fps = writable(0);
 
-export const cloud_density = writable(0.75);
+export const cloud_density = writable(0.25);
 
-export const sun_transmittance = writable(0.44);
-export const rayleigh_intensity = writable(0.3);
+export const sun_transmittance = writable(2.0);
+export const rayleigh_intensity = writable(2.0);
 
 export const raymarch_length = writable(0.3);
-export const raymarch_steps = writable(50);
+export const raymarch_steps = writable(100);
 export const rotation_speed = writable(0.05);
 
 export const half_res = writable(true);

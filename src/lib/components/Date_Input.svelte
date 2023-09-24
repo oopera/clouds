@@ -32,14 +32,34 @@
 
   const getNearestForecastValues = (targetDate: Date) => {
     const now = new Date(Date.now());
-
     let modelRunDate = targetDate;
     let modelRunTime;
+
     if (targetDate > now) {
       modelRunDate = now;
-      modelRunTime = Math.floor(now.getUTCHours() / 6) * 6;
-    } else {
-      modelRunTime = Math.floor(targetDate.getUTCHours() / 6) * 6;
+    }
+
+    // Adjusting model run times based on their actual release times
+    const cycles = [0, 6, 12, 18]; // The standard cycle times
+    const releaseTimes = [6, 12, 18, 24]; // The release times for each cycle
+
+    modelRunTime = cycles[0]; // Initialize to the first cycle as a fallback
+
+    for (let i = 0; i < cycles.length; i++) {
+      const releaseTime = new Date(
+        Date.UTC(
+          modelRunDate.getUTCFullYear(),
+          modelRunDate.getUTCMonth(),
+          modelRunDate.getUTCDate(),
+          releaseTimes[i]
+        )
+      );
+
+      if (releaseTime <= now) {
+        modelRunTime = cycles[i];
+      } else {
+        break;
+      }
     }
 
     const targetTimestamp = targetDate.getTime();
@@ -51,6 +71,7 @@
         modelRunTime
       )
     ).getTime();
+
     let forecastHours =
       (targetTimestamp - modelRunTimestamp) / (1000 * 60 * 60);
 

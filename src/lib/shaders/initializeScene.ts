@@ -665,7 +665,7 @@ async function InitializeScene() {
   });
 
   setYaw(360, true);
-  setZoom(4, true);
+  setZoom(7.5, true);
   setPitch(0, true);
   tweenedVisibility.set(1.0);
 
