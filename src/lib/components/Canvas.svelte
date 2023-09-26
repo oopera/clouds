@@ -1,5 +1,5 @@
 <script lang="ts">
-  import InitializeScene from '$lib/shaders/initializeScene';
+  import init from '$lib/shaders/init';
   import {
     zoom,
     setZoom,
@@ -18,7 +18,7 @@
   const min_zoom = 2.65;
 
   onMount(() => {
-    InitializeScene();
+    init();
 
     const canvas = document.getElementById('canvas') as HTMLCanvasElement;
 
@@ -28,6 +28,8 @@
     canvas.addEventListener('mousedown', handlemousedown);
     canvas.addEventListener('mouseup', handlemouseup);
     canvas.addEventListener('mousemove', handlemousemove);
+
+    // Todo bind keyboard events
   });
 
   const handleScroll = (e: WheelEvent) => {

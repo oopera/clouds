@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import type { Stores } from '$lib/types/types';
-  import IconComponent from './IconComponent.svelte';
+  import IconComponent from './Icon.svelte';
   import Tooltip from './Tooltip.svelte';
 
   export let title: Stores;
@@ -54,8 +54,11 @@
     align-items: end;
     justify-content: end;
     flex-direction: column;
-    gap: 4px;
+
     z-index: 1;
     cursor: pointer;
+    &:focus-visible {
+      outline: 1px solid white;
+    }
   }
 </style>

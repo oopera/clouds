@@ -173,13 +173,13 @@
     top: 50%;
     right: 50%;
     transform: translate(50%, -50%);
-    transition: 750ms var(--ease);
+    transition: 1250ms var(--ease);
     z-index: 1;
   }
 
   .typo {
     transform: translate(110%, 0%);
-    transition: 750ms var(--ease);
+    transition: 1250ms var(--ease);
   }
 
   .loaded {

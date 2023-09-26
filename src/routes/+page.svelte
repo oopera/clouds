@@ -4,7 +4,7 @@
   import { inject } from '@vercel/analytics';
 
   import Canvas from '$lib/components/Canvas.svelte';
-  import Range_Input from '$lib/components/Range_Input.svelte';
+  import Range_Input from '$lib/components/Range.svelte';
   import Cursor from '$lib/components/Cursor.svelte';
   import Loading from '$lib/components/Loading.svelte';
   import Logo from '$lib/components/Logo.svelte';

@@ -40,6 +40,7 @@ export interface RenderOptions {
   amountOfVertices: number;
   halfRes: boolean;
   isDragging: boolean;
+  isFetching: boolean;
 
   elapsed: number;
   lastElapsed: number;
@@ -52,6 +53,7 @@ export interface RenderOptions {
     };
     modelRunTime: string;
     forecastHours: string;
+    projected_time: string;
   };
 
   // Strings (enum types)
@@ -68,6 +70,11 @@ export interface RenderOptions {
     atmo: number;
   };
   cameraPosition: {
+    x: number;
+    y: number;
+    z: number;
+  };
+  lightPosition: {
     x: number;
     y: number;
     z: number;

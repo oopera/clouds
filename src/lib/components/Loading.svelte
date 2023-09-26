@@ -4,10 +4,9 @@
   import Text from './Text.svelte';
   import Layout from './Layout.svelte';
   import { onMount } from 'svelte';
-  import Tag from './Tag.svelte';
   import Button from './Button.svelte';
   import Line from './Line.svelte';
-  import DateInput from './Date_Input.svelte';
+  import DateInput from './Date.svelte';
 
   let loadedItems: LoadingStore;
   let mounted: boolean = false;
@@ -74,7 +73,7 @@
                   <Text delay={id} text={message} />
                   <Text
                     nowrap
-                    text={progress + '%'}
+                    text={progress === 100 ? 'done' : `waiting`}
                     secondary={progress !== 100}
                     tertiary={progress === 100}
                     delay={id + 1}
