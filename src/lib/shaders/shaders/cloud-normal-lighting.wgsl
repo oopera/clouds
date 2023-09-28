@@ -59,11 +59,11 @@ struct Samples {
 
 const sphere_center = vec3<f32>(0.0, 0.0, 0.0);
 const sphere_radius: f32 = 5.0;
-const cube_offset: f32 = 0.25;
+const cube_offset: f32 = 0.13;
 
-const layer_1_offset = 0.03; 
-const layer_2_offset = 0.17;
-const layer_3_offset = 0.22;
+const layer_1_offset = 0.02; 
+const layer_2_offset = 0.07;
+const layer_3_offset = 0.10;
 
 const layer_1_sphere_radius: f32 = sphere_radius + layer_1_offset;
 const layer_2_sphere_radius: f32 = sphere_radius + layer_2_offset;
