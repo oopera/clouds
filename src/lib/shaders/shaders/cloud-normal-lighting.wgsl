@@ -141,7 +141,7 @@ fn calculate_height(min_layer_sphere_radius: f32, max_layer_sphere_radius: f32, 
   var final_density: f32 = saturate(ReMap(shape_noise, detail_modifier, 1.0, 0.0, 1.0));
 
   var maxheight = ReMap(pow(final_density * pow(coverage,1), 1), 0.0, 1.0, min_layer_sphere_radius, (max_layer_sphere_radius - sphere_radius));
-  let minheight = ReMap(ReMap(-(1 - final_density), 0.0, 1.0, 0.0, 0.5), 0.0, 1.0, min_layer_sphere_radius, (max_layer_sphere_radius - sphere_radius));
+  let minheight = ReMap(ReMap((1 - final_density), 0.0, 1.0, 0.0, 0.15), 0.0, 1.0, min_layer_sphere_radius, (max_layer_sphere_radius - sphere_radius));
 
   return vec2<f32>(minheight, maxheight);
 }
@@ -199,28 +199,26 @@ fn getSamples(inner_sphere_point:vec3<f32>, sphere_uv: vec2<f32>) -> Samples {
 
 
 fn getDensity(current_point: vec3<f32>, distance_to_center: f32, distance_to_inner_sphere:f32, samples: Samples, reverse: bool) -> f32 {
-  var distance_low = ReMap(length(sphere_center - current_point), layer_1_offset, layer_1_buffer - sphere_radius, 0.0, 1.0);
-  var low: vec2<f32> = calculate_height(layer_1_offset, layer_2_sphere_radius,samples.noise, samples.noise, samples.coverage.r, distance_low, 1);
+  var distance_low = ReMap(length(sphere_center - current_point), layer_1_offset, layer_1_buffer, 0.0, 1.0);
+  var low: vec2<f32> = calculate_height(layer_1_offset, layer_1_buffer + sphere_radius,samples.detail_noise, samples.detail_noise, samples.coverage.r, distance_low, 1);
   
-  var distance_middle = ReMap(length(sphere_center - current_point), layer_2_offset, layer_2_buffer - sphere_radius, 0.0, 1.0);
-  var middle: vec2<f32> = calculate_height(layer_2_offset, layer_3_sphere_radius, samples.noise, samples.detail_noise, samples.coverage.g, distance_middle, 2);
-  
+  var distance_middle = ReMap(length(sphere_center - current_point), layer_2_offset, layer_2_buffer, 0.0, 1.0);
+  var middle: vec2<f32> = calculate_height(layer_2_offset, layer_2_buffer + sphere_radius, samples.detail_noise, samples.detail_noise, samples.coverage.g, distance_middle, 2);
+
   var distance_high = ReMap(length(sphere_center - current_point), layer_3_offset, outer_sphere_radius - sphere_radius, 0.0, 1.0);
   var high: vec2<f32> = calculate_height(layer_3_offset, outer_sphere_radius,samples.detail_noise, samples.detail_noise, samples.coverage.b, distance_high, 3);
 
-  var offset_scale =(ReMap(distance_to_center, sphere_radius, outer_sphere_radius, 0.0, 1.0));
-
   if (distance_to_center < outer_sphere_radius && distance_to_center > sphere_radius) {
    if (distance_to_center > layer_3_sphere_radius) {
-        if((distance_to_inner_sphere > high[0] && distance_to_inner_sphere < high[1] * samples.coverage.b)){
+        if((distance_to_inner_sphere > high[0] && distance_to_inner_sphere < high[1])){
         return samples.coverage.b ;
       }
     } else if (distance_to_center > layer_2_sphere_radius) {
-      if((distance_to_inner_sphere > middle[0] && distance_to_inner_sphere < middle[1] * samples.coverage.g)){
+      if((distance_to_inner_sphere > middle[0] && distance_to_inner_sphere < middle[1])){
         return samples.coverage.g;
       }
     } else if (distance_to_center > layer_1_sphere_radius) {
-      if((distance_to_inner_sphere > low[0] && distance_to_inner_sphere < low[1] * samples.coverage.r)){
+      if((distance_to_inner_sphere > low[0] && distance_to_inner_sphere < low[1])){
         return samples.coverage.r;
       }
     }
