@@ -64,8 +64,8 @@ const cube_offset: f32 = 0.13;
 const layer_1_offset = 0.01; 
 const layer_1_buffer = 0.06;
 const layer_2_offset = 0.07;
-const layer_2_buffer = 0.1;
-const layer_3_offset = 0.11;
+const layer_2_buffer = 0.11;
+const layer_3_offset = 0.12;
 
 const layer_1_sphere_radius: f32 = sphere_radius + layer_1_offset;
 const layer_2_sphere_radius: f32 = sphere_radius + layer_2_offset;
@@ -200,13 +200,13 @@ fn getSamples(inner_sphere_point:vec3<f32>, sphere_uv: vec2<f32>) -> Samples {
 
 fn getDensity(current_point: vec3<f32>, distance_to_center: f32, distance_to_inner_sphere:f32, samples: Samples, reverse: bool) -> f32 {
   var distance_low = ReMap(length(sphere_center - current_point), layer_1_offset, layer_1_buffer, 0.0, 1.0);
-  var low: vec2<f32> = calculate_height(layer_1_offset, layer_1_buffer + sphere_radius,samples.detail_noise, samples.detail_noise, samples.coverage.r, distance_low, 1);
+  var low: vec2<f32> = calculate_height(layer_1_offset, layer_1_buffer + sphere_radius,samples.noise, samples.detail_noise, samples.coverage.r, distance_low, 1);
   
   var distance_middle = ReMap(length(sphere_center - current_point), layer_2_offset, layer_2_buffer, 0.0, 1.0);
-  var middle: vec2<f32> = calculate_height(layer_2_offset, layer_2_buffer + sphere_radius, samples.detail_noise, samples.detail_noise, samples.coverage.g, distance_middle, 2);
+  var middle: vec2<f32> = calculate_height(layer_2_offset, layer_2_buffer + sphere_radius, samples.noise, samples.detail_noise, samples.coverage.g, distance_middle, 2);
 
-  var distance_high = ReMap(length(sphere_center - current_point), layer_3_offset, outer_sphere_radius - sphere_radius, 0.0, 1.0);
-  var high: vec2<f32> = calculate_height(layer_3_offset, outer_sphere_radius,samples.detail_noise, samples.detail_noise, samples.coverage.b, distance_high, 3);
+  var distance_high = ReMap(length(sphere_center - current_point), layer_3_offset, cube_offset, 0.0, 1.0);
+  var high: vec2<f32> = calculate_height(layer_3_offset, outer_sphere_radius,samples.noise, samples.detail_noise, samples.coverage.b, distance_high, 3);
 
   if (distance_to_center < outer_sphere_radius && distance_to_center > sphere_radius) {
    if (distance_to_center > layer_3_sphere_radius) {
@@ -313,10 +313,12 @@ fn calculate_lod() -> f32 {
       if(cloud_density < 1.0){
         sun_transmittance += getDensity(sun_point, distance_to_center, distance_to_inner_sphere, samples, false) * cloudUniforms.sunDensity * clamp(lightness, lightclamp[0], lightclamp[1]);
       }
-        // output_color += sun_transmittance * highlight_color * light * cur_density;
+      if(cloud_density < 5.0){
+        output_color += sun_transmittance * highlight_color * light * cur_density;
+    }
     }
   } 
-  output_color += sun_transmittance * highlight_color  * light;
+  // output_color += sun_transmittance * highlight_color  * light;
   return vec4<f32>(output_color, pow(cloud_density,1) * cloudUniforms.visibility);
   }
 
