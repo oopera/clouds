@@ -98,8 +98,8 @@
                 delay={0}
                 title="rayleigh_intensity"
                 min={0}
-                max={2.0}
-                step={0.05}
+                max={3.0}
+                step={0.1}
               />
               <Range_Input
                 delay={0}

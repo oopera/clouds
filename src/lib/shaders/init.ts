@@ -216,7 +216,7 @@ async function init() {
   if (generateWorleyTexture) {
     executePromise(
       'worleyNoiseTexture',
-      (await Get3DNoiseTexture(device), 64, 64, 64) as any,
+      (await Get3DNoiseTexture(device), 128, 128, 128) as any,
       '3D Noise Texture'
     );
   }

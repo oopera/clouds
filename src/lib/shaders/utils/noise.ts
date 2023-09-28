@@ -130,16 +130,20 @@ export function generateWorleyFbmNoise(
   width: number,
   height: number,
   depth: number,
-  frequency: number
+  frequency: number,
+  resolution: number
 ): Float32Array {
   const result = new Float32Array(width * height * depth);
 
   for (let x = 0; x < width; x++) {
     for (let y = 0; y < height; y++) {
       for (let z = 0; z < depth; z++) {
-        const uv: [number, number] = [x / width, y / height];
+        const uv: [number, number] = [
+          (x / width) * resolution,
+          (y / height) * resolution,
+        ];
         const value = worley(
-          [uv[0] * 2.0 - 1.0, uv[1] * 2.0 - 1.0, z / depth],
+          [uv[0] * 2.0 - 1.0, uv[1] * 2.0 - 1.0, (z / depth) * resolution],
           2.0,
           frequency
         );
