@@ -284,13 +284,13 @@ fn calculate_lod() -> f32 {
 
 const cloud_ambient_minimum: f32 = 0.0;
 const sun_color: vec3<f32> = vec3<f32>(0.89, 0.82, 0.90);
-const cloud_beer: f32 = 0.2;
+const cloud_beer: f32 = 0.7;
 const cloud_attuention_clampval: f32 = 0.2;
 const cloud_outscatter_ambient: f32 = 0.1;
 const cloud_inscatter: f32 = 0.2;
 const cloud_silver_intensity: f32 = 0.2;
 const cloud_silver_exponent: f32 = 0.2;
-const cloud_outscatter: f32 = 0.2;
+const cloud_outscatter: f32 = 0.6;
 const cloud_in_vs_outscatter: f32 = 0.2;
 
 fn InOutScatter(cos_angle: f32, cloud_inscatter: f32, cloud_silver_intensity: f32, cloud_silver_exponent: f32, cloud_outscatter: f32, cloud_in_vs_outscatter: f32) -> f32 {
@@ -396,7 +396,7 @@ fn CalculateLight(
 
       if(cloud_density < 1.0){
         sun_transmittance += getCoverage(sun_point, distance_to_center, distance_to_inner_sphere, samples, true) * cloudUniforms.sunDensity;
-        sun_output += CalculateLight(cloud_density, sun_transmittance, 1.0, scale, k / 2, samples.blue_noise.r) * lightUniforms.rayleighIntensity;
+        sun_output += CalculateLight(cloud_density, sun_transmittance, 1.0, 1, k / 2, samples.blue_noise.r) * lightUniforms.rayleighIntensity;
       }
     }
   } 
