@@ -29,7 +29,7 @@ import { CreateViewProjection, CreateTransforms } from './utils/matrix.js';
 import { loading, setZoom, setPitch, setYaw } from '$lib/stores/stores.js';
 
 import earthShader from './shaders/earth.wgsl?raw';
-import cloudShader from './shaders/cloud.wgsl?raw';
+import cloudShader from './shaders/cloud-normal-lighting.wgsl?raw';
 import atmosphereShader from './shaders/atmosphere.wgsl?raw';
 import fullScreenQuadShader from './shaders/quad.wgsl?raw';
 
@@ -193,12 +193,6 @@ async function init() {
     '3d noise textures'
   );
 
-  let detail_noise = await executePromise(
-    'detail_noise',
-    loadBinaryData('/textures/detail_noise.bin'),
-    '3d detail noise textures'
-  );
-
   let bluenoise = await executePromise(
     'bluenoise',
     loadImage('/textures/BlueNoise64Tiled.jpg'),
@@ -209,7 +203,6 @@ async function init() {
   const lightMapV = await GetPartitionedTexture(device, lightmap);
   const noiseV = Create3DTextureFromData(device, noise);
   const bluenoiseV = await GetTexture(device, bluenoise);
-  const detailnoiseV = Create3DTextureFromData(device, detail_noise);
 
   const generateWorleyTexture = false;
 
@@ -541,14 +534,6 @@ async function init() {
     {
       binding: 8,
       resource: bluenoiseV.sampler,
-    },
-    {
-      binding: 9,
-      resource: detailnoiseV.texture.createView({ dimension: '3d' }),
-    },
-    {
-      binding: 10,
-      resource: detailnoiseV.sampler,
     },
   ];
 
