@@ -29,7 +29,7 @@ import { CreateViewProjection, CreateTransforms } from './utils/matrix.js';
 import { loading, setZoom, setPitch, setYaw } from '$lib/stores/stores.js';
 
 import earthShader from './shaders/earth.wgsl?raw';
-import cloudShader from './shaders/cloud-normal-lighting.wgsl?raw';
+import cloudShader from './shaders/cloud-normal-lighting-new.wgsl?raw';
 import atmosphereShader from './shaders/atmosphere.wgsl?raw';
 import fullScreenQuadShader from './shaders/quad.wgsl?raw';
 
