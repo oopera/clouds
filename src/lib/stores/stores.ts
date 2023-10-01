@@ -11,13 +11,13 @@ export const scale = writable(0.05);
 export const fps = writable(0);
 export const dragging = writable(false);
 
-export const cloud_density = writable(0.14);
+export const cloud_density = writable(0.34);
 
-export const sun_transmittance = writable(1.0);
-export const rayleigh_intensity = writable(2.0);
+export const sun_transmittance = writable(2.0);
+export const rayleigh_intensity = writable(3.0);
 
 export const raymarch_length = writable(0.3);
-export const raymarch_steps = writable(100);
+export const raymarch_steps = writable(40);
 export const rotation_speed = writable(0.05);
 
 export const half_res = writable(true);

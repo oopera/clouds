@@ -89,8 +89,8 @@
                 delay={0}
                 title="raymarch_steps"
                 min={1}
-                max={299}
-                step={5}
+                max={100}
+                step={1}
               />
               <Text accent delay={9} text={'FORM'} />
 
