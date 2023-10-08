@@ -617,17 +617,18 @@ async function init() {
       status: false,
     },
   }));
-  // document?.getElementById('download')?.addEventListener('click', function (e) {
-  //   let canvasUrl = canvas.toDataURL();
-  //   const createEl = document.createElement('a');
-  //   createEl.href = canvasUrl;
-  //   createEl.download = 'Canvas.png';
-  //   createEl.click();
-  //   createEl.remove();
-  // });
+  document?.getElementById('download')?.addEventListener('click', function (e) {
+    let canvasUrl = canvas.toDataURL();
+    console.log('test');
+    const createEl = document.createElement('a');
+    createEl.href = canvasUrl;
+    createEl.download = 'Canvas.png';
+    createEl.click();
+    createEl.remove();
+  });
 
   setYaw(210, true);
-  setZoom(7.5, true);
+  setZoom(15, true);
   setPitch(0, true);
   tweenedVisibility.set(1.0);
 

@@ -57,7 +57,7 @@ struct Samples {
 
 
 const sphere_center = vec3<f32>(0.0, 0.0, 0.0);
-const sphere_radius: f32 = 5.0;
+const sphere_radius: f32 = 10.0;
 const cube_offset: f32 = 0.15;
 
 const layer_1_offset = 0.01; 
@@ -147,7 +147,7 @@ fn getDensity(noise: vec4<f32>,  percent_height: f32, layer: f32) -> f32{
   detail_modifier = detail_modifier;
   var final_density: f32 = saturate(ReMap(shape_noise, detail_modifier, 1.0, 0.0, 1.0));
 
-  return pow(final_density, 2);
+  return pow(final_density, 1 + (layer * 0.2));
 }
 
 
@@ -192,9 +192,9 @@ fn calculateStepLength(ro: vec3<f32>, rd: vec3<f32>) -> f32 {
 }
 
 
-const high_lod: f32 = 2.5;
-const low_lod: f32 = 1;
-const lod_distance_threshold: f32 = 8.5; 
+const high_lod: f32 = 2;
+const low_lod: f32 = 1.0;
+const lod_distance_threshold: f32 = 15; 
 
 fn getLod() -> f32 {
     let distance = length(sphere_center - uni.cameraPosition.xyz);
@@ -267,7 +267,7 @@ fn getSphereUV(inner_sphere_point: vec3<f32>) -> vec2<f32> {
 @fragment fn fs(output: Output) -> @location(0) vec4<f32> {
   var output_color: vec3<f32> = vec3<f32>(0.52, 0.53, 0.57);
   var highlight_color: vec3<f32> = vec3<f32>(0.09, 0.07, 0.12);
-
+  var sun_color: vec3<f32> = vec3<f32>(1, 0.8, 0.7);
   var light: f32 = 0.0;
   var sun_transmittance: f32 = 0.0;
   var sun_output: vec3<f32> = vec3<f32>(0.0, 0.0, 0.0);
@@ -331,6 +331,6 @@ fn getSphereUV(inner_sphere_point: vec3<f32>) -> vec2<f32> {
       }
     }
   } 
-    return vec4<f32>(output_color, pow(cloud_density,2) * cloudUniforms.visibility);
+    return vec4<f32>(output_color, cloud_density * cloudUniforms.visibility);
   }
 

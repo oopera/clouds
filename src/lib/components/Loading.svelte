@@ -58,6 +58,7 @@
       <Layout horizontal align="center" justify="between" gap="2">
         <Layout horizontal align="center" justify="start" gap="2">
           <Button {onclick}><p>{showDownloads ? 'hide' : 'show'}</p></Button>
+          <p>UTC</p>
           <DateInput />
         </Layout>
 

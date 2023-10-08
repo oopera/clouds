@@ -123,8 +123,14 @@ export const light_position = derived(
   ([$projection_date]) => {
     const distance = 6.0;
 
-    const angle =
-      (parseInt($projection_date.projected_time) / 24.0) * 2.0 * Math.PI;
+    // Adjust for time difference between GMT and Amazon Time (AMT is GMT-4)
+    const adjustedTime = parseInt($projection_date.projected_time) + 12;
+
+    // Normalize the time to a 24-hour format after adjustment
+    const normalizedTime = (adjustedTime + 24) % 24;
+
+    // Calculate angle based on adjusted time
+    const angle = (normalizedTime / 24.0) * 2.0 * Math.PI;
 
     const x = distance * Math.cos(angle);
     const y = 0;
