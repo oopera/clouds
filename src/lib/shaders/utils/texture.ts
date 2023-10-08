@@ -50,22 +50,29 @@ export const Get4LayerTextureFromGribData = async (
 
   const rgbaData = new Uint8Array(width * height * 4);
 
-  for (let wh = 0; wh < width * height; wh++) {
-    const layerData1 = data[0][wh];
-    const layerData2 = data[1][wh];
-    const layerData3 = data[2][wh];
-    const layerData4 = data[3][wh];
-    const offset = wh * 4;
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const wh = y * width + x;
+      // Invert horizontally and vertically to Align with Texture
+      // Tested this in Figma
+      const whShifted = (height - 1 - y) * width + (width - 1 - (x + width));
 
-    const value = Math.floor(layerData1 * 2.55);
-    const value2 = Math.floor(layerData2 * 2.55);
-    const value3 = Math.floor(layerData3 * 2.55);
-    const value4 = Math.floor(layerData4 * 2.55);
+      const layerData1 = data[0][wh];
+      const layerData2 = data[1][wh];
+      const layerData3 = data[2][wh];
+      const layerData4 = data[3][wh];
+      const offset = whShifted * 4; // Using the shifted index here
 
-    rgbaData[offset] = value;
-    rgbaData[offset + 1] = value2;
-    rgbaData[offset + 2] = value3;
-    rgbaData[offset + 3] = value4; // alpha channel
+      const value = Math.floor(layerData1 * 2.55);
+      const value2 = Math.floor(layerData2 * 2.55);
+      const value3 = Math.floor(layerData3 * 2.55);
+      const value4 = Math.floor(layerData4 * 2.55);
+
+      rgbaData[offset] = value;
+      rgbaData[offset + 1] = value2;
+      rgbaData[offset + 2] = value3;
+      rgbaData[offset + 3] = value4; // alpha channel
+    }
   }
 
   const sampler = device.createSampler({
@@ -90,6 +97,24 @@ export const Get4LayerTextureFromGribData = async (
     { bytesPerRow: width * 4, rowsPerImage: height },
     [width, height, 1]
   );
+
+  // const canvas = document.createElement('canvas');
+  // canvas.width = width;
+  // canvas.height = height;
+  // const ctx = canvas.getContext('2d');
+  // if (ctx) {
+  //   const imageData = ctx.createImageData(width, height);
+  //   imageData.data.set(rgbaData);
+  //   ctx.putImageData(imageData, 0, 0);
+
+  //   const pngURL = canvas.toDataURL('image/png');
+  //   const link = document.createElement('a');
+  //   link.href = pngURL;
+  //   link.download = 'texture.png';
+  //   document.body.appendChild(link);
+  //   link.click();
+  //   document.body.removeChild(link);
+  // }
 
   return {
     texture,
