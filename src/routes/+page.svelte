@@ -124,9 +124,9 @@
               <Range_Input
                 delay={0}
                 title="tweenedZoom"
-                min={10}
-                max={20}
-                step={0.1}
+                min={21}
+                max={35}
+                step={1}
               />
               <Text accent delay={9} text={'CAMERA'} />
             </Layout>

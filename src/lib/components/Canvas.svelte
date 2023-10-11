@@ -14,8 +14,8 @@
   let initialX = 0;
   let initialY = 0;
 
-  const max_zoom = 20;
-  const min_zoom = 11;
+  const max_zoom = 35;
+  const min_zoom = 21;
 
   onMount(() => {
     init();

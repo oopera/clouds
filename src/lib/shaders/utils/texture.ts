@@ -179,9 +179,9 @@ export const GetTextureFromGribData = async (
 export function Create3DTextureFromData(
   device: GPUDevice,
   data: Uint8Array,
-  width: number = 128,
-  height: number = 128,
-  depth: number = 128
+  width: number = 64,
+  height: number = 64,
+  depth: number = 64
 ): { texture: GPUTexture; sampler: GPUSampler } {
   const sampler = device.createSampler({
     minFilter: 'linear',
@@ -209,6 +209,95 @@ export function Create3DTextureFromData(
     texture,
     sampler,
   };
+}
+
+export function CreateNoiseImages(
+  buffer: ArrayBuffer,
+  width: number = 64,
+  height: number = 64,
+  depth: number = 64
+) {
+  const data = new Uint8Array(buffer);
+  // Initialize canvases and their 2D contexts for RGBA channels
+  const canvases = {
+    R: document.createElement('canvas'),
+    G: document.createElement('canvas'),
+    B: document.createElement('canvas'),
+    A: document.createElement('canvas'),
+  };
+
+  canvases.R.width =
+    canvases.G.width =
+    canvases.B.width =
+    canvases.A.width =
+      width;
+  canvases.R.height =
+    canvases.G.height =
+    canvases.B.height =
+    canvases.A.height =
+      height;
+
+  const ctxs = {
+    R: canvases.R.getContext('2d')!,
+    G: canvases.G.getContext('2d')!,
+    B: canvases.B.getContext('2d')!,
+    A: canvases.A.getContext('2d')!,
+  };
+
+  const imgData = {
+    R: ctxs.R.createImageData(width, height),
+    G: ctxs.G.createImageData(width, height),
+    B: ctxs.B.createImageData(width, height),
+    A: ctxs.A.createImageData(width, height),
+  };
+
+  // Loop through the first slice and fill all channels equally based on the single channel value
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const index3D = (x + y * width) * 4;
+      const indexImgData = (x + y * width) * 4;
+
+      // For Red channel
+      imgData.R.data[indexImgData] =
+        imgData.R.data[indexImgData + 1] =
+        imgData.R.data[indexImgData + 2] =
+          data[index3D];
+      imgData.R.data[indexImgData + 3] = 255;
+
+      // For Green channel
+      imgData.G.data[indexImgData] =
+        imgData.G.data[indexImgData + 1] =
+        imgData.G.data[indexImgData + 2] =
+          data[index3D + 1];
+      imgData.G.data[indexImgData + 3] = 255;
+
+      // For Blue channel
+      imgData.B.data[indexImgData] =
+        imgData.B.data[indexImgData + 1] =
+        imgData.B.data[indexImgData + 2] =
+          data[index3D + 2];
+      imgData.B.data[indexImgData + 3] = 255;
+
+      // For Alpha channel
+      imgData.A.data[indexImgData] =
+        imgData.A.data[indexImgData + 1] =
+        imgData.A.data[indexImgData + 2] =
+          data[index3D + 3];
+      imgData.A.data[indexImgData + 3] = 255;
+    }
+  }
+
+  // Put image data onto canvas and download
+  for (const channel of ['R', 'G', 'B', 'A']) {
+    ctxs[channel].putImageData(imgData[channel], 0, 0);
+    const dataUrl = canvases[channel].toDataURL('image/png');
+    const link = document.createElement('a');
+    link.href = dataUrl;
+    link.download = `texture_${channel}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
 }
 
 // Used to partition a texture into 2 textures since the max texture size is 8192
@@ -307,49 +396,47 @@ export const parseEncodedToFlattened = (encodedLayer: number[][]): number[] => {
   return flattenedLayer;
 };
 
+function reMap(
+  value: number,
+  old_low: number,
+  old_high: number,
+  new_low: number,
+  new_high: number
+) {
+  var ret_val: number =
+    new_low + ((value - old_low) * (new_high - new_low)) / (old_high - old_low);
+  return ret_val;
+}
+
 export const Get3DNoiseTexture = async (
   device: GPUDevice,
-  width: number = 128,
-  height: number = 128,
-  depth: number = 128,
+  width: number = 32,
+  height: number = 32,
+  depth: number = 32,
   addressModeU = 'repeat',
   addressModeV = 'repeat',
   addressModeW = 'repeat'
 ) => {
   const perlinNoiseData_01 = generatePerlinFbmNoise(width, height, depth, 4, 8);
-  const noiseData_01 = generateWorleyFbmNoise(width, height, depth, 2);
-  const noiseData_02 = generateWorleyFbmNoise(width, height, depth, 4);
-  const noiseData_03 = generateWorleyFbmNoise(width, height, depth, 8);
-  const noiseData_04 = generateWorleyFbmNoise(width, height, depth, 16);
+  const noiseData_01 = generateWorleyFbmNoise(width, height, depth, 0.5);
+  const noiseData_02 = generateWorleyFbmNoise(width, height, depth, 0.75);
+  const noiseData_03 = generateWorleyFbmNoise(width, height, depth, 1);
   const rgbaData = new Uint8Array(noiseData_01.length * 4);
 
   function mix(a: number, b: number, t: number): number {
     return a * (1 - t) + b * t;
   }
 
-  function reMap(
-    value: number,
-    old_low: number,
-    old_high: number,
-    new_low: number,
-    new_high: number
-  ) {
-    var ret_val: number =
-      new_low +
-      ((value - old_low) * (new_high - new_low)) / (old_high - old_low);
-    return ret_val;
-  }
-
   for (let i = 0; i < noiseData_01.length; i++) {
     const index = i * 4;
-    let pfbm = mix(noiseData_01[i], perlinNoiseData_01[i], 0.5);
-    const billowyPerlinData = reMap(pfbm, 0.0, 1.0, noiseData_02[i], 1.0);
+    let pfbm = mix(noiseData_01[i], perlinNoiseData_01[i], 0.75);
+    const billowyPerlinData = reMap(pfbm, 0.0, 1.0, noiseData_01[i], 1.0);
 
     // rgbaData[index] = perlinNoiseData_01[i] * 255; // R
     rgbaData[index] = billowyPerlinData * 255; // G
-    rgbaData[index + 1] = noiseData_02[i] * 255; // B
-    rgbaData[index + 2] = noiseData_03[i] * 255; // G
-    rgbaData[index + 3] = noiseData_04[i] * 255; // B
+    rgbaData[index + 1] = noiseData_01[i] * 255; // B
+    rgbaData[index + 2] = noiseData_02[i] * 255; // G
+    rgbaData[index + 3] = noiseData_03[i] * 255; // B
     // rgbaData[index + 3] = billowyPerlinData * 255; // A
   }
 
@@ -374,7 +461,7 @@ export const Get3DNoiseTexture = async (
     { width: width, height: height, depthOrArrayLayers: depth }
   );
 
-  downloadData(rgbaData, 'noiseTexture.bin');
+  downloadData(rgbaData, 'noise.bin');
 
   return {
     texture,

@@ -16,6 +16,7 @@ import {
   GetDepthTexture,
   downloadData,
   GetTexture,
+  CreateNoiseImages,
 } from './utils/texture.js';
 import {
   displayError,
@@ -193,23 +194,39 @@ async function init() {
     '3d noise textures'
   );
 
+  let detailNoise = await executePromise(
+    'detailNoise',
+    loadBinaryData('/textures/detail-noise.bin'),
+    'detail noise textures'
+  );
+
   let bluenoise = await executePromise(
     'bluenoise',
-    loadImage('/textures/BlueNoise64Tiled.jpg'),
+    loadImage('/textures/blue-noise.jpg'),
     'bluenoise textures'
+  );
+
+  let curlnoise = await executePromise(
+    'curl',
+    loadImage('/textures/curl-noise.jpg'),
+    'curl textures'
   );
 
   const textureV = await GetPartitionedTexture(device, texture);
   const lightMapV = await GetPartitionedTexture(device, lightmap);
-  const noiseV = Create3DTextureFromData(device, noise);
+  const noiseV = Create3DTextureFromData(device, noise, 64, 64, 64);
+  const detailNoiseV = Create3DTextureFromData(device, detailNoise, 32, 32, 32);
   const bluenoiseV = await GetTexture(device, bluenoise);
+  const curlnoiseV = await GetTexture(device, curlnoise);
 
-  const generateWorleyTexture = false;
+  CreateNoiseImages(detailNoise, 32, 32, 32);
+
+  const generateWorleyTexture = true;
 
   if (generateWorleyTexture) {
     executePromise(
       'worleyNoiseTexture',
-      (await Get3DNoiseTexture(device), 128, 128, 128) as any,
+      (await Get3DNoiseTexture(device, 32, 32, 32)) as any,
       '3D Noise Texture'
     );
   }
@@ -407,7 +424,6 @@ async function init() {
   );
 
   offscreenDepthTexture = offscreenDepth.texture;
-
   depthTexture = depth.texture;
 
   const renderPassDescriptor: GPURenderPassDescriptor = {
@@ -451,6 +467,21 @@ async function init() {
     addressModeU: 'clamp-to-edge',
     addressModeV: 'clamp-to-edge',
   });
+
+  const vertexAndLight = [
+    {
+      binding: 0,
+      resource: {
+        buffer: vertexUniBuffer,
+      },
+    },
+    {
+      binding: 1,
+      resource: {
+        buffer: lightUniBuffer,
+      },
+    },
+  ];
 
   const earthBindings = [
     {
@@ -522,19 +553,35 @@ async function init() {
     },
     {
       binding: 5,
-      resource: parsedGribTexture.texture.createView(),
+      resource: detailNoiseV.texture.createView({ dimension: '3d' }),
     },
     {
       binding: 6,
-      resource: parsedGribTexture.sampler,
+      resource: detailNoiseV.sampler,
     },
     {
       binding: 7,
-      resource: bluenoiseV.texture.createView(),
+      resource: parsedGribTexture.texture.createView(),
     },
     {
       binding: 8,
+      resource: parsedGribTexture.sampler,
+    },
+    {
+      binding: 9,
+      resource: bluenoiseV.texture.createView(),
+    },
+    {
+      binding: 10,
       resource: bluenoiseV.sampler,
+    },
+    {
+      binding: 11,
+      resource: curlnoiseV.texture.createView(),
+    },
+    {
+      binding: 12,
+      resource: curlnoiseV.sampler,
     },
   ];
 
@@ -582,7 +629,6 @@ async function init() {
     device.createShaderModule({ code: cloudShader }),
     {
       ...options,
-      cullmode: 'back',
     },
     presentationFormat
   );
@@ -628,7 +674,7 @@ async function init() {
   });
 
   setYaw(210, true);
-  setZoom(15, true);
+  setZoom(30, true);
   setPitch(0, true);
   tweenedVisibility.set(1.0);
 

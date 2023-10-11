@@ -124,7 +124,7 @@ const SphereData = (
 
 onmessage = function (event: any) {
   var numFs = event.data.numFs;
-  var sphereData = SphereData(10, numFs, numFs);
+  var sphereData = SphereData(20, numFs, numFs);
 
   postMessage(sphereData);
 };

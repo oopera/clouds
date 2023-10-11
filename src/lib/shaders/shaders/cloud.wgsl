@@ -40,7 +40,9 @@ struct Output {
 
 struct Samples {
   noise : vec4<f32>,
+  detail_noise: vec4<f32>,
   blue_noise : vec4<f32>,
+  curl_noise: vec4<f32>,
   coverage : vec4<f32>,
 }
 
@@ -49,22 +51,25 @@ struct Samples {
 @group(0) @binding(2) var<uniform> lightUniforms: LightUniforms;
 @group(0) @binding(3) var noise_texture: texture_3d<f32>;
 @group(0) @binding(4) var noise_sampler: sampler;
-@group(0) @binding(5) var cloud_texture: texture_2d<f32>;
-@group(0) @binding(6) var cloud_sampler: sampler;
-@group(0) @binding(7) var bluenoise_texture: texture_2d<f32>;
-@group(0) @binding(8) var bluenoise_sampler: sampler;
-
+@group(0) @binding(5) var detail_noise_texture: texture_3d<f32>; 
+@group(0) @binding(6) var detail_noise_sampler: sampler;
+@group(0) @binding(7) var cloud_texture: texture_2d<f32>;
+@group(0) @binding(8) var cloud_sampler: sampler;
+@group(0) @binding(9) var bluenoise_texture: texture_2d<f32>;
+@group(0) @binding(10) var bluenoise_sampler: sampler;
+@group(0) @binding(11) var curlnoise_texture: texture_2d<f32>;
+@group(0) @binding(12) var curlnoise_sampler: sampler;
 
 
 const sphere_center = vec3<f32>(0.0, 0.0, 0.0);
-const sphere_radius: f32 = 10.0;
-const cube_offset: f32 = 0.15;
+const sphere_radius: f32 = 20.0;
+const cube_offset: f32 = 0.3;
 
-const layer_1_offset = 0.01; 
-const layer_1_buffer = 0.06;
-const layer_2_offset = 0.08;
-const layer_2_buffer = 0.11;
-const layer_3_offset = 0.13;
+const layer_1_offset = 0.03; 
+const layer_1_buffer = 0.14;
+const layer_2_offset = 0.16;
+const layer_2_buffer = 0.22;
+const layer_3_offset = 0.23;
 
 const layer_1_sphere_radius: f32 = sphere_radius + layer_1_offset;
 const layer_2_sphere_radius: f32 = sphere_radius + layer_2_offset;
@@ -89,45 +94,9 @@ const n: f32 = 1.0003;
   return output;
 } 
 
-fn ReMap(value: f32, old_low: f32, old_high: f32, new_low: f32, new_high: f32) -> f32 {
-  var ret_val: f32 = new_low + (value - old_low) * (new_high - new_low) / (old_high - old_low);
-  return ret_val;
-}
-
-fn HG(cos_angle: f32, g: f32) -> f32 {
-  let g2: f32 = g * g;
-  let val: f32 = (1.0 - g2) / (pow(1.0 + g2 - 2.0 * g * cos_angle, 1.5)) / (4.0 * PI);
-  return val;
-}
-
-fn mieScattering(theta: f32) -> f32 {
-  return (3.0 / 4.0) * (1.0 + cos(theta) * cos(theta));
-}
-fn rayleighScattering(theta: f32) -> f32 {
-  return  (3.0 / (16.0 * PI)) * (1.0 + cos(theta) * cos(theta)) ;
-}
-fn lerp(a: f32, b: f32, t: f32) -> f32 {
-  return (1.0 - t) * a + t * b;
-}
-
-fn saturate(x: f32) -> f32 {
-  return clamp(x, 0.0, 1.0);
-}
-
-fn pow(x: f32, y: f32) -> f32 {
-  return exp(y * log(x));
-}
 
 
-fn angleBetweenVectors(A: vec3<f32>, B: vec3<f32>) -> f32 {
-  let dotProduct = dot(A, B);
-  let magnitudeA = length(A);
-  let magnitudeB = length(B);
-  let cosTheta = dotProduct / (magnitudeA * magnitudeB);
-  return acos(clamp(cosTheta, -1.0, 1.0));
-}
-
-fn getDensity(noise: vec4<f32>,  percent_height: f32, layer: f32) -> f32{
+fn getDensity(noise: vec4<f32>, detail_noise: vec4<f32>,  curl_noise: vec4<f32>, percent_height: f32, layer: f32) -> f32{
   var shape_noise: f32;
 
   if(layer == 1){
@@ -192,9 +161,9 @@ fn calculateStepLength(ro: vec3<f32>, rd: vec3<f32>) -> f32 {
 }
 
 
-const high_lod: f32 = 2;
-const low_lod: f32 = 1.0;
-const lod_distance_threshold: f32 = 15; 
+const high_lod: f32 = 4;
+const low_lod: f32 = 2;
+const lod_distance_threshold: f32 = 25; 
 
 fn getLod() -> f32 {
     let distance = length(sphere_center - uni.cameraPosition.xyz);
@@ -204,16 +173,13 @@ fn getLod() -> f32 {
 
 
 fn getScale(current_point: vec3<f32>, distance_to_center: f32, layer:f32) -> f32{
-  var offset_scale_low =(ReMap(distance_to_center, sphere_radius, layer_2_sphere_radius, 0.0, 1.0));
-  var offset_scale_middle =(ReMap(distance_to_center, sphere_radius, layer_3_sphere_radius, 0.0, 1.0));
-  var offset_scale_high =(ReMap(distance_to_center, sphere_radius, outer_sphere_radius, 0.0, 1.0));
 
    if(layer == 3){
-      return offset_scale_high;
+      return ReMap(distance_to_center, sphere_radius, layer_2_sphere_radius, 0.0, 1.0);
     }else if(layer == 2){
-      return offset_scale_middle;
+      return ReMap(distance_to_center, sphere_radius, layer_3_sphere_radius, 0.0, 1.0);
     }else if(layer == 1){
-      return offset_scale_low;
+      return ReMap(distance_to_center, sphere_radius, outer_sphere_radius, 0.0, 1.0);
     }
   
   
@@ -252,9 +218,10 @@ fn getSamples(inner_sphere_point:vec3<f32>, sphere_uv: vec2<f32>) -> Samples {
   var lod = getLod();
   let coverage = textureSample(cloud_texture, cloud_sampler, sphere_uv);
   var noise = textureSample(noise_texture, noise_sampler, inner_sphere_point * lod);    
+  var detail_noise = textureSample(detail_noise_texture, detail_noise_sampler, inner_sphere_point * lod);
   var blue_noise = textureSample(bluenoise_texture, bluenoise_sampler, sphere_uv * lod);
-
-  return Samples(noise, blue_noise, coverage);
+  var curl_noise = textureSample(curlnoise_texture, curlnoise_sampler, sphere_uv);
+  return Samples(noise, detail_noise, blue_noise, curl_noise, coverage);
 }
 
 fn getSphereUV(inner_sphere_point: vec3<f32>) -> vec2<f32> {
@@ -264,10 +231,12 @@ fn getSphereUV(inner_sphere_point: vec3<f32>) -> vec2<f32> {
   );
 }
 
+
 @fragment fn fs(output: Output) -> @location(0) vec4<f32> {
   var output_color: vec3<f32> = vec3<f32>(0.52, 0.53, 0.57);
   var highlight_color: vec3<f32> = vec3<f32>(0.09, 0.07, 0.12);
   var sun_color: vec3<f32> = vec3<f32>(1, 0.8, 0.7);
+
   var light: f32 = 0.0;
   var sun_transmittance: f32 = 0.0;
   var sun_output: vec3<f32> = vec3<f32>(0.0, 0.0, 0.0);
@@ -287,8 +256,8 @@ fn getSphereUV(inner_sphere_point: vec3<f32>) -> vec2<f32> {
 
     var layer = getLayer(current_point);
     var samples: Samples = getSamples(inner_sphere_point, sphere_uv);
-    var density = getDensity(samples.noise, length(current_point - inner_sphere_point), layer);
-    var cur_transmittance = density * getCoverage(layer, samples.coverage) * cloudUniforms.density;
+    var density = getDensity(samples.noise, samples.detail_noise, samples.curl_noise, length(current_point - inner_sphere_point), layer);
+    var cur_transmittance = density * getCoverage(layer, samples.coverage) * cloudUniforms.density ;
 
     cloud_density += cur_transmittance;
     
@@ -311,22 +280,23 @@ fn getSphereUV(inner_sphere_point: vec3<f32>) -> vec2<f32> {
 
       if(lightUniforms.lightType == 1){
         lightclamp = vec2(1.0,1.0);
+        lightness = 1.0;
       }else if(lightUniforms.lightType == 0.5){
-        lightclamp = vec2(0.7, 1.0); 
+        lightclamp = vec2(0.8, 1.0); 
+        lightness = clamp(lightness, 0.8, 1.0);
       }else if(lightUniforms.lightType == 0){
-        lightclamp = vec2(0.7, 0.7);
+        lightclamp = vec2(0.8, 0.8);
+        lightness = 0.8;
       }
 
       var layer = getLayer(sun_point);
       var scale = getScale(sun_point, distance_to_center, layer);
+
       
       if(cloud_density < 1.25 && cur_transmittance > 0.0){
-        if(k == 1.0){
-          light = mieScattering(theta) * lightUniforms.rayleighIntensity + samples.blue_noise.r * 0.05;
-        } else {
-          light = rayleighScattering(theta) * lightUniforms.rayleighIntensity + samples.blue_noise.r * 0.05;
-        }
-        sun_transmittance = getDensity(samples.noise,  scale, layer) * getCoverage(layer, samples.coverage) * cloudUniforms.sunDensity * clamp(lightness, lightclamp[0], lightclamp[1]);
+
+          light = mieScattering(theta) + rayleighScattering(theta) * lightUniforms.rayleighIntensity + samples.blue_noise.r * 0.05;
+        sun_transmittance = getDensity(samples.noise, samples.detail_noise,  samples.curl_noise,  scale, layer) * getCoverage(layer, samples.coverage) * cloudUniforms.sunDensity * clamp(lightness, lightclamp[0], lightclamp[1]);
         output_color +=  (sun_transmittance) * highlight_color * light * cur_transmittance;
       }
     }
@@ -334,3 +304,146 @@ fn getSphereUV(inner_sphere_point: vec3<f32>) -> vec2<f32> {
     return vec4<f32>(output_color, cloud_density * cloudUniforms.visibility);
   }
 
+
+
+fn ReMap(value: f32, old_low: f32, old_high: f32, new_low: f32, new_high: f32) -> f32 {
+  var ret_val: f32 = new_low + (value - old_low) * (new_high - new_low) / (old_high - old_low);
+  return ret_val;
+}
+
+fn HG(cos_angle: f32, g: f32) -> f32 {
+  let g2: f32 = g * g;
+  let val: f32 = (1.0 - g2) / (pow(1.0 + g2 - 2.0 * g * cos_angle, 1.5)) / (4.0 * PI);
+  return val;
+}
+
+fn mieScattering(theta: f32) -> f32 {
+  return (3.0 / 4.0) * (1.0 + cos(theta) * cos(theta));
+}
+fn rayleighScattering(theta: f32) -> f32 {
+  return  (3.0 / (16.0 * PI)) * (1.0 + cos(theta) * cos(theta)) ;
+}
+fn lerp(a: f32, b: f32, t: f32) -> f32 {
+  return (1.0 - t) * a + t * b;
+}
+
+fn saturate(x: f32) -> f32 {
+  return clamp(x, 0.0, 1.0);
+}
+
+fn pow(x: f32, y: f32) -> f32 {
+  return exp(y * log(x));
+}
+
+
+fn angleBetweenVectors(A: vec3<f32>, B: vec3<f32>) -> f32 {
+  let dotProduct = dot(A, B);
+  let magnitudeA = length(A);
+  let magnitudeB = length(B);
+  let cosTheta = dotProduct / (magnitudeA * magnitudeB);
+  return acos(clamp(cosTheta, -1.0, 1.0));
+}
+
+
+
+// fn rq(dividend: vec3<i32>, divisor: i32) -> vec3<u32> {
+//     let quotient: vec3<i32> = dividend / divisor;
+//     let remainder: vec3<i32> = dividend - (quotient * divisor);
+//     return vec3<u32>(remainder);
+// }
+
+// fn hash33(p: vec3<u32>) -> vec3<f32> {
+//     var q: vec3<u32> = p * vec3<u32>(1597334673u, 3812015801u, 2798796415u);
+//     q = vec3<u32>(q.x ^ q.y ^ q.z) * vec3<u32>(1597334673u, 3812015801u, 2798796415u);
+//     return vec3<f32>(-1.0 + 2.0 * vec3<f32>(q) / 4294967295.0);
+// }
+
+// fn remap(x: f32, a: f32, b: f32, c: f32, d: f32) -> f32 {
+//     return (((x - a) / (b - a)) * (d - c)) + c;
+// }
+
+// // Gradient noise by iq (modified to be tileable)
+// fn gradientNoise(x: vec3<f32>, freq: f32) -> f32 {
+//     // grid
+//     let p: vec3<i32> = vec3<i32>(floor(x));
+//     let w: vec3<f32> = fract(x);
+
+//     // quintic interpolant
+//     let u: vec3<f32> = w * w * w * (w * (w * 6.0 - 15.0) + 10.0);
+
+//     // gradients
+//     let ga: vec3<f32> = hash33(rq(p + vec3<i32>(0, 0, 0), i32(freq))) * 0.5 + 0.5;
+//     let gb: vec3<f32> = hash33(rq(p + vec3<i32>(1, 0, 0), i32(freq))) * 0.5 + 0.5;
+//     let gc: vec3<f32> = hash33(rq(p + vec3<i32>(0, 1, 0), i32(freq))) * 0.5 + 0.5;
+//     let gd: vec3<f32> = hash33(rq(p + vec3<i32>(1, 1, 0), i32(freq))) * 0.5 + 0.5;
+//     let ge: vec3<f32> = hash33(rq(p + vec3<i32>(0, 0, 1), i32(freq))) * 0.5 + 0.5;
+//     let gf: vec3<f32> = hash33(rq(p + vec3<i32>(1, 0, 1), i32(freq))) * 0.5 + 0.5;
+//     let gg: vec3<f32> = hash33(rq(p + vec3<i32>(0, 1, 1), i32(freq))) * 0.5 + 0.5;
+//     let gh: vec3<f32> = hash33(rq(p + vec3<i32>(1, 1, 1), i32(freq))) * 0.5 + 0.5;
+
+//     // projections
+//     let va: f32 = dot(ga, w - vec3<f32>(0.0, 0.0, 0.0));
+//     let vb: f32 = dot(gb, w - vec3<f32>(1.0, 0.0, 0.0));
+//     let vc: f32 = dot(gc, w - vec3<f32>(0.0, 1.0, 0.0));
+//     let vd: f32 = dot(gd, w - vec3<f32>(1.0, 1.0, 0.0));
+//     let ve: f32 = dot(ge, w - vec3<f32>(0.0, 0.0, 1.0));
+//     let vf: f32 = dot(gf, w - vec3<f32>(1.0, 0.0, 1.0));
+//     let vg: f32 = dot(gg, w - vec3<f32>(0.0, 1.0, 1.0));
+//     let vh: f32 = dot(gh, w - vec3<f32>(1.0, 1.0, 1.0));
+
+//     // interpolation
+//     return va +
+//            u.x * (vb - va) +
+//            u.y * (vc - va) +
+//            u.z * (ve - va) +
+//            u.x * u.y * (va - vb - vc + vd) +
+//            u.y * u.z * (va - vc - ve + vg) +
+//            u.z * u.x * (va - vb - ve + vf) +
+//            u.x * u.y * u.z * (-va + vb + vc - vd + ve - vf - vg + vh);
+// }
+
+// // Tileable 3D worley noise
+// fn worleyNoise(uv: vec3<f32>, freq: f32) -> f32 {
+//     let id: vec3<i32> = vec3<i32>(floor(uv));
+//     let p: vec3<f32> = fract(uv);
+//     var minDist: f32 = 10000.0;
+
+//     for (var x: f32 = -1.0; x <= 1.0; x += 1.0) {
+//         for (var y: f32 = -1.0; y <= 1.0; y += 1.0) {
+//             for (var z: f32 = -1.0; z <= 1.0; z += 1.0) {
+//                 let offset: vec3<f32> = vec3<f32>(x, y, z);
+//                 var h: vec3<f32> = hash33(rq(id + vec3<i32>(offset), i32(freq))) * 0.5 + 0.5;
+//                 h += offset;
+//                 let d: vec3<f32> = p - h;
+//                 minDist = min(minDist, dot(d, d));
+//             }
+//         }
+//     }
+
+//     // inverted worley noise
+//     return 1.0 - minDist;
+// }
+
+// // Fbm for Perlin noise based on iq's blog
+// fn perlinfbm(p: vec3<f32>, freq: f32, octaves: i32) -> f32 {
+//     let G: f32 = exp2(-0.85);
+//     var amp: f32 = 1.0;
+//     var noise: f32 = 0.0;
+//     var newfreg: f32 = freq;
+
+//     for (var i: i32 = 0; i < octaves; i = i + 1) {
+//         noise = noise + amp * gradientNoise(p * freq, freq);
+//         newfreg = freq * 2.0;
+//         amp = amp * G;
+//     }
+
+//     return noise;
+// }
+
+// // Tileable Worley fbm inspired by Andrew Schneider's Real-Time Volumetric Cloudscapes
+// // chapter in GPU Pro 7.
+// fn worleyFbm(p: vec3<f32>, freq: f32) -> f32 {
+//     return worleyNoise(p * freq, freq) * 0.625 +
+//            worleyNoise(p * freq * 2.0, freq * 2.0) * 0.25 +
+//            worleyNoise(p * freq * 4.0, freq * 4.0) * 0.125;
+// }

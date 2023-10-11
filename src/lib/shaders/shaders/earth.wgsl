@@ -146,6 +146,7 @@
       }else if(lightUni.lightType == 1.0){
         lightness = 1.0;
       }
+      lightness = clamp(lightness, 0.2, 1.0);
       
       // else{
       //   let edge = fwidth(lightness);
