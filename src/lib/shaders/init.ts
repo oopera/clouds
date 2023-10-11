@@ -219,14 +219,18 @@ async function init() {
   const bluenoiseV = await GetTexture(device, bluenoise);
   const curlnoiseV = await GetTexture(device, curlnoise);
 
-  CreateNoiseImages(detailNoise, 32, 32, 32);
+  const printImages = true;
+  const generateWorleyTexture = false;
 
-  const generateWorleyTexture = true;
+  if (dev && printImages) {
+    CreateNoiseImages(noise, 64, 64, 64);
+    CreateNoiseImages(detailNoise, 32, 32, 32);
+  }
 
-  if (generateWorleyTexture) {
+  if (dev && generateWorleyTexture) {
     executePromise(
       'worleyNoiseTexture',
-      (await Get3DNoiseTexture(device, 32, 32, 32)) as any,
+      (await Get3DNoiseTexture(device, 64, 64, 64)) as any,
       '3D Noise Texture'
     );
   }
