@@ -12,12 +12,19 @@ function mod(a: number, b: number): number {
 }
 
 function hash33(p3: Vec3, scale: number = 1): Vec3 {
+  const prime1 = 73856093;
+  const prime2 = 19349663;
+  const prime3 = 83492791;
+
   const p: Vec3 = [
-    fract(mod(p3[0], scale) * 0.1031),
-    fract(mod(p3[1], scale) * 0.11369),
-    fract(mod(p3[2], scale) * 0.13787),
+    fract(mod(p3[0] * prime1, scale) * 0.1031),
+    fract(mod(p3[1] * prime2, scale) * 0.11369),
+    fract(mod(p3[2] * prime3, scale) * 0.13787),
   ];
-  const dotValue = p[0] * (p[1] + p[2] + 19.19) + p[1] * (p[2] + 19.19);
+
+  const dotValue = Math.sin(
+    p[0] * (p[1] + p[2] + 19.19) + p[1] * (p[2] + 19.19) + Math.PI
+  );
 
   p[0] += dotValue;
   p[1] += dotValue;
