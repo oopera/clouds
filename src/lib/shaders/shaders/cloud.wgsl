@@ -110,13 +110,13 @@ fn getDensity(noise: vec4<f32>, detail_noise: vec4<f32>,  curl_noise: vec4<f32>,
   shape_noise = -(1 - shape_noise);
   shape_noise = ReMap(noise.r, shape_noise, 1.0, 0.0, 1.0);
 
-  var detail = noise.r * 0.625 + noise.g * 0.25 + noise.a * 0.125;
+  var detail = detail_noise.g * 0.625 + detail_noise.b * 0.25 + detail_noise.a * 0.125;
 
   var detail_modifier: f32 = lerp(detail, 1.0 - detail, saturate(percent_height));
   detail_modifier = detail_modifier;
   var final_density: f32 = saturate(ReMap(shape_noise, detail_modifier, 1.0, 0.0, 1.0));
 
-  return pow(final_density, 1 + (layer * 0.2));
+  return pow(shape_noise, 1 + (layer * 0.2));
 }
 
 
@@ -162,7 +162,7 @@ fn calculateStepLength(ro: vec3<f32>, rd: vec3<f32>) -> f32 {
 
 
 const high_lod: f32 = 4;
-const low_lod: f32 = 2;
+const low_lod: f32 = 2.5;
 const lod_distance_threshold: f32 = 25; 
 
 fn getLod() -> f32 {

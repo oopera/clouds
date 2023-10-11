@@ -6,11 +6,16 @@ type Vec3 = [number, number, number];
 function fract(value: number): number {
   return value - Math.floor(value);
 }
-function hash33(p3: Vec3): Vec3 {
+
+function mod(a: number, b: number): number {
+  return ((a % b) + b) % b;
+}
+
+function hash33(p3: Vec3, scale: number = 1): Vec3 {
   const p: Vec3 = [
-    fract(p3[0] * 0.1031),
-    fract(p3[1] * 0.11369),
-    fract(p3[2] * 0.13787),
+    fract(mod(p3[0], scale) * 0.1031),
+    fract(mod(p3[1], scale) * 0.11369),
+    fract(mod(p3[2], scale) * 0.13787),
   ];
   const dotValue = p[0] * (p[1] + p[2] + 19.19) + p[1] * (p[2] + 19.19);
 
@@ -81,7 +86,12 @@ export function perlinfbm(p: Vec3, freq: number, octaves: number): number {
   return noise;
 }
 
-function worley(p: Vec3, scale: number, frequency: number): number {
+function worley(
+  p: Vec3,
+  scale: number,
+  frequency: number,
+  maxDist: number = 0
+): number {
   p = [p[0] * frequency, p[1] * frequency, p[2] * frequency];
 
   const id: Vec3 = [
@@ -102,11 +112,14 @@ function worley(p: Vec3, scale: number, frequency: number): number {
     for (let y = -1.0; y <= 1.0; y++) {
       for (let z = -1.0; z <= 1.0; z++) {
         const coord: Vec3 = [x, y, z];
-        const rId = hash33([
-          (id[0] + coord[0]) % scale,
-          (id[1] + coord[1]) % scale,
-          (id[2] + coord[2]) % scale,
-        ]).map((v) => 0.5 * v + 0.5) as Vec3;
+        const rId = hash33(
+          [
+            mod(id[0] + coord[0], scale),
+            mod(id[1] + coord[1], scale),
+            mod(id[2] + coord[2], scale),
+          ],
+          scale
+        ).map((v) => 0.5 * v + 0.5) as Vec3;
 
         const r: Vec3 = [
           coord[0] + rId[0] - fd[0],
@@ -123,6 +136,10 @@ function worley(p: Vec3, scale: number, frequency: number): number {
     }
   }
 
+  if (maxDist > 0) {
+    minimalDist = Math.min(minimalDist, maxDist);
+  }
+
   return 1.0 - minimalDist;
 }
 
@@ -130,18 +147,20 @@ export function generateWorleyFbmNoise(
   width: number,
   height: number,
   depth: number,
-  frequency: number
+  frequency: number,
+  scale: number,
+  maxDist: number = 0
 ): Float32Array {
   const result = new Float32Array(width * height * depth);
 
   for (let x = 0; x < width; x++) {
     for (let y = 0; y < height; y++) {
       for (let z = 0; z < depth; z++) {
-        const uv: [number, number] = [x / width, y / height];
         const value = worley(
-          [uv[0] * 2.0 - 1.0, uv[1] * 2.0 - 1.0, z / depth],
-          2.0,
-          frequency
+          [x / width, y / height, z / depth],
+          scale,
+          frequency,
+          maxDist
         );
 
         const index = x + y * width + z * width * height;
@@ -165,9 +184,8 @@ export function generatePerlinFbmNoise(
   for (let x = 0; x < width; x++) {
     for (let y = 0; y < height; y++) {
       for (let z = 0; z < depth; z++) {
-        const uv: [number, number] = [x / width, y / height];
         const value = perlinfbm(
-          [uv[0] * 2.0 - 1.0, uv[1] * 2.0 - 1.0, z / depth],
+          [x / width, y / height, z / depth],
           frequency,
           octaves
         );

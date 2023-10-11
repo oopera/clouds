@@ -214,23 +214,23 @@ async function init() {
 
   const textureV = await GetPartitionedTexture(device, texture);
   const lightMapV = await GetPartitionedTexture(device, lightmap);
-  const noiseV = Create3DTextureFromData(device, noise, 64, 64, 64);
+  const noiseV = Create3DTextureFromData(device, noise, 128, 128, 128);
   const detailNoiseV = Create3DTextureFromData(device, detailNoise, 32, 32, 32);
   const bluenoiseV = await GetTexture(device, bluenoise);
   const curlnoiseV = await GetTexture(device, curlnoise);
 
-  const printImages = true;
+  const printImages = false;
   const generateWorleyTexture = false;
 
   if (dev && printImages) {
-    CreateNoiseImages(noise, 64, 64, 64);
+    CreateNoiseImages(noise, 128, 128, 128);
     CreateNoiseImages(detailNoise, 32, 32, 32);
   }
 
   if (dev && generateWorleyTexture) {
     executePromise(
       'worleyNoiseTexture',
-      (await Get3DNoiseTexture(device, 64, 64, 64)) as any,
+      (await Get3DNoiseTexture(device, 128, 128, 128)) as any,
       '3D Noise Texture'
     );
   }
