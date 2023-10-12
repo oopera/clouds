@@ -64,12 +64,13 @@ struct Samples {
 const sphere_center = vec3<f32>(0.0, 0.0, 0.0);
 const sphere_radius: f32 = 20.0;
 const cube_offset: f32 = 0.3;
+const cube_partial = cube_offset / 10;
 
-const layer_1_offset = 0.03; 
-const layer_1_buffer = 0.14;
-const layer_2_offset = 0.16;
-const layer_2_buffer = 0.22;
-const layer_3_offset = 0.23;
+const layer_1_offset = cube_partial; 
+const layer_1_buffer = cube_partial * 4;
+const layer_2_offset = cube_partial * 5;
+const layer_2_buffer = cube_partial * 6;
+const layer_3_offset = cube_partial * 9;
 
 const layer_1_sphere_radius: f32 = sphere_radius + layer_1_offset;
 const layer_2_sphere_radius: f32 = sphere_radius + layer_2_offset;
@@ -98,27 +99,30 @@ const n: f32 = 1.0003;
 
 fn getDensity(noise: vec4<f32>, detail_noise: vec4<f32>,  curl_noise: vec4<f32>, percent_height: f32, layer: f32) -> f32{
   var shape_noise: f32;
+  var detail: f32;
 
   if(layer == 1){
     shape_noise  = noise.g * 0.625 + noise.g * 0.25 + noise.b * 0.125;
+
   }else if(layer == 2){
     shape_noise  = noise.b * 0.625 + noise.g * 0.25 + noise.a * 0.125;
+  
   }else if(layer == 3){
-    shape_noise  = noise.a * 0.625 + noise.b * 0.25 + noise.g * 0.125;
+    shape_noise  = noise.a * 0.625 + noise.b * 0.25 + noise.g * 0.125 * curl_noise.r;
+
   }
+
+  detail = detail_noise.r;
 
   shape_noise = -(1 - shape_noise);
   shape_noise = ReMap(noise.r, shape_noise, 1.0, 0.0, 1.0);
 
-  var detail = detail_noise.g * 0.625 + detail_noise.b * 0.25 + detail_noise.a * 0.125;
-
   var detail_modifier: f32 = lerp(detail, 1.0 - detail, saturate(percent_height));
-  detail_modifier = detail_modifier;
   var final_density: f32 = saturate(ReMap(shape_noise, detail_modifier, 1.0, 0.0, 1.0));
 
-  return pow(shape_noise, 1 + (layer * 0.2));
+  // return pow(shape_noise, 1 + (layer * 0.2));
+  return pow(final_density, 1 + (layer * 0.2));
 }
-
 
 fn calculateStepLength(ro: vec3<f32>, rd: vec3<f32>) -> f32 {
   var closest_intersection: f32 = 9999999;
@@ -161,8 +165,8 @@ fn calculateStepLength(ro: vec3<f32>, rd: vec3<f32>) -> f32 {
 }
 
 
-const high_lod: f32 = 4;
-const low_lod: f32 = 2.5;
+const high_lod: f32 = 2;
+const low_lod: f32 = 0.5;
 const lod_distance_threshold: f32 = 25; 
 
 fn getLod() -> f32 {
@@ -174,13 +178,16 @@ fn getLod() -> f32 {
 
 fn getScale(current_point: vec3<f32>, distance_to_center: f32, layer:f32) -> f32{
 
-   if(layer == 3){
-      return ReMap(distance_to_center, sphere_radius, layer_2_sphere_radius, 0.0, 1.0);
+
+   if(layer == 1){
+      return ReMap(distance_to_center - sphere_radius, layer_1_offset, layer_1_buffer, 0.0, 1.0);
     }else if(layer == 2){
-      return ReMap(distance_to_center, sphere_radius, layer_3_sphere_radius, 0.0, 1.0);
-    }else if(layer == 1){
-      return ReMap(distance_to_center, sphere_radius, outer_sphere_radius, 0.0, 1.0);
+      return ReMap(distance_to_center - sphere_radius, layer_2_offset, layer_2_buffer, 0.0, 1.0);
+    }else if(layer == 3){
+      return ReMap(distance_to_center - sphere_radius, layer_3_offset, cube_offset, 0.0, 1.0);
     }
+
+
   
   
   return 0.0;
@@ -188,13 +195,14 @@ fn getScale(current_point: vec3<f32>, distance_to_center: f32, layer:f32) -> f32
 
 fn getLayer(inner_sphere_point: vec3<f32>) -> f32{
   var distance_to_center = length(inner_sphere_point - sphere_center);
+  var altitude = distance_to_center - sphere_radius;
 
   if (distance_to_center < outer_sphere_radius && distance_to_center > sphere_radius) {
-    if (distance_to_center > layer_3_sphere_radius) {
+    if (altitude < cube_offset && altitude > layer_3_offset) {
       return 3.0;
-    } else if (distance_to_center > layer_2_sphere_radius) {
+    } else if (altitude < layer_2_buffer && altitude > layer_2_offset) {
       return 2.0;
-    } else if (distance_to_center > layer_1_sphere_radius) {
+    } else if (altitude < layer_1_buffer && altitude > layer_1_offset) {
       return 1.0;
     }
   }
@@ -231,7 +239,6 @@ fn getSphereUV(inner_sphere_point: vec3<f32>) -> vec2<f32> {
   );
 }
 
-
 @fragment fn fs(output: Output) -> @location(0) vec4<f32> {
   var output_color: vec3<f32> = vec3<f32>(0.52, 0.53, 0.57);
   var highlight_color: vec3<f32> = vec3<f32>(0.09, 0.07, 0.12);
@@ -255,20 +262,20 @@ fn getSphereUV(inner_sphere_point: vec3<f32>) -> vec2<f32> {
     let sphere_uv = getSphereUV(inner_sphere_point);
 
     var layer = getLayer(current_point);
-    var samples: Samples = getSamples(inner_sphere_point, sphere_uv);
+    var samples: Samples = getSamples(current_point, sphere_uv);
     var density = getDensity(samples.noise, samples.detail_noise, samples.curl_noise, length(current_point - inner_sphere_point), layer);
     var cur_transmittance = density * getCoverage(layer, samples.coverage) * cloudUniforms.density ;
 
     cloud_density += cur_transmittance;
     
-    for(var k: f32 = 0.0; k < 2.0; k += 1.0){
+    for(var k: f32 = 0.0; k < 1.0; k += 1.0){
       let sun_ray_direction = normalize(current_point + lightUniforms.lightPosition);
       let sun_point: vec3<f32> = current_point + k * sun_ray_direction * step_length;
       let distance_to_center = length(sun_point - sphere_center);
       let inner_sphere_point = sphere_center + normalize(sun_point - sphere_center) * sphere_radius;
       let sphere_uv = getSphereUV(inner_sphere_point);
     
-      var samples: Samples = getSamples(inner_sphere_point, sphere_uv);
+      var samples: Samples = getSamples(sun_point, sphere_uv);
       let distance_to_inner_sphere = length(sun_point - inner_sphere_point);
       var theta = angleBetweenVectors(ray_direction, sun_ray_direction);
 
@@ -293,9 +300,9 @@ fn getSphereUV(inner_sphere_point: vec3<f32>) -> vec2<f32> {
       var scale = getScale(sun_point, distance_to_center, layer);
 
       
-      if(cloud_density < 1.25 && cur_transmittance > 0.0){
+      if(cloud_density < 1.5 && cur_transmittance > 0.0){
 
-          light = mieScattering(theta) + rayleighScattering(theta) * lightUniforms.rayleighIntensity + samples.blue_noise.r * 0.05;
+          light = mieScattering(theta) + rayleighScattering(theta) * pow(lightUniforms.rayleighIntensity,2) + samples.blue_noise.r * 0.05;
         sun_transmittance = getDensity(samples.noise, samples.detail_noise,  samples.curl_noise,  scale, layer) * getCoverage(layer, samples.coverage) * cloudUniforms.sunDensity * clamp(lightness, lightclamp[0], lightclamp[1]);
         output_color +=  (sun_transmittance) * highlight_color * light * cur_transmittance;
       }
@@ -303,6 +310,8 @@ fn getSphereUV(inner_sphere_point: vec3<f32>) -> vec2<f32> {
   } 
     return vec4<f32>(output_color, cloud_density * cloudUniforms.visibility);
   }
+
+
 
 
 

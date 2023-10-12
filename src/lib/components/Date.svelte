@@ -55,7 +55,7 @@
         )
       );
 
-      if (releaseTime <= now) {
+      if (releaseTime <= now && releaseTime <= targetDate) {
         modelRunTime = cycles[i];
       } else {
         break;
