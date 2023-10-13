@@ -418,9 +418,9 @@ export const Get3DNoiseTexture = async (
   addressModeW = 'repeat'
 ) => {
   const perlinNoiseData_01 = generatePerlinFbmNoise(width, height, depth, 1, 1);
-  const noiseData_01 = generateWorleyFbmNoise(width, height, depth, 2, 2, 0.0);
-  const noiseData_02 = generateWorleyFbmNoise(width, height, depth, 4, 3, 0.0);
-  const noiseData_03 = generateWorleyFbmNoise(width, height, depth, 6, 4, 0.0);
+  const noiseData_01 = generateWorleyFbmNoise(width, height, depth, 1, 1, 0.0);
+  const noiseData_02 = generateWorleyFbmNoise(width, height, depth, 2, 1, 0.0);
+  const noiseData_03 = generateWorleyFbmNoise(width, height, depth, 3, 1, 0.0);
   const rgbaData = new Uint8Array(noiseData_01.length * 4);
 
   function mix(a: number, b: number, t: number): number {

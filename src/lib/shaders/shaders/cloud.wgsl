@@ -97,7 +97,7 @@ const n: f32 = 1.0003;
 
 
 
-fn getDensity(noise: vec4<f32>, detail_noise: vec4<f32>,  curl_noise: vec4<f32>, percent_height: f32, layer: f32) -> f32{
+fn getDensity(noise: vec4<f32>, detail_noise: vec4<f32>,  curl_noise: vec4<f32>, percent_height: f32, layer: f32, coverage: f32) -> f32{
   var shape_noise: f32;
   var detail: f32;
 
@@ -118,6 +118,7 @@ fn getDensity(noise: vec4<f32>, detail_noise: vec4<f32>,  curl_noise: vec4<f32>,
   shape_noise = ReMap(noise.r, shape_noise, 1.0, 0.0, 1.0);
 
   var detail_modifier: f32 = lerp(detail, 1.0 - detail, saturate(percent_height));
+  detail_modifier *=  exp(-coverage * 0.75);
   var final_density: f32 = saturate(ReMap(shape_noise, detail_modifier, 1.0, 0.0, 1.0));
 
   // return pow(shape_noise, 1 + (layer * 0.2));
@@ -263,8 +264,9 @@ fn getSphereUV(inner_sphere_point: vec3<f32>) -> vec2<f32> {
 
     var layer = getLayer(current_point);
     var samples: Samples = getSamples(current_point, sphere_uv);
-    var density = getDensity(samples.noise, samples.detail_noise, samples.curl_noise, length(current_point - inner_sphere_point), layer);
-    var cur_transmittance = density * getCoverage(layer, samples.coverage) * cloudUniforms.density ;
+    var coverage = getCoverage(layer, samples.coverage);
+    var density = getDensity(samples.noise, samples.detail_noise, samples.curl_noise, length(current_point - inner_sphere_point), layer, coverage);
+    var cur_transmittance = density * coverage * cloudUniforms.density ;
 
     cloud_density += cur_transmittance;
     
@@ -301,9 +303,9 @@ fn getSphereUV(inner_sphere_point: vec3<f32>) -> vec2<f32> {
 
       
       if(cloud_density < 1.5 && cur_transmittance > 0.0){
-
-          light = mieScattering(theta) + rayleighScattering(theta) * pow(lightUniforms.rayleighIntensity,2) + samples.blue_noise.r * 0.05;
-        sun_transmittance = getDensity(samples.noise, samples.detail_noise,  samples.curl_noise,  scale, layer) * getCoverage(layer, samples.coverage) * cloudUniforms.sunDensity * clamp(lightness, lightclamp[0], lightclamp[1]);
+        coverage = getCoverage(layer, samples.coverage);
+        light = mieScattering(theta) + rayleighScattering(theta) * pow(lightUniforms.rayleighIntensity,2) + samples.blue_noise.r * 0.05;
+        sun_transmittance = getDensity(samples.noise, samples.detail_noise,  samples.curl_noise,  scale, layer, coverage) * coverage * cloudUniforms.sunDensity * clamp(lightness, lightclamp[0], lightclamp[1]);
         output_color +=  (sun_transmittance) * highlight_color * light * cur_transmittance;
       }
     }
