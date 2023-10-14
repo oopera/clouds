@@ -104,13 +104,13 @@
                 title="rayleigh_intensity"
                 min={0}
                 max={3.0}
-                step={0.1}
+                step={0.05}
               />
               <Range_Input
                 delay={0}
                 title="sun_transmittance"
                 min={0}
-                max={2.0}
+                max={4.0}
                 step={0.1}
               />
               <Text accent delay={9} text={'LIGHT'} />

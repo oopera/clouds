@@ -376,8 +376,8 @@ export const GetDepthTexture = async (
   });
 
   const sampler = device.createSampler({
-    magFilter: 'nearest',
-    minFilter: 'nearest',
+    magFilter: 'linear',
+    minFilter: 'linear',
     compare: 'less',
   });
 
