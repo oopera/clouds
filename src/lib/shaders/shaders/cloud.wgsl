@@ -110,13 +110,13 @@ fn getDensity(noise: vec4<f32>, detail_noise: vec4<f32>,  curl_noise: vec4<f32>,
   var shape_noise: f32 = getNoise(noise, layer);
   var detail: f32;
 
-  detail = detail_noise.r;
+  detail = detail_noise.r * 0.625 + detail_noise.g * 0.25 + detail_noise.b * 0.125;
 
   shape_noise = -(1 - shape_noise);
   shape_noise = ReMap(noise.r, shape_noise, 1.0, 0.0, 1.0);
 
   var detail_modifier: f32 = lerp(detail, 1.0 - detail, saturate(percent_height));
-  // detail_modifier *=  coverage;
+  detail_modifier *=  coverage;
   var final_density: f32 = saturate(ReMap(shape_noise, detail_modifier, 1.0, 0.0, 1.0));
 
   // return pow(shape_noise, 1 + (layer * 0.2));
@@ -227,7 +227,7 @@ fn getSamples(inner_sphere_point:vec3<f32>, sphere_uv: vec2<f32>) -> Samples {
   var noise = textureSample(noise_texture, noise_sampler, inner_sphere_point * lod);    
   var detail_noise = textureSample(detail_noise_texture, detail_noise_sampler, inner_sphere_point * lod);
   var blue_noise = textureSample(bluenoise_texture, bluenoise_sampler, sphere_uv * lod);
-  var curl_noise = textureSample(curlnoise_texture, curlnoise_sampler, sphere_uv);
+  var curl_noise = textureSample(curlnoise_texture, curlnoise_sampler, sphere_uv * lod);
   return Samples(noise, detail_noise, blue_noise, curl_noise, coverage);
 }
 
@@ -263,7 +263,7 @@ fn getSphereUV(inner_sphere_point: vec3<f32>) -> vec2<f32> {
 
   var current_point: vec3<f32> = output.vPosition.xyz; 
   for (var i: f32 = 0.0; i < steps; i += 1.0) {
-    current_point += (1 - cur_transmittance)  * ray_direction * step_length;
+    current_point += (clamp(1 - cur_transmittance, 0.05, 1.0))  * ray_direction * step_length;
 
     let distance_to_center = length(current_point - sphere_center);
     let inner_sphere_point = sphere_center + normalize(current_point - sphere_center) * sphere_radius;
@@ -290,7 +290,7 @@ fn getSphereUV(inner_sphere_point: vec3<f32>) -> vec2<f32> {
       var lightness: f32 = 1.0 - (1.0 / (1.0 + exp(-scaledDotProduct)));
       let moonposition = vec3<f32>(-lightUniforms.lightPosition.x, -lightUniforms.lightPosition.y, -lightUniforms.lightPosition.z);
 
-      let sun_ray_direction = mix(normalize(current_point + lightUniforms.lightPosition),  normalize(current_point + moonposition), lightness);
+      let sun_ray_direction = normalize(current_point + lightUniforms.lightPosition);
       let sun_point: vec3<f32> = current_point + k * sun_ray_direction * step_length;
 
 
