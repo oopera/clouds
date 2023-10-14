@@ -95,22 +95,20 @@ const n: f32 = 1.0003;
   return output;
 } 
 
-
+fn getNoise(noise:vec4<f32>, layer:f32) -> f32{
+  if(layer == 1){
+    return noise.g * 0.625 + noise.g * 0.25 + noise.b * 0.125;
+  }else if(layer == 2){
+    return noise.b * 0.625 + noise.g * 0.25 + noise.a * 0.125;
+  }else if(layer == 3){
+    return noise.a * 0.625 + noise.b * 0.25 + noise.g * 0.125;
+  }
+  return 0.0;
+}
 
 fn getDensity(noise: vec4<f32>, detail_noise: vec4<f32>,  curl_noise: vec4<f32>, percent_height: f32, layer: f32, coverage: f32) -> f32{
-  var shape_noise: f32;
+  var shape_noise: f32 = getNoise(noise, layer);
   var detail: f32;
-
-  if(layer == 1){
-    shape_noise  = noise.g * 0.625 + noise.g * 0.25 + noise.b * 0.125;
-
-  }else if(layer == 2){
-    shape_noise  = noise.b * 0.625 + noise.g * 0.25 + noise.a * 0.125;
-  
-  }else if(layer == 3){
-    shape_noise  = noise.a * 0.625 + noise.b * 0.25 + noise.g * 0.125 * curl_noise.r;
-
-  }
 
   detail = detail_noise.r;
 
@@ -118,7 +116,7 @@ fn getDensity(noise: vec4<f32>, detail_noise: vec4<f32>,  curl_noise: vec4<f32>,
   shape_noise = ReMap(noise.r, shape_noise, 1.0, 0.0, 1.0);
 
   var detail_modifier: f32 = lerp(detail, 1.0 - detail, saturate(percent_height));
-  detail_modifier *=  exp(-coverage * 0.75);
+  // detail_modifier *=  coverage;
   var final_density: f32 = saturate(ReMap(shape_noise, detail_modifier, 1.0, 0.0, 1.0));
 
   // return pow(shape_noise, 1 + (layer * 0.2));
@@ -240,11 +238,13 @@ fn getSphereUV(inner_sphere_point: vec3<f32>) -> vec2<f32> {
   );
 }
 
+  const highlight_color: vec3<f32> = vec3<f32>(0.09, 0.07, 0.12);
+  const sun_color: vec3<f32> = vec3<f32>(1, 0.8, 0.7);
+  const moon_color: vec3<f32> = vec3<f32>(0.4, 0.5, 0.7);
+  const base_color: vec3<f32> = vec3<f32>(0.32, 0.33, 0.47);
+
 @fragment fn fs(output: Output) -> @location(0) vec4<f32> {
   var output_color: vec3<f32> = vec3<f32>(0.52, 0.53, 0.57);
-  var highlight_color: vec3<f32> = vec3<f32>(0.09, 0.07, 0.12);
-  var sun_color: vec3<f32> = vec3<f32>(1, 0.8, 0.7);
-
   var light: f32 = 0.0;
   var sun_transmittance: f32 = 0.0;
   var sun_output: vec3<f32> = vec3<f32>(0.0, 0.0, 0.0);
@@ -256,23 +256,44 @@ fn getSphereUV(inner_sphere_point: vec3<f32>) -> vec2<f32> {
   let steps = cloudUniforms.raymarchSteps;
   var step_length = calculateStepLength(ray_origin, ray_direction) / (steps);
 
+
+  var transmittance:f32 = 1;
+  var light_energy:f32 = 0.0;
+  var cur_transmittance: f32 = 0;
+
+  var current_point: vec3<f32> = output.vPosition.xyz; 
   for (var i: f32 = 0.0; i < steps; i += 1.0) {
-    let current_point = output.vPosition.xyz + i * ray_direction * step_length;
+    current_point += (1 - cur_transmittance)  * ray_direction * step_length;
+
     let distance_to_center = length(current_point - sphere_center);
     let inner_sphere_point = sphere_center + normalize(current_point - sphere_center) * sphere_radius;
     let sphere_uv = getSphereUV(inner_sphere_point);
 
     var layer = getLayer(current_point);
     var samples: Samples = getSamples(current_point, sphere_uv);
+    var scale = getScale(current_point, distance_to_center, layer);
     var coverage = getCoverage(layer, samples.coverage);
-    var density = getDensity(samples.noise, samples.detail_noise, samples.curl_noise, length(current_point - inner_sphere_point), layer, coverage);
-    var cur_transmittance = density * coverage * cloudUniforms.density ;
+    var density = getDensity(samples.noise, samples.detail_noise, samples.curl_noise, scale, layer, coverage);
+
+    cur_transmittance = density * coverage * cloudUniforms.density;
 
     cloud_density += cur_transmittance;
+
+    var sun_density: f32 = 0.0;
+    var sun_transmittance: f32 = 1.0;
+    var light: f32 = 0.0;
+
     
     for(var k: f32 = 0.0; k < 1.0; k += 1.0){
-      let sun_ray_direction = normalize(current_point + lightUniforms.lightPosition);
+      let dotProduct = dot(lightUniforms.lightPosition, current_point);
+      let scaledDotProduct: f32 = dotProduct * 1.0;
+      var lightness: f32 = 1.0 - (1.0 / (1.0 + exp(-scaledDotProduct)));
+      let moonposition = vec3<f32>(-lightUniforms.lightPosition.x, -lightUniforms.lightPosition.y, -lightUniforms.lightPosition.z);
+
+      let sun_ray_direction = mix(normalize(current_point + lightUniforms.lightPosition),  normalize(current_point + moonposition), lightness);
       let sun_point: vec3<f32> = current_point + k * sun_ray_direction * step_length;
+
+
       let distance_to_center = length(sun_point - sphere_center);
       let inner_sphere_point = sphere_center + normalize(sun_point - sphere_center) * sphere_radius;
       let sphere_uv = getSphereUV(inner_sphere_point);
@@ -281,9 +302,6 @@ fn getSphereUV(inner_sphere_point: vec3<f32>) -> vec2<f32> {
       let distance_to_inner_sphere = length(sun_point - inner_sphere_point);
       var theta = angleBetweenVectors(ray_direction, sun_ray_direction);
 
-      let dotProduct = dot(lightUniforms.lightPosition, sun_point);
-      let scaledDotProduct: f32 = dotProduct * 1.0;
-      var lightness: f32 = 1.0 - (1.0 / (1.0 + exp(-scaledDotProduct)));
 
       var lightclamp: vec2<f32> = vec2<f32>(0.7, 1.0); 
 
@@ -302,19 +320,86 @@ fn getSphereUV(inner_sphere_point: vec3<f32>) -> vec2<f32> {
       var scale = getScale(sun_point, distance_to_center, layer);
 
       
-      if(cloud_density < 1.5 && cur_transmittance > 0.0){
+      if(cloud_density < 1 + pow((1 + cloudUniforms.density), 1.25) && cur_transmittance > 0.0){
         coverage = getCoverage(layer, samples.coverage);
-        light = mieScattering(theta) + rayleighScattering(theta) * pow(lightUniforms.rayleighIntensity,2) + samples.blue_noise.r * 0.05;
+        light = mieScattering(theta) + rayleighScattering(theta) * pow(lightUniforms.rayleighIntensity,2) + samples.blue_noise.r * 0.25;
         sun_transmittance = getDensity(samples.noise, samples.detail_noise,  samples.curl_noise,  scale, layer, coverage) * coverage * cloudUniforms.sunDensity * clamp(lightness, lightclamp[0], lightclamp[1]);
-        output_color +=  (sun_transmittance) * highlight_color * light * cur_transmittance;
+        output_color +=  (sun_transmittance) * highlight_color * light * cur_transmittance ;
       }
+
+      // if(cloud_density > 0.0 && cloud_density < 1.5){
+      //   light += mieScattering(theta) * lightUniforms.rayleighIntensity * 5 + samples.blue_noise.r * 0.05;
+      //   sun_density += getDensity(samples.noise, samples.detail_noise,  samples.curl_noise,  scale, layer, coverage) * getCoverage(layer, samples.coverage) * clamp(lightness, lightclamp[0], lightclamp[1]) * cloudUniforms.sunDensity;
+      //   // output_color += CalculateLight(cur_transmittance, sun_density, theta, scale, samples.blue_noise.r, ((1 - lightness) * 5)) * lightUniforms.rayleighIntensity;
+      // }
     }
-  } 
+      // sun_transmittance = exp(-sun_density * cloudUniforms.sunDensity);
+      // var darknessThres = 0.5;
+      // var darkness = darknessThres + sun_transmittance * 0.5;
+      // light_energy += cloud_density * step_length * darkness * light * transmittance; 
+      // transmittance *= exp(-density * cloudUniforms.density * step_length);
+    } 
+
+    // var cloud_color = light_energy * sun_color;
+    // output_color = base_color * transmittance + cloud_color;
+
     return vec4<f32>(output_color, cloud_density * cloudUniforms.visibility);
   }
 
 
 
+
+fn InOutScatter(cos_angle: f32) -> f32 {
+    let first_hg = HG(cos_angle, cloud_inscatter);
+    let second_hg = cloud_silver_intensity * pow(saturate(cos_angle), cloud_silver_exponent);
+    let in_scatter_hg = max(first_hg, second_hg);
+    let out_scatter_hg = HG(cos_angle, -cloud_outscatter);
+    return lerp(in_scatter_hg, out_scatter_hg, cloud_in_vs_outscatter);
+}
+
+fn Attenuation(density_to_sun: f32, cos_angle: f32) -> f32 {
+    let prim = exp(-cloud_beer * density_to_sun);
+    let scnd = exp(-cloud_beer * cloud_attuention_clampval) * 0.7;
+    let checkval = ReMap(cos_angle, 0.0, 1.0, scnd, scnd * 0.5);
+    return max(checkval, prim);
+}
+
+fn OutScatterAmbient(density: f32, percent_height: f32) -> f32 {
+    let depth = cloud_outscatter_ambient * pow(density, ReMap(percent_height, 0.3, 0.9, 0.5, 1.0));
+    let vertical = pow(saturate(ReMap(percent_height, 0.0, 0.3, 0.8, 1.0)), 0.8);
+    var out_scatter = depth * vertical;
+    out_scatter = 1.0 - saturate(out_scatter);
+    return out_scatter;
+}
+
+fn CalculateLight(
+    density: f32, 
+    density_to_sun: f32, 
+    cos_angle: f32, 
+    percent_height: f32, 
+    bluenoise: f32, 
+    dist_along_ray: f32
+    ) -> vec3<f32> {
+    let attenuation_prob = Attenuation(density_to_sun, cos_angle);
+    let ambient_out_scatter = OutScatterAmbient(density, percent_height);
+    let sun_highlight = InOutScatter(cos_angle);
+    var attenuation = attenuation_prob * sun_highlight * ambient_out_scatter;
+    attenuation = max(density * cloud_ambient_minimum * (1.0 - pow(saturate(dist_along_ray / 4000.0), 2.0)), attenuation);
+    attenuation += bluenoise * 0.003;
+    let ret_color = vec3<f32>(attenuation * sun_color.x, attenuation * sun_color.y, attenuation * sun_color.z);
+    return ret_color;
+}
+
+// Define the constants
+const cloud_inscatter: f32 = 0.15;
+const cloud_silver_intensity: f32 = 0.0;
+const cloud_silver_exponent: f32 = 0.0;
+const cloud_outscatter: f32 = 0.65;
+const cloud_in_vs_outscatter: f32 = 0.2;
+const cloud_beer: f32 = 0.76;
+const cloud_attuention_clampval: f32 = 0.15;
+const cloud_outscatter_ambient: f32 = 0.9;
+const cloud_ambient_minimum: f32 = 0.9;
 
 
 fn ReMap(value: f32, old_low: f32, old_high: f32, new_low: f32, new_high: f32) -> f32 {
@@ -354,6 +439,7 @@ fn angleBetweenVectors(A: vec3<f32>, B: vec3<f32>) -> f32 {
   let cosTheta = dotProduct / (magnitudeA * magnitudeB);
   return acos(clamp(cosTheta, -1.0, 1.0));
 }
+
 
 
 

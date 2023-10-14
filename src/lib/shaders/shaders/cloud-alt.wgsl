@@ -306,7 +306,7 @@ fn beersLaw(density: f32, transmittance: f32, distance: f32) -> f32 {
     var samples: Samples = getSamples(inner_sphere_point, sphere_uv, layer);
     var density = getDensity(samples.noise, samples.detail_noise,samples.curl_noise, length(current_point - inner_sphere_point), layer);
 
-    cloud_density += density * getCoverage(layer, samples.coverage) * cloudUniforms.density;
+    cloud_density += pow(density * getCoverage(layer, samples.coverage) * cloudUniforms.density, 2);
 
     var sun_density: f32 = 0.0;
     var sun_transmittance: f32 = 1.0;

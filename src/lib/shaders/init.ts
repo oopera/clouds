@@ -687,6 +687,7 @@ async function init() {
     options.elapsed += 0.0005;
 
     const cameraPosition = vec3.create();
+    const lightPosition = vec3.create();
     vec3.set(
       cameraPosition,
       options.cameraPosition.x,
@@ -694,7 +695,6 @@ async function init() {
       options.cameraPosition.z
     );
 
-    const lightPosition = vec3.create();
     vec3.set(
       lightPosition,
       options.lightPosition.x,

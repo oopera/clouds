@@ -148,6 +148,7 @@ export const GetTextureFromGribData = async (
   const sampler = device.createSampler({
     minFilter: 'linear',
     magFilter: 'linear',
+    mipmapFilter: 'linear',
     addressModeU: addressModeU as GPUAddressMode,
     addressModeV: addressModeV as GPUAddressMode,
   });
@@ -155,6 +156,7 @@ export const GetTextureFromGribData = async (
   const texture = device.createTexture({
     size: [width, height, 1],
     format: 'rgba8unorm',
+    mipLevelCount: Math.log2(Math.max(width, height)) + 1,
     usage:
       GPUTextureUsage.TEXTURE_BINDING |
       GPUTextureUsage.COPY_DST |
