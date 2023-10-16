@@ -12,7 +12,6 @@
   import Text from '$lib/components/Text.svelte';
   import Link from '$lib/components/Link.svelte';
   import Card from '$lib/components/Card.svelte';
-  import Button from '$lib/components/Button.svelte';
 
   inject({ mode: dev ? 'development' : 'production' });
 </script>
@@ -79,10 +78,6 @@
         <Layout horizontal gap="2" justify="end" align="end">
           <Card show>
             <Layout align="end" gap="1" fit>
-              <Button id="download">
-                <Text text="RENDER" />
-              </Button>
-
               <Range_Input
                 delay={0}
                 title="cloud_density"

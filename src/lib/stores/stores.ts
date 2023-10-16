@@ -4,24 +4,17 @@ import { cubicBezier } from '../shaders/utils/tween';
 import { tweened } from 'svelte/motion';
 
 export const has_initialized = writable(false);
-
 export const amount_of_points = writable(100);
 export const scale = writable(0.05);
-
 export const fps = writable(0);
 export const dragging = writable(false);
-
-export const cloud_density = writable(0.34);
-
+export const cloud_density = writable(0.2);
 export const sun_transmittance = writable(2.0);
-export const rayleigh_intensity = writable(3.0);
-
+export const rayleigh_intensity = writable(0.6);
 export const raymarch_length = writable(0.3);
 export const raymarch_steps = writable(40);
 export const rotation_speed = writable(0.05);
-
 export const half_res = writable(true);
-
 export const day_cycle = writable<'day_cycle' | 'full_day' | 'full_night'>(
   'day_cycle'
 );

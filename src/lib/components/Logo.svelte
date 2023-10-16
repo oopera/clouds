@@ -6,6 +6,7 @@
   import Line from './Line.svelte';
   import IconButton from './IconButton.svelte';
   import Tag from './Tag.svelte';
+  import Button from './Button.svelte';
 
   const translationsForLoading = [
     'Loading',
@@ -129,6 +130,9 @@
               third_title="full_night"
             />
           </Layout>
+          <Button id="download">
+            <Text text="RENDER" />
+          </Button>
         </Layout>
       </div>
     </Layout>
