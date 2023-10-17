@@ -93,12 +93,7 @@ export function perlinfbm(p: Vec3, freq: number, octaves: number): number {
   return noise;
 }
 
-function worley(
-  p: Vec3,
-  scale: number,
-  frequency: number,
-  maxDist: number = 0
-): number {
+function worley(p: Vec3, scale: number, frequency: number): number {
   p = [p[0] * frequency, p[1] * frequency, p[2] * frequency];
 
   const id: Vec3 = [
@@ -143,10 +138,6 @@ function worley(
     }
   }
 
-  if (maxDist > 0) {
-    minimalDist = Math.min(minimalDist, maxDist);
-  }
-
   return 1.0 - minimalDist;
 }
 
@@ -155,8 +146,7 @@ export function generateWorleyFbmNoise(
   height: number,
   depth: number,
   frequency: number,
-  scale: number,
-  maxDist: number = 0
+  scale: number
 ): Float32Array {
   const result = new Float32Array(width * height * depth);
 
@@ -166,8 +156,7 @@ export function generateWorleyFbmNoise(
         const value = worley(
           [x / width, y / height, z / depth],
           scale,
-          frequency,
-          maxDist
+          frequency
         );
 
         const index = x + y * width + z * width * height;
