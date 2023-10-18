@@ -448,7 +448,7 @@ fn raymarch(ray_origin: vec3<f32>, ray_direction: vec3<f32>) -> RaymarchOutput {
       let cloud_variables: CloudVariables = calculateCloudVariables(current_point, sphere_center, sphere_radius);
       var coverage = getCoverage(cloud_variables.layer, textureSampleLevel(cloud_texture, cloud_sampler, sphere_uv, 0));
       
-      if(cloud_variables.layer == 0){
+      if(cloud_variables.layer == 0 || coverage == 0){
         continue;
       }
 
@@ -473,7 +473,7 @@ fn raymarch(ray_origin: vec3<f32>, ray_direction: vec3<f32>) -> RaymarchOutput {
       light_energy += cloud_density * sun_transmittance * light; 
       transmittance *= exp(-cloud_density * cloudUniforms.density );
 
-      if(1 - transmittance >= 1){
+        if(1 - transmittance >= 1){
           break;
       }
     } 
