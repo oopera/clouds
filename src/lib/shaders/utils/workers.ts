@@ -1,3 +1,5 @@
+import type { RenderOptions } from '$lib/types/types';
+
 export async function CreateSphereData(options: RenderOptions): Promise<any> {
   const worker: Worker = new Worker(
     new URL('$lib/shaders/primitives/sphere.ts', import.meta.url),

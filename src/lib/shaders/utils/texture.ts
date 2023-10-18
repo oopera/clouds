@@ -39,6 +39,56 @@ export const GetTexture = async (
   };
 };
 
+const applyGaussianBlur1D = (data: number[], kernel: number[]) => {
+  const output = new Array<number>(data.length).fill(0);
+  const halfKernelSize = Math.floor(kernel.length / 2);
+
+  for (let i = 0; i < data.length; i++) {
+    let sum = 0;
+    for (let j = -halfKernelSize; j <= halfKernelSize; j++) {
+      const index = i + j;
+      if (index >= 0 && index < data.length) {
+        sum += data[index] * kernel[j + halfKernelSize];
+      }
+    }
+    output[i] = sum;
+  }
+
+  return output;
+};
+
+const applyGaussianBlur2D = (
+  data: number[],
+  width: number,
+  height: number,
+  kernel: number[]
+) => {
+  let output = new Array<number>(width * height).fill(0);
+
+  // Apply to each row
+  for (let y = 0; y < height; y++) {
+    const row = data.slice(y * width, (y + 1) * width);
+    const blurredRow = applyGaussianBlur1D(row, kernel);
+    for (let x = 0; x < width; x++) {
+      output[y * width + x] = blurredRow[x];
+    }
+  }
+
+  // Apply to each column
+  for (let x = 0; x < width; x++) {
+    const col = [];
+    for (let y = 0; y < height; y++) {
+      col.push(output[y * width + x]);
+    }
+    const blurredCol = applyGaussianBlur1D(col, kernel);
+    for (let y = 0; y < height; y++) {
+      output[y * width + x] = blurredCol[y];
+    }
+  }
+
+  return output;
+};
+
 export const Get4LayerTextureFromGribData = async (
   device: GPUDevice,
   data: number[][],
@@ -47,6 +97,13 @@ export const Get4LayerTextureFromGribData = async (
 ) => {
   const width = 1440;
   const height = 721;
+
+  const kernel = [0.06136, 0.24477, 0.38774, 0.24477, 0.06136];
+
+  // Apply Gaussian blur to each channel
+  const blurredData = data.map((channel) => {
+    return applyGaussianBlur2D(channel, width, height, kernel);
+  });
 
   const rgbaData = new Uint8Array(width * height * 4);
 
@@ -57,10 +114,10 @@ export const Get4LayerTextureFromGribData = async (
       // Tested this in Figma
       const whShifted = (height - 1 - y) * width + (width - 1 - (x + width));
 
-      const layerData1 = data[0][wh];
-      const layerData2 = data[1][wh];
-      const layerData3 = data[2][wh];
-      const layerData4 = data[3][wh];
+      const layerData1 = blurredData[0][wh];
+      const layerData2 = blurredData[1][wh];
+      const layerData3 = blurredData[2][wh];
+      const layerData4 = blurredData[3][wh];
       const offset = whShifted * 4; // Using the shifted index here
 
       const value = Math.floor(layerData1 * 2.55);
@@ -98,23 +155,23 @@ export const Get4LayerTextureFromGribData = async (
     [width, height, 1]
   );
 
-  // const canvas = document.createElement('canvas');
-  // canvas.width = width;
-  // canvas.height = height;
-  // const ctx = canvas.getContext('2d');
-  // if (ctx) {
-  //   const imageData = ctx.createImageData(width, height);
-  //   imageData.data.set(rgbaData);
-  //   ctx.putImageData(imageData, 0, 0);
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  if (ctx) {
+    const imageData = ctx.createImageData(width, height);
+    imageData.data.set(blurredData[0]);
+    ctx.putImageData(imageData, 0, 0);
 
-  //   const pngURL = canvas.toDataURL('image/png');
-  //   const link = document.createElement('a');
-  //   link.href = pngURL;
-  //   link.download = 'texture.png';
-  //   document.body.appendChild(link);
-  //   link.click();
-  //   document.body.removeChild(link);
-  // }
+    const pngURL = canvas.toDataURL('image/png');
+    const link = document.createElement('a');
+    link.href = pngURL;
+    link.download = 'texture.png';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
 
   return {
     texture,
@@ -419,10 +476,16 @@ export const Get3DNoiseTexture = async (
   addressModeV = 'repeat',
   addressModeW = 'repeat'
 ) => {
-  const perlinNoiseData_01 = generatePerlinFbmNoise(width, height, depth, 1, 1);
-  const noiseData_01 = generateWorleyFbmNoise(width, height, depth, 5, 2);
-  const noiseData_02 = generateWorleyFbmNoise(width, height, depth, 10, 2);
-  const noiseData_03 = generateWorleyFbmNoise(width, height, depth, 15, 2);
+  const perlinNoiseData_01 = generatePerlinFbmNoise(
+    width,
+    height,
+    depth,
+    25,
+    8
+  );
+  const noiseData_01 = generateWorleyFbmNoise(width, height, depth, 1, 4);
+  const noiseData_02 = generateWorleyFbmNoise(width, height, depth, 1, 8);
+  const noiseData_03 = generateWorleyFbmNoise(width, height, depth, 1, 16);
   const rgbaData = new Uint8Array(noiseData_01.length * 4);
 
   function mix(a: number, b: number, t: number): number {
@@ -467,7 +530,7 @@ export const Get3DNoiseTexture = async (
     { width: width, height: height, depthOrArrayLayers: depth }
   );
 
-  downloadData(rgbaData, 'noise.bin');
+  downloadData(rgbaData, 'detail-noise.bin');
 
   return {
     texture,

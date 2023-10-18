@@ -61,35 +61,6 @@
     }
 
     
-    // @vertex fn vs(input: Input, @builtin(vertex_index) vertexIndex: u32) -> Output {
-    //   var output: Output;
-    
-    //   var d: vec2<i32> = vec2<i32>(textureDimensions(heightTexture));
-    
-    //   var heightPixel: vec4<f32> = textureLoad(
-    //     heightTexture,
-    //     vec2<i32>(i32(input.uv.x * f32(d.x)), i32(input.uv.y * f32(d.y))),
-    //     0
-    //   );
-    //   var height: f32 = heightPixel.x;
-    //   var usedVisibility = earthUni.visibility;
-    
-    //   let mPosition: vec4<f32> = uni.modelMatrix * input.position;
-    //   let mNormal: vec4<f32> = uni.normalMatrix * input.normal;
-    
-    //   let displacement: vec3<f32> = normalize(mNormal.xyz) * (height );
-    
-    //   output.Position = uni.viewProjectionMatrix * (mPosition + vec4<f32>(displacement, 0.0));
-  
-    //   output.vPosition = uni.viewProjectionMatrix * (mPosition + vec4<f32>(displacement, 0.0));
-    //   output.vNormal = mNormal;
-    //   output.vUV = input.uv;
-    //   output.cameraPosition = uni.cameraPosition;
-
-    
-    //   return output;
-    // }
-    
     fn getDistance(uv: vec2<f32>, selectedPoint: vec2<f32>) -> f32 {
       let delta = abs(uv - selectedPoint);
       let wrappedDelta = vec2<f32>(min(delta.x, 1.0 - delta.x) * 2, delta.y);
@@ -148,10 +119,6 @@
       }
       lightness = clamp(lightness, 0.2, 1.0);
       
-      // else{
-      //   let edge = fwidth(lightness);
-      //    mask = smoothstep(0.0, blendRadius, edge);
-      // }
 
       let resultColor = vec4(textureColor.rgb * pow(lightness, 1.2), 1) + 
                    vec4(lightColor.rgb  * pow(1.0 - lightness, 1.2) , 1.0);

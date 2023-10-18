@@ -83,10 +83,10 @@ const cube_offset: f32 = 0.5;
 const cube_partial = cube_offset / 10;
 
 const layer_1_offset = cube_partial * 0.5; 
-const layer_1_buffer = cube_partial * 4;
-const layer_2_offset = cube_partial * 4;
-const layer_2_buffer = cube_partial * 6.5;
-const layer_3_offset = cube_partial * 6.5;
+const layer_1_buffer = cube_partial * 5;
+const layer_2_offset = cube_partial * 6;
+const layer_2_buffer = cube_partial * 8.5;
+const layer_3_offset = cube_partial * 8.5;
 
 const layer_1_sphere_radius: f32 = sphere_radius + layer_1_offset;
 const layer_2_sphere_radius: f32 = sphere_radius + layer_2_offset;
@@ -104,12 +104,12 @@ const N: f32 = 2.545e25;
 const n: f32 = 1.0003;   
 
 // Define the constants
-const cloud_inscatter: f32 = 0.27;
+const cloud_inscatter: f32 = 0.2;
 const cloud_silver_intensity: f32 = 0.12;
 const cloud_silver_exponent: f32 = 0.00;
 const cloud_outscatter: f32 = 0.75;
-const cloud_in_vs_outscatter: f32 = 0.24;
-const cloud_beer: f32 = 0.82;
+const cloud_in_vs_outscatter: f32 = 0.74;
+const cloud_beer: f32 = 0.22;
 const cloud_attuention_clampval: f32 = 0.15;
 const cloud_outscatter_ambient: f32 = 0.74;
 const cloud_ambient_minimum: f32 = 0.85;
@@ -162,7 +162,6 @@ fn CalculateLight(
     return attenuation;
 }
 
-
 fn InOutScatter(cos_angle: f32) -> f32 {
     let first_hg = HG(cos_angle, cloud_inscatter);
     let second_hg = cloud_silver_intensity * pow(saturate(cos_angle), cloud_silver_exponent);
@@ -197,11 +196,11 @@ fn angleBetweenVectors(A: vec3<f32>, B: vec3<f32>) -> f32 {
 
 fn getNoise(noise:vec4<f32>, layer:f32) -> f32{
   if(layer == 1){
-    return noise.g ;
+    return noise.g * 0.625 + noise.b * 0.25 + noise.a * 0.125;
   }else if(layer == 2){
-    return noise.b ;
+    return noise.b * 0.625 + noise.g * 0.25 + noise.a * 0.125;
   }else if(layer == 3){
-    return noise.a ;
+    return noise.a * 0.625 + noise.g * 0.25 + noise.b * 0.125;
   }
   return 0.0;
 }
@@ -248,7 +247,7 @@ fn getDensity(noise: vec4<f32>, detail_noise: vec4<f32>,  curl_noise: vec4<f32>,
   detail_modifier = ReMap(detail_modifier, 0.0, 1.0, 0.0, 1.0);
   var final_density: f32 = saturate(ReMap(shape_noise, detail_modifier, 1.0, 0.0, 1.0));
 
-  return pow(final_density, 1 + (layer * 0.2)) * coverage  * HeightAlter(percent_height, coverage);
+  return pow(final_density, 1 + (layer * 0.2)) * DensityAlter(percent_height, coverage) ;
 }
 
 fn calculateStepLength(ro: vec3<f32>, rd: vec3<f32>) -> f32 {
@@ -364,6 +363,10 @@ fn updateStep(current_point: vec3<f32>, ray_direction: vec3<f32>, step_length: f
   return current_point + cur_step_length * ray_direction;
 }
 
+fn getStep(step_length: f32, cur_density: f32) -> f32 {
+  return step_length * (clamp(1.0 - cur_density, 0.1, 1.0 - (clamp(cur_density * 25.0, 0.0, 0.75))));
+}
+
 fn calculateCloudVariables(current_point: vec3<f32>, sphere_center: vec3<f32>, sphere_radius: f32) -> CloudVariables {
   let distance_to_center = length(current_point - sphere_center);
   let altitude = distance_to_center - sphere_radius;
@@ -399,9 +402,7 @@ fn sunRaymarch(current_point: vec3<f32>, ray_direction: vec3<f32>, cur_density: 
         sun_point = updateStep(sun_point, sun_ray_direction, step_length, 0);
 
         let distance_to_center = length(sun_point - sphere_center);
-        let altitude = distance_to_center - sphere_radius;
         let sphere_uv = getSphereUV(sun_point);
-
         let cloud_variables: CloudVariables = calculateCloudVariables(sun_point, sphere_center, sphere_radius);
         
         var coverage = getCoverage(cloud_variables.layer, textureSampleLevel(cloud_texture, cloud_sampler, sphere_uv, 0));
@@ -447,7 +448,7 @@ fn raymarch(ray_origin: vec3<f32>, ray_direction: vec3<f32>) -> RaymarchOutput {
       let cloud_variables: CloudVariables = calculateCloudVariables(current_point, sphere_center, sphere_radius);
       var coverage = getCoverage(cloud_variables.layer, textureSampleLevel(cloud_texture, cloud_sampler, sphere_uv, 0));
       
-      if(coverage == 0 || cloud_variables.layer == 0){
+      if(cloud_variables.layer == 0){
         continue;
       }
 
@@ -468,8 +469,8 @@ fn raymarch(ray_origin: vec3<f32>, ray_direction: vec3<f32>) -> RaymarchOutput {
       light = sunRaymarchOutput.light;
       sun_transmittance = exp(-sun_density * cloudUniforms.sunDensity);
 
-      var darkness = 0.85 + sun_transmittance * (0.25);
-      light_energy += cloud_density * sun_transmittance * light * transmittance ; 
+      var darkness = 0.65 + sun_transmittance * (0.35);
+      light_energy += cloud_density * sun_transmittance * light; 
       transmittance *= exp(-cloud_density * cloudUniforms.density );
 
       if(1 - transmittance >= 1){
