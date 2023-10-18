@@ -155,23 +155,23 @@ export const Get4LayerTextureFromGribData = async (
     [width, height, 1]
   );
 
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext('2d');
-  if (ctx) {
-    const imageData = ctx.createImageData(width, height);
-    imageData.data.set(blurredData[0]);
-    ctx.putImageData(imageData, 0, 0);
+  // const canvas = document.createElement('canvas');
+  // canvas.width = width;
+  // canvas.height = height;
+  // const ctx = canvas.getContext('2d');
+  // if (ctx) {
+  //   const imageData = ctx.createImageData(width, height);
+  //   imageData.data.set(blurredData[0]);
+  //   ctx.putImageData(imageData, 0, 0);
 
-    const pngURL = canvas.toDataURL('image/png');
-    const link = document.createElement('a');
-    link.href = pngURL;
-    link.download = 'texture.png';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }
+  //   const pngURL = canvas.toDataURL('image/png');
+  //   const link = document.createElement('a');
+  //   link.href = pngURL;
+  //   link.download = 'texture.png';
+  //   document.body.appendChild(link);
+  //   link.click();
+  //   document.body.removeChild(link);
+  // }
 
   return {
     texture,
