@@ -219,7 +219,7 @@ async function init() {
   const bluenoiseV = await GetTexture(device, bluenoise);
   const curlnoiseV = await GetTexture(device, curlnoise);
 
-  const printImages = true;
+  const printImages = false;
   const generateWorleyTexture = false;
 
   if (dev && printImages) {
@@ -230,7 +230,7 @@ async function init() {
   if (dev && generateWorleyTexture) {
     executePromise(
       'worleyNoiseTexture',
-      (await Get3DNoiseTexture(device, 128, 128, 128)) as any,
+      (await Get3DNoiseTexture(device, 32, 32, 32)) as any,
       '3D Noise Texture'
     );
   }

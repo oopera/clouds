@@ -420,9 +420,9 @@ export const Get3DNoiseTexture = async (
   addressModeW = 'repeat'
 ) => {
   const perlinNoiseData_01 = generatePerlinFbmNoise(width, height, depth, 1, 1);
-  const noiseData_01 = generateWorleyFbmNoise(width, height, depth, 1, 5);
-  const noiseData_02 = generateWorleyFbmNoise(width, height, depth, 2, 10);
-  const noiseData_03 = generateWorleyFbmNoise(width, height, depth, 3, 15);
+  const noiseData_01 = generateWorleyFbmNoise(width, height, depth, 5, 2);
+  const noiseData_02 = generateWorleyFbmNoise(width, height, depth, 10, 2);
+  const noiseData_03 = generateWorleyFbmNoise(width, height, depth, 15, 2);
   const rgbaData = new Uint8Array(noiseData_01.length * 4);
 
   function mix(a: number, b: number, t: number): number {
@@ -440,7 +440,7 @@ export const Get3DNoiseTexture = async (
     let pfbm = mix(fbmNoise, perlinNoiseData_01[i], 0.75);
     const billowyPerlinData = reMap(pfbm, 0.0, 1.0, fbmNoise, 1.0);
 
-    rgbaData[index] = billowyPerlinData * 255; // R
+    rgbaData[index] = perlinNoiseData_01[i] * 255; // R
     rgbaData[index + 1] = noiseData_01[i] * 255; // G
     rgbaData[index + 2] = noiseData_02[i] * 255; // B
     rgbaData[index + 3] = noiseData_03[i] * 255; // A
