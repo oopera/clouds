@@ -398,7 +398,7 @@ fn sunRaymarch(current_point: vec3<f32>, ray_direction: vec3<f32>, cur_density: 
   let sun_ray_direction = normalize(current_point - light_position);
   var sun_point = current_point;
 
-  for(var k: f32 = 0.0; k < 2.0; k += 1.0) {
+  for(var k: f32 = 0.0; k < 1.0; k += 1.0) {
         sun_point = updateStep(sun_point, sun_ray_direction, step_length, 0);
 
         let distance_to_center = length(sun_point - sphere_center);
@@ -468,17 +468,16 @@ fn raymarch(ray_origin: vec3<f32>, ray_direction: vec3<f32>) -> RaymarchOutput {
       sun_density = sunRaymarchOutput.sun_density;
       light = sunRaymarchOutput.light;
       sun_transmittance = exp(-sun_density * cloudUniforms.sunDensity);
-
       var darkness = 0.65 + sun_transmittance * (0.35);
       light_energy += cloud_density * sun_transmittance * light; 
       transmittance *= exp(-cloud_density * cloudUniforms.density );
 
-        if(1 - transmittance >= 1){
+      if(1 - transmittance >= 1){
           break;
       }
     } 
 
-  return RaymarchOutput( light_energy, transmittance);
+  return RaymarchOutput(light_energy, transmittance);
 }
 
 
