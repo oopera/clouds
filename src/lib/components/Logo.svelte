@@ -88,6 +88,7 @@
 
   $: if ($loading.welcome.message === 'error') {
     deviceFailed = true;
+    loaded = true;
   }
 </script>
 
