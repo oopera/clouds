@@ -88,7 +88,9 @@
 
   $: if ($loading.welcome.message === 'error') {
     deviceFailed = true;
-    loaded = true;
+    setTimeout(() => {
+      loaded = true;
+    }, 1);
   }
 </script>
 
@@ -129,9 +131,17 @@
               third_title="full_night"
             />
           </Layout>
-          <Button id="download">
-            <Text text="RENDER" />
-          </Button>
+          {#if !deviceFailed}
+            <Button id="download">
+              <Text text="RENDER" />
+            </Button>
+          {:else}
+            <Text
+              end
+              secondary={true}
+              text="You must use a WebGPU Compatible Device and Browser."
+            />
+          {/if}
         </Layout>
       </div>
     </Layout>
