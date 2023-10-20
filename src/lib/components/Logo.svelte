@@ -91,9 +91,7 @@
   }
 </script>
 
-<div class="slider" class:mounted />
-
-{#if mounted && !deviceFailed}
+{#if mounted}
   <span class="parent" class:loaded>
     <Text type="h1" delay={4} text={'CLOUDS'} />
     {#if mounted && !loaded}
@@ -137,15 +135,6 @@
       </div>
     </Layout>
   </div>
-{/if}
-
-{#if deviceFailed}
-  <span class="error">
-    <Layout>
-      <Text nowrap delay={0} text={'Attaching to GPU Failed.'} />
-      <Text tertiary delay={6} text={'You need to use Chrome 113 onwards.'} />
-    </Layout>
-  </span>
 {/if}
 
 <style lang="scss">

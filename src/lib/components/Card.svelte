@@ -3,6 +3,7 @@
   import Button from './Button.svelte';
   import { loading } from '$lib/stores/stores';
   import type { LoadingStore } from '$lib/types/types';
+
   export let show: boolean | null;
   export let direction: 'left' | 'down' = 'down';
 
@@ -55,6 +56,8 @@
     gap: gap(2);
     transition: transform 0.75s var(--ease), opacity 0.75s var(--ease);
     transform: translateY(calc(100% + 25px));
+    position: absolute;
+    bottom: 0;
   }
 
   .mounted {

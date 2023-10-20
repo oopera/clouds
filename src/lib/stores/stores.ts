@@ -4,7 +4,7 @@ import { cubicBezier } from '../shaders/utils/tween';
 import { tweened } from 'svelte/motion';
 
 export const has_initialized = writable(false);
-export const amount_of_points = writable(150);
+export const amount_of_points = writable(250);
 export const scale = writable(0.05);
 export const fps = writable(0);
 export const dragging = writable(false);

@@ -108,6 +108,10 @@
 
     width: 300px;
     max-width: 100%;
+    display: none;
+    @include m {
+      display: unset;
+    }
   }
   .mounted {
     transform: translateY(0);

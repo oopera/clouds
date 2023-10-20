@@ -428,6 +428,7 @@ async function init() {
   );
 
   offscreenDepthTexture = offscreenDepth.texture;
+
   depthTexture = depth.texture;
 
   const renderPassDescriptor: GPURenderPassDescriptor = {
@@ -458,6 +459,7 @@ async function init() {
     ],
     depthStencilAttachment: {
       view: offscreenDepthTexture.createView(),
+      resolveTarget: offscreenTextureResolve.createView(),
       depthClearValue: 1,
       depthLoadOp: 'clear',
       depthStoreOp: 'store',

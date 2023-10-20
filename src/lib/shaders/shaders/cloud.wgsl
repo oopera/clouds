@@ -79,8 +79,8 @@ struct CloudVariables {
 
 const sphere_center = vec3<f32>(0.0, 0.0, 0.0);
 const sphere_radius: f32 = 20.0;
-const cube_offset: f32 = 0.5; 
-const cube_partial = cube_offset / 10;
+const sphere_offset: f32 = 0.5; 
+const cube_partial = sphere_offset / 10;
 
 const layer_1_offset = cube_partial * 0.5; 
 const layer_1_buffer = cube_partial * 5;
@@ -92,7 +92,7 @@ const layer_1_sphere_radius: f32 = sphere_radius + layer_1_offset;
 const layer_2_sphere_radius: f32 = sphere_radius + layer_2_offset;
 const layer_3_sphere_radius: f32 = sphere_radius + layer_3_offset;
 
-const outer_sphere_radius: f32 = sphere_radius + cube_offset;
+const outer_sphere_radius: f32 = sphere_radius + sphere_offset;
 
 const high_lod: f32 = 1;
 const low_lod: f32 = 1;
@@ -303,20 +303,19 @@ fn getScale(altitude: f32, layer:f32) -> f32{
     }else if(layer == 2){
       return ReMap(altitude, layer_2_offset, layer_2_buffer, 0.0, 1.0);
     }else if(layer == 3){
-      return ReMap(altitude, layer_3_offset, cube_offset, 0.0, 1.0);
+      return ReMap(altitude, layer_3_offset, sphere_offset, 0.0, 1.0);
     }
   return 0.0;
 }
 
 fn getLayer(altitude: f32) -> f32{
-    if (altitude < cube_offset && altitude > layer_3_offset) {
+    if (altitude < sphere_offset && altitude > layer_3_offset) {
       return 3.0;
     } else if (altitude < layer_2_buffer && altitude > layer_2_offset) {
       return 2.0;
     } else if (altitude < layer_1_buffer && altitude > layer_1_offset) {
       return 1.0;
     }
-  
   return 0.0;
 }
 
@@ -424,6 +423,7 @@ fn sunRaymarch(current_point: vec3<f32>, ray_direction: vec3<f32>, cur_density: 
           sun_lightness = 0.8;
         }
         sun_density += getDensity(samples.noise, samples.detail_noise,  samples.curl_noise,  cloud_variables.scale, cloud_variables.layer, coverage) * cloudUniforms.sunDensity + samples.blue_noise.r * 0.01;
+        // light += mieScattering(angle) * lightUniforms.rayleighIntensity * sun_lightness;
         light += CalculateLight(cur_density, sun_density, angle, cloud_variables.scale, samples.blue_noise.r, step_length) * lightUniforms.rayleighIntensity * sun_lightness;  
   }
   
@@ -447,8 +447,8 @@ fn raymarch(ray_origin: vec3<f32>, ray_direction: vec3<f32>) -> RaymarchOutput {
       let sphere_uv = getSphereUV(current_point);
       let cloud_variables: CloudVariables = calculateCloudVariables(current_point, sphere_center, sphere_radius);
       var coverage = getCoverage(cloud_variables.layer, textureSampleLevel(cloud_texture, cloud_sampler, sphere_uv, 0));
-      
-      if(cloud_variables.layer == 0 || coverage == 0){
+    
+    if(cloud_variables.layer == 0 || coverage == 0){
         continue;
       }
 
@@ -472,7 +472,7 @@ fn raymarch(ray_origin: vec3<f32>, ray_direction: vec3<f32>) -> RaymarchOutput {
       light_energy += cloud_density * sun_transmittance * light; 
       transmittance *= exp(-cloud_density * cloudUniforms.density );
 
-      if(1 - transmittance >= 1){
+      if(transmittance < 0.001){
           break;
       }
     } 
@@ -484,7 +484,7 @@ fn raymarch(ray_origin: vec3<f32>, ray_direction: vec3<f32>) -> RaymarchOutput {
 @vertex fn vs(input: Input, @builtin(vertex_index) vertexIndex: u32) -> Output {
   var output: Output;
   let mPosition: vec4<f32> = uni.modelMatrix * input.position;
-  let displacement: vec4<f32> = vec4<f32>(normalize(mPosition.xyz) * cube_offset, 0.0);
+  let displacement: vec4<f32> = vec4<f32>(normalize(mPosition.xyz) * sphere_offset, 0.0);
   let worldPosition: vec4<f32> = mPosition + displacement;
   
   output.Position = uni.viewProjectionMatrix * worldPosition;

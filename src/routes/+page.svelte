@@ -72,62 +72,59 @@
       </Card>
     </Layout>
     <!-- <Axis_Indicator /> -->
-    <Layout align="end" justify="between" stretch>
+    <Layout align="end" justify="start" stretch>
       <Logo />
-      <Layout stretch justify="end" align="end">
-        <Layout horizontal gap="2" justify="end" align="end">
-          <Card show>
-            <Layout align="end" gap="1" fit>
-              <Range_Input
-                delay={0}
-                title="cloud_density"
-                min={0}
-                max={2.0}
-                step={0.01}
-              />
-              <Range_Input
-                delay={0}
-                title="raymarch_steps"
-                min={1}
-                max={100}
-                step={1}
-              />
-              <Text accent delay={9} text={'FORM'} />
 
-              <Range_Input
-                delay={0}
-                title="rayleigh_intensity"
-                min={0}
-                max={3.0}
-                step={0.05}
-              />
-              <Range_Input
-                delay={0}
-                title="sun_transmittance"
-                min={0}
-                max={4.0}
-                step={0.1}
-              />
-              <Text accent delay={9} text={'LIGHT'} />
-              <Range_Input
-                delay={0}
-                title="rotation_speed"
-                min={0}
-                max={1}
-                step={0.05}
-              />
-              <Range_Input
-                delay={0}
-                title="tweenedZoom"
-                min={21}
-                max={35}
-                step={1}
-              />
-              <Text accent delay={9} text={'CAMERA'} />
-            </Layout>
-          </Card>
+      <Card show>
+        <Layout align="end" gap="1" fit>
+          <Range_Input
+            delay={0}
+            title="cloud_density"
+            min={0}
+            max={2.0}
+            step={0.01}
+          />
+          <Range_Input
+            delay={0}
+            title="raymarch_steps"
+            min={1}
+            max={100}
+            step={1}
+          />
+          <Text accent delay={9} text={'FORM'} />
+
+          <Range_Input
+            delay={0}
+            title="rayleigh_intensity"
+            min={0}
+            max={1.0}
+            step={0.01}
+          />
+          <Range_Input
+            delay={0}
+            title="sun_transmittance"
+            min={0}
+            max={4.0}
+            step={0.1}
+          />
+          <Text accent delay={9} text={'LIGHT'} />
+          <Range_Input
+            delay={0}
+            title="rotation_speed"
+            min={0}
+            max={1}
+            step={0.05}
+          />
+          <Range_Input
+            delay={0}
+            title="tweenedZoom"
+            min={21}
+            max={35}
+            step={1}
+          />
+          <Text accent delay={9} text={'CAMERA'} />
         </Layout>
-      </Layout>
+      </Card>
     </Layout>
   </Layout>
 </main>
