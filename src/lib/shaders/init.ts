@@ -220,8 +220,8 @@ async function init() {
   const bluenoiseV = await GetTexture(device, bluenoise);
   const curlnoiseV = await GetTexture(device, curlnoise);
 
-  const printImages = true;
-  const generateWorleyTexture = true;
+  const printImages = false;
+  const generateWorleyTexture = false;
 
   if (dev && printImages) {
     CreateNoiseImages(noise, 128, 128, 128);

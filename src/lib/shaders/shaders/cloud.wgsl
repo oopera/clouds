@@ -82,11 +82,11 @@ const sphere_radius: f32 = 20.0;
 const sphere_offset: f32 = 0.5; 
 const cube_partial = sphere_offset / 10;
 
-const layer_1_offset = cube_partial * 0.5; 
+const layer_1_offset = cube_partial * 1; 
 const layer_1_buffer = cube_partial * 5;
-const layer_2_offset = cube_partial * 6;
-const layer_2_buffer = cube_partial * 8.5;
-const layer_3_offset = cube_partial * 8.5;
+const layer_2_offset = cube_partial * 5;
+const layer_2_buffer = cube_partial * 8;
+const layer_3_offset = cube_partial * 8;
 
 const layer_1_sphere_radius: f32 = sphere_radius + layer_1_offset;
 const layer_2_sphere_radius: f32 = sphere_radius + layer_2_offset;
@@ -106,12 +106,12 @@ const n: f32 = 1.0003;
 // Define the constants
 const cloud_inscatter: f32 = 0.2;
 const cloud_silver_intensity: f32 = 0.12;
-const cloud_silver_exponent: f32 = 0.00;
+const cloud_silver_exponent: f32 = 0.5;
 const cloud_outscatter: f32 = 0.75;
-const cloud_in_vs_outscatter: f32 = 0.74;
-const cloud_beer: f32 = 0.72;
+const cloud_in_vs_outscatter: f32 = 0.24;
+const cloud_beer: f32 = 0.95;
 const cloud_attuention_clampval: f32 = 0.15;
-const cloud_outscatter_ambient: f32 = 0.3;
+const cloud_outscatter_ambient: f32 = 0.9;
 const cloud_ambient_minimum: f32 = 0.85;
 
 
@@ -244,10 +244,10 @@ fn getDensity(noise: vec4<f32>, detail_noise: vec4<f32>,  curl_noise: vec4<f32>,
   shape_noise = ReMap(noise.r, shape_noise, 1.0, 0.0, 1.0);
 
   var detail_modifier: f32 = lerp(detail, 1.0 - detail, saturate(percent_height));
-  detail_modifier *= .35 * exp(-coverage * 0.75);
+  detail_modifier *= .25 * exp(-coverage * 0.75);
   var final_density: f32 = saturate(ReMap(shape_noise, detail_modifier, 1.0, 0.0, 1.0));
 
-  return pow(final_density, 1 ) * DensityAlter(percent_height, coverage) ;
+  return pow(final_density, 1 ) * DensityAlter(percent_height, coverage) * HeightAlter(percent_height, coverage);
 }
 
 fn calculateStepLength(ro: vec3<f32>, rd: vec3<f32>) -> f32 {
@@ -363,7 +363,7 @@ fn updateStep(current_point: vec3<f32>, ray_direction: vec3<f32>, step_length: f
 }
 
 fn getStep(step_length: f32, cur_density: f32) -> f32 {
-  return 1;
+  // return 1;
   return ReMap(step_length * (clamp(1.0 - cur_density, 0.1, 1.0 - (clamp(cur_density * 25.0, 0.0, 0.75)))), 0.0, step_length, 0.0, 1.0);
 }
 
@@ -467,7 +467,7 @@ fn raymarch(ray_origin: vec3<f32>, ray_direction: vec3<f32>) -> RaymarchOutput {
             var light = sunRaymarchOutput.light;
             var sun_transmittance = exp(-sun_density * cloudUniforms.sunDensity);
             var darkness = 0.25 + sun_transmittance * (0.75);
-            light_energy += cloud_density * sun_transmittance * light; 
+            light_energy += cloud_density * sun_transmittance * light * darkness; 
             transmittance *= exp(-cloud_density * cloudUniforms.density * step);
 
             if(transmittance < 0.001){
