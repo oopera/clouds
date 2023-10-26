@@ -114,10 +114,10 @@ export const Get4LayerTextureFromGribData = async (
       // Tested this in Figma
       const whShifted = (height - 1 - y) * width + (width - 1 - (x + width));
 
-      const layerData1 = blurredData[0][wh];
-      const layerData2 = blurredData[1][wh];
-      const layerData3 = blurredData[2][wh];
-      const layerData4 = blurredData[3][wh];
+      const layerData1 = data[0][wh];
+      const layerData2 = data[1][wh];
+      const layerData3 = data[2][wh];
+      const layerData4 = data[3][wh];
       const offset = whShifted * 4; // Using the shifted index here
 
       const value = Math.floor(layerData1 * 2.55);
@@ -155,23 +155,30 @@ export const Get4LayerTextureFromGribData = async (
     [width, height, 1]
   );
 
-  // const canvas = document.createElement('canvas');
-  // canvas.width = width;
-  // canvas.height = height;
-  // const ctx = canvas.getContext('2d');
-  // if (ctx) {
-  //   const imageData = ctx.createImageData(width, height);
-  //   imageData.data.set(blurredData[0]);
-  //   ctx.putImageData(imageData, 0, 0);
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  if (ctx) {
+    const imageData = ctx.createImageData(width, height);
+    for (let i = 0; i < blurredData[1].length; i++) {
+      const value = Math.floor(blurredData[0][i] * 2.55); // Convert data to 8-bit value
+      const offset = i * 4; // Each pixel has 4 bytes (R, G, B, A)
+      imageData.data[offset] = value; // R
+      imageData.data[offset + 1] = value; // G
+      imageData.data[offset + 2] = value; // B
+      imageData.data[offset + 3] = value; // A (full opacity)
+    }
+    ctx.putImageData(imageData, 0, 0);
 
-  //   const pngURL = canvas.toDataURL('image/png');
-  //   const link = document.createElement('a');
-  //   link.href = pngURL;
-  //   link.download = 'texture.png';
-  //   document.body.appendChild(link);
-  //   link.click();
-  //   document.body.removeChild(link);
-  // }
+    const pngURL = canvas.toDataURL('image/png');
+    const link = document.createElement('a');
+    link.href = pngURL;
+    link.download = 'texture.png';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
 
   return {
     texture,

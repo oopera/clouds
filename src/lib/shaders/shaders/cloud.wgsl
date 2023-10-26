@@ -109,9 +109,9 @@ const cloud_silver_intensity: f32 = 0.12;
 const cloud_silver_exponent: f32 = 0.00;
 const cloud_outscatter: f32 = 0.75;
 const cloud_in_vs_outscatter: f32 = 0.74;
-const cloud_beer: f32 = 0.22;
+const cloud_beer: f32 = 0.72;
 const cloud_attuention_clampval: f32 = 0.15;
-const cloud_outscatter_ambient: f32 = 0.74;
+const cloud_outscatter_ambient: f32 = 0.3;
 const cloud_ambient_minimum: f32 = 0.85;
 
 
@@ -247,7 +247,7 @@ fn getDensity(noise: vec4<f32>, detail_noise: vec4<f32>,  curl_noise: vec4<f32>,
   detail_modifier = ReMap(detail_modifier, 0.0, 1.0, 0.0, 1.0);
   var final_density: f32 = saturate(ReMap(shape_noise, detail_modifier, 1.0, 0.0, 1.0));
 
-  return pow(final_density, 1 + (layer * 0.2)) * DensityAlter(percent_height, coverage) ;
+  return pow(final_density, 1 ) * DensityAlter(percent_height, coverage) * HeightAlter(percent_height, coverage);
 }
 
 fn calculateStepLength(ro: vec3<f32>, rd: vec3<f32>) -> f32 {
@@ -331,9 +331,9 @@ fn getCoverage(layer: f32, coverage: vec4<f32>) -> f32 {
   return 0.0;
 }
 
-fn getSamples(inner_sphere_point:vec3<f32>, sphere_uv: vec2<f32>) -> Samples {
+fn getSamples(inner_sphere_point:vec3<f32>, sphere_uv: vec2<f32>, layer: f32) -> Samples {
   var lod = getLod();
-  var noise = textureSampleLevel(noise_texture, noise_sampler, inner_sphere_point  * lod, 0);    
+  var noise = textureSampleLevel(noise_texture, noise_sampler, inner_sphere_point  * lod * (layer * 0.5 + 0.5), 0);    
   var detail_noise = textureSampleLevel(detail_noise_texture, detail_noise_sampler, inner_sphere_point * lod, 0);
   var blue_noise = textureSampleLevel(bluenoise_texture, bluenoise_sampler, sphere_uv, 0);
   return Samples(noise, detail_noise, noise, blue_noise);
@@ -358,7 +358,7 @@ fn calculateLightness(current_point: vec3<f32>, light_position: vec3<f32>) -> f3
 }
 
 fn updateStep(current_point: vec3<f32>, ray_direction: vec3<f32>, step_length: f32, cur_density: f32) -> vec3<f32> {
-  let cur_step_length = step_length * (clamp(1.0 - cur_density, 0.1, 1.0 - (clamp(cur_density * 25.0, 0.0, 0.75))));
+  let cur_step_length = step_length * (clamp(1.0 - cur_density, 0.05, 1.0 - (clamp(cur_density * 2.0, 0.0, 0.75))));
   return current_point + cur_step_length * ray_direction;
 }
 
@@ -406,7 +406,7 @@ fn sunRaymarch(current_point: vec3<f32>, ray_direction: vec3<f32>, cur_density: 
         
         var coverage = getCoverage(cloud_variables.layer, textureSampleLevel(cloud_texture, cloud_sampler, sphere_uv, 0));
 
-        var samples: Samples = getSamples(sun_point, sphere_uv);
+        var samples: Samples = getSamples(sun_point, sphere_uv, cloud_variables.layer);
 
         var angle: f32;
         var sun_lightness: f32 = calculateLightness(current_point, lightUniforms.lightPosition);
@@ -423,7 +423,6 @@ fn sunRaymarch(current_point: vec3<f32>, ray_direction: vec3<f32>, cur_density: 
           sun_lightness = 0.8;
         }
         sun_density += getDensity(samples.noise, samples.detail_noise,  samples.curl_noise,  cloud_variables.scale, cloud_variables.layer, coverage) * cloudUniforms.sunDensity + samples.blue_noise.r * 0.01;
-        // light += mieScattering(angle) * lightUniforms.rayleighIntensity * sun_lightness;
         light += CalculateLight(cur_density, sun_density, angle, cloud_variables.scale, samples.blue_noise.r, step_length) * lightUniforms.rayleighIntensity * sun_lightness;  
   }
   
@@ -452,7 +451,7 @@ fn raymarch(ray_origin: vec3<f32>, ray_direction: vec3<f32>) -> RaymarchOutput {
         continue;
       }
 
-      var samples: Samples = getSamples(current_point, sphere_uv);
+      var samples: Samples = getSamples(current_point, sphere_uv, cloud_variables.layer);
       var density = getDensity(samples.noise, samples.detail_noise, samples.curl_noise, cloud_variables.scale, cloud_variables.layer, coverage);
 
       cur_density = density * cloudUniforms.density;
@@ -470,7 +469,7 @@ fn raymarch(ray_origin: vec3<f32>, ray_direction: vec3<f32>) -> RaymarchOutput {
       sun_transmittance = exp(-sun_density * cloudUniforms.sunDensity);
       var darkness = 0.65 + sun_transmittance * (0.35);
       light_energy += cloud_density * sun_transmittance * light; 
-      transmittance *= exp(-cloud_density * cloudUniforms.density );
+      transmittance *= exp(-cloud_density * cloudUniforms.density);
 
       if(transmittance < 0.001){
           break;

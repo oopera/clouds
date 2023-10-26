@@ -25,7 +25,7 @@
     calculateFPS();
     setTimeout(() => {
       mounted = true;
-    }, 1);
+    }, 375);
   });
 
   $: if ($loading.welcome.message === 'error') {
