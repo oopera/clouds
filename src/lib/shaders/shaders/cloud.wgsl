@@ -243,11 +243,11 @@ fn getDensity(noise: vec4<f32>, detail_noise: vec4<f32>,  curl_noise: vec4<f32>,
   shape_noise = -(1 - shape_noise);
   shape_noise = ReMap(noise.r, shape_noise, 1.0, 0.0, 1.0);
 
-  var detail_modifier: f32 = lerp(detail_noise.r, 1.0 - detail_noise.r, saturate(percent_height));
-  detail_modifier = ReMap(detail_modifier, 0.0, 1.0, 0.0, 1.0);
+  var detail_modifier: f32 = lerp(detail, 1.0 - detail, saturate(percent_height));
+  detail_modifier *= .35 * exp(-coverage * 0.75);
   var final_density: f32 = saturate(ReMap(shape_noise, detail_modifier, 1.0, 0.0, 1.0));
 
-  return pow(final_density, 1 ) * DensityAlter(percent_height, coverage) * HeightAlter(percent_height, coverage);
+  return pow(final_density, 1 ) * DensityAlter(percent_height, coverage) ;
 }
 
 fn calculateStepLength(ro: vec3<f32>, rd: vec3<f32>) -> f32 {
@@ -333,8 +333,8 @@ fn getCoverage(layer: f32, coverage: vec4<f32>) -> f32 {
 
 fn getSamples(inner_sphere_point:vec3<f32>, sphere_uv: vec2<f32>, layer: f32) -> Samples {
   var lod = getLod();
-  var noise = textureSampleLevel(noise_texture, noise_sampler, inner_sphere_point  * lod * (layer * 0.5 + 0.5), 0);    
-  var detail_noise = textureSampleLevel(detail_noise_texture, detail_noise_sampler, inner_sphere_point * lod, 0);
+  var noise = textureSampleLevel(noise_texture, noise_sampler, inner_sphere_point * (1 + layer * 0.1) * 0.5, 0);    
+  var detail_noise = textureSampleLevel(detail_noise_texture, detail_noise_sampler, inner_sphere_point * (1 + layer * 0.1) * 0.5, 0);
   var blue_noise = textureSampleLevel(bluenoise_texture, bluenoise_sampler, sphere_uv, 0);
   return Samples(noise, detail_noise, noise, blue_noise);
 }
@@ -363,7 +363,8 @@ fn updateStep(current_point: vec3<f32>, ray_direction: vec3<f32>, step_length: f
 }
 
 fn getStep(step_length: f32, cur_density: f32) -> f32 {
-  return step_length * (clamp(1.0 - cur_density, 0.1, 1.0 - (clamp(cur_density * 25.0, 0.0, 0.75))));
+  return 1;
+  return ReMap(step_length * (clamp(1.0 - cur_density, 0.1, 1.0 - (clamp(cur_density * 25.0, 0.0, 0.75)))), 0.0, step_length, 0.0, 1.0);
 }
 
 fn calculateCloudVariables(current_point: vec3<f32>, sphere_center: vec3<f32>, sphere_radius: f32) -> CloudVariables {
@@ -399,31 +400,32 @@ fn sunRaymarch(current_point: vec3<f32>, ray_direction: vec3<f32>, cur_density: 
 
   for(var k: f32 = 0.0; k < 1.0; k += 1.0) {
         sun_point = updateStep(sun_point, sun_ray_direction, step_length, 0);
-
+        let step = getStep(step_length, 0);
         let distance_to_center = length(sun_point - sphere_center);
         let sphere_uv = getSphereUV(sun_point);
         let cloud_variables: CloudVariables = calculateCloudVariables(sun_point, sphere_center, sphere_radius);
-        
         var coverage = getCoverage(cloud_variables.layer, textureSampleLevel(cloud_texture, cloud_sampler, sphere_uv, 0));
+        if(coverage > 0.01){
 
-        var samples: Samples = getSamples(sun_point, sphere_uv, cloud_variables.layer);
+          var samples: Samples = getSamples(sun_point, sphere_uv, cloud_variables.layer);
 
-        var angle: f32;
-        var sun_lightness: f32 = calculateLightness(current_point, lightUniforms.lightPosition);
+          var angle: f32;
+          var sun_lightness: f32 = calculateLightness(current_point, lightUniforms.lightPosition);
 
+          if(lightUniforms.lightType == 1){
+            angle = 0.5;
+            sun_lightness = 1.0;
+          }else if(lightUniforms.lightType == 0.5){
+            angle = thetaA * sun_lightness + thetaB * (1.0 - sun_lightness);
+            sun_lightness = clamp(lightness, 0.8, 1.0);
+          }else if(lightUniforms.lightType == 0){
+            angle = 0.5;
+            sun_lightness = 0.8;
+          }
 
-        if(lightUniforms.lightType == 1){
-          angle = 0.5;
-          sun_lightness = 1.0;
-        }else if(lightUniforms.lightType == 0.5){
-          angle = thetaA * sun_lightness + thetaB * (1.0 - sun_lightness);
-          sun_lightness = clamp(lightness, 0.8, 1.0);
-        }else if(lightUniforms.lightType == 0){
-          angle = 0.5;
-          sun_lightness = 0.8;
+          sun_density += getDensity(samples.noise, samples.detail_noise,  samples.curl_noise,  cloud_variables.scale, cloud_variables.layer, coverage);
+          light += CalculateLight(cur_density, sun_density, angle, cloud_variables.scale, samples.blue_noise.r, step_length) * lightUniforms.rayleighIntensity * sun_lightness;  
         }
-        sun_density += getDensity(samples.noise, samples.detail_noise,  samples.curl_noise,  cloud_variables.scale, cloud_variables.layer, coverage) * cloudUniforms.sunDensity + samples.blue_noise.r * 0.01;
-        light += CalculateLight(cur_density, sun_density, angle, cloud_variables.scale, samples.blue_noise.r, step_length) * lightUniforms.rayleighIntensity * sun_lightness;  
   }
   
   return SunRaymarchOutput(sun_density, light);
@@ -442,37 +444,36 @@ fn raymarch(ray_origin: vec3<f32>, ray_direction: vec3<f32>) -> RaymarchOutput {
 
   for (var i: f32 = 0.0; i < steps; i += 1.0) {
       current_point = updateStep(current_point, ray_direction, step_length, cur_density);
+      let step = getStep(step_length, cur_density);
 
       let sphere_uv = getSphereUV(current_point);
       let cloud_variables: CloudVariables = calculateCloudVariables(current_point, sphere_center, sphere_radius);
       var coverage = getCoverage(cloud_variables.layer, textureSampleLevel(cloud_texture, cloud_sampler, sphere_uv, 0));
     
-    if(cloud_variables.layer == 0 || coverage == 0){
-        continue;
-      }
+      if(coverage > 0.01){
 
-      var samples: Samples = getSamples(current_point, sphere_uv, cloud_variables.layer);
-      var density = getDensity(samples.noise, samples.detail_noise, samples.curl_noise, cloud_variables.scale, cloud_variables.layer, coverage);
+        var samples: Samples = getSamples(current_point, sphere_uv, cloud_variables.layer);
+        var density = getDensity(samples.noise, samples.detail_noise, samples.curl_noise, cloud_variables.scale, cloud_variables.layer, coverage);
 
-      cur_density = density * cloudUniforms.density;
-      cloud_density += cur_density;
+        cur_density = density * cloudUniforms.density;
+        cloud_density += cur_density;
+      
+          if(cur_density > 0.001){
+            var lightness = calculateLightness(current_point, lightUniforms.lightPosition);
 
-      var sun_density: f32 = 0.0;
-      var sun_transmittance: f32 = 1.0;
-      var light: f32 = 0.0;
-      var lightness = calculateLightness(current_point, lightUniforms.lightPosition);
+            let sunRaymarchOutput = sunRaymarch(current_point, ray_direction, cur_density, step_length, lightness);
 
-      let sunRaymarchOutput = sunRaymarch(current_point, ray_direction, cur_density, step_length, lightness);
+            var sun_density = sunRaymarchOutput.sun_density;
+            var light = sunRaymarchOutput.light;
+            var sun_transmittance = exp(-sun_density * cloudUniforms.sunDensity);
+            var darkness = 0.25 + sun_transmittance * (0.75);
+            light_energy += cloud_density * sun_transmittance * light; 
+            transmittance *= exp(-cloud_density * cloudUniforms.density * step);
 
-      sun_density = sunRaymarchOutput.sun_density;
-      light = sunRaymarchOutput.light;
-      sun_transmittance = exp(-sun_density * cloudUniforms.sunDensity);
-      var darkness = 0.65 + sun_transmittance * (0.35);
-      light_energy += cloud_density * sun_transmittance * light; 
-      transmittance *= exp(-cloud_density * cloudUniforms.density);
-
-      if(transmittance < 0.001){
-          break;
+            if(transmittance < 0.001){
+                break;
+            }
+          }
       }
     } 
 
@@ -499,7 +500,6 @@ fn raymarch(ray_origin: vec3<f32>, ray_direction: vec3<f32>) -> RaymarchOutput {
   let ray_origin = output.vPosition.xyz;
   let ray_direction = normalize(ray_origin - uni.cameraPosition.xyz);
 
-  // var blue_noise = textureSampleLevel(bluenoise_texture, bluenoise_sampler, vec2(0,0), 0);
   var curl_noise = textureSampleLevel(curlnoise_texture, curlnoise_sampler, vec2(0,0), 0);
   
   let values: RaymarchOutput = raymarch(ray_origin, ray_direction);

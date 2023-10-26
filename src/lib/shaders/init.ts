@@ -33,6 +33,7 @@ import earthShader from './shaders/earth.wgsl?raw';
 import cloudShader from './shaders/cloud.wgsl?raw';
 import atmosphereShader from './shaders/atmosphere.wgsl?raw';
 import fullScreenQuadShader from './shaders/quad.wgsl?raw';
+import worleyShader from './shaders/worley.wgsl?raw';
 
 import type { RenderOptions, HasChanged } from '$lib/types/types.js';
 
@@ -219,8 +220,8 @@ async function init() {
   const bluenoiseV = await GetTexture(device, bluenoise);
   const curlnoiseV = await GetTexture(device, curlnoise);
 
-  const printImages = false;
-  const generateWorleyTexture = false;
+  const printImages = true;
+  const generateWorleyTexture = true;
 
   if (dev && printImages) {
     CreateNoiseImages(noise, 128, 128, 128);
@@ -474,21 +475,6 @@ async function init() {
     addressModeV: 'clamp-to-edge',
   });
 
-  const vertexAndLight = [
-    {
-      binding: 0,
-      resource: {
-        buffer: vertexUniBuffer,
-      },
-    },
-    {
-      binding: 1,
-      resource: {
-        buffer: lightUniBuffer,
-      },
-    },
-  ];
-
   const earthBindings = [
     {
       binding: 0,
@@ -657,6 +643,20 @@ async function init() {
     },
     presentationFormat
   );
+
+  // const module = device.createShaderModule({
+  //   label: 'doubling compute module',
+  //   code: worleyShader,
+  // });
+
+  // const noisePipeline = device.createComputePipeline({
+  //   label: 'doubling compute pipeline',
+  //   layout: 'auto',
+  //   compute: {
+  //     module,
+  //     entryPoint: 'computeSomething',
+  //   },
+  // });
 
   buffers[0] = CreateVertexBuffers(device, data);
   WriteVertexBuffers(device, buffers[0][0], buffers[0][1], buffers[0][2], data);

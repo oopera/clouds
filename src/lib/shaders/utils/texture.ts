@@ -155,30 +155,30 @@ export const Get4LayerTextureFromGribData = async (
     [width, height, 1]
   );
 
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext('2d');
-  if (ctx) {
-    const imageData = ctx.createImageData(width, height);
-    for (let i = 0; i < blurredData[1].length; i++) {
-      const value = Math.floor(blurredData[0][i] * 2.55); // Convert data to 8-bit value
-      const offset = i * 4; // Each pixel has 4 bytes (R, G, B, A)
-      imageData.data[offset] = value; // R
-      imageData.data[offset + 1] = value; // G
-      imageData.data[offset + 2] = value; // B
-      imageData.data[offset + 3] = value; // A (full opacity)
-    }
-    ctx.putImageData(imageData, 0, 0);
+  // const canvas = document.createElement('canvas');
+  // canvas.width = width;
+  // canvas.height = height;
+  // const ctx = canvas.getContext('2d');
+  // if (ctx) {
+  //   const imageData = ctx.createImageData(width, height);
+  //   for (let i = 0; i < blurredData[1].length; i++) {
+  //     const value = Math.floor(blurredData[0][i] * 2.55); // Convert data to 8-bit value
+  //     const offset = i * 4; // Each pixel has 4 bytes (R, G, B, A)
+  //     imageData.data[offset] = value; // R
+  //     imageData.data[offset + 1] = value; // G
+  //     imageData.data[offset + 2] = value; // B
+  //     imageData.data[offset + 3] = value; // A (full opacity)
+  //   }
+  //   ctx.putImageData(imageData, 0, 0);
 
-    const pngURL = canvas.toDataURL('image/png');
-    const link = document.createElement('a');
-    link.href = pngURL;
-    link.download = 'texture.png';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }
+  //   const pngURL = canvas.toDataURL('image/png');
+  //   const link = document.createElement('a');
+  //   link.href = pngURL;
+  //   link.download = 'texture.png';
+  //   document.body.appendChild(link);
+  //   link.click();
+  //   document.body.removeChild(link);
+  // }
 
   return {
     texture,
@@ -487,12 +487,12 @@ export const Get3DNoiseTexture = async (
     width,
     height,
     depth,
-    25,
+    10,
     8
   );
-  const noiseData_01 = generateWorleyFbmNoise(width, height, depth, 1, 4);
-  const noiseData_02 = generateWorleyFbmNoise(width, height, depth, 1, 8);
-  const noiseData_03 = generateWorleyFbmNoise(width, height, depth, 1, 16);
+  const noiseData_01 = generateWorleyFbmNoise(width, height, depth, 1, 8);
+  const noiseData_02 = generateWorleyFbmNoise(width, height, depth, 1, 10);
+  const noiseData_03 = generateWorleyFbmNoise(width, height, depth, 1, 12);
   const rgbaData = new Uint8Array(noiseData_01.length * 4);
 
   function mix(a: number, b: number, t: number): number {
@@ -510,7 +510,7 @@ export const Get3DNoiseTexture = async (
     let pfbm = mix(fbmNoise, perlinNoiseData_01[i], 0.75);
     const billowyPerlinData = reMap(pfbm, 0.0, 1.0, fbmNoise, 1.0);
 
-    rgbaData[index] = perlinNoiseData_01[i] * 255; // R
+    rgbaData[index] = billowyPerlinData * 255; // R
     rgbaData[index + 1] = noiseData_01[i] * 255; // G
     rgbaData[index + 2] = noiseData_02[i] * 255; // B
     rgbaData[index + 3] = noiseData_03[i] * 255; // A
