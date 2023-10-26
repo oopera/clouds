@@ -103,8 +103,8 @@
   .loading {
     top: 0;
 
-    transition: transform 0.75s var(--ease);
-    transform: translateY(-100%);
+    transition: transform 0.75s var(--ease) 0.75s;
+    transform: translateY(-120%);
 
     width: 300px;
     max-width: 100%;

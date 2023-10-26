@@ -109,10 +109,10 @@ const cloud_silver_intensity: f32 = 0.12;
 const cloud_silver_exponent: f32 = 0.00;
 const cloud_outscatter: f32 = 0.75;
 const cloud_in_vs_outscatter: f32 = 0.74;
-const cloud_beer: f32 = 0.72;
-const cloud_attuention_clampval: f32 = 0.15;
+const cloud_beer: f32 = 0.95;
+const cloud_attuention_clampval: f32 = 0.2;
 const cloud_outscatter_ambient: f32 = 0.3;
-const cloud_ambient_minimum: f32 = 0.85;
+const cloud_ambient_minimum: f32 = 0.95;
 
 
 fn ReMap(value: f32, old_low: f32, old_high: f32, new_low: f32, new_high: f32) -> f32 {
