@@ -224,14 +224,14 @@ async function init() {
   const generateWorleyTexture = false;
 
   if (dev && printImages) {
-    CreateNoiseImages(noise, 128, 128, 128);
+    // CreateNoiseImages(noise, 128, 128, 128);
     CreateNoiseImages(detailNoise, 32, 32, 32);
   }
 
   if (dev && generateWorleyTexture) {
     executePromise(
       'worleyNoiseTexture',
-      (await Get3DNoiseTexture(device, 32, 32, 32)) as any,
+      (await Get3DNoiseTexture(device, 128, 128, 128)) as any,
       '3D Noise Texture'
     );
   }
@@ -680,7 +680,7 @@ async function init() {
   });
 
   setYaw(210, true);
-  setZoom(30, true);
+  setZoom(35, true);
   setPitch(0, true);
   tweenedVisibility.set(1.0);
 
