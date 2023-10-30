@@ -73,8 +73,6 @@ struct CloudVariables {
 @group(0) @binding(8) var cloud_sampler: sampler;
 @group(0) @binding(9) var bluenoise_texture: texture_2d<f32>;
 @group(0) @binding(10) var bluenoise_sampler: sampler;
-@group(0) @binding(11) var curlnoise_texture: texture_2d<f32>;
-@group(0) @binding(12) var curlnoise_sampler: sampler;
 
 
 const sphere_center = vec3<f32>(0.0, 0.0, 0.0);
@@ -474,7 +472,6 @@ fn raymarch(ray_origin: vec3<f32>, ray_direction: vec3<f32>) -> RaymarchOutput {
 
 
 @fragment fn fs(output: Output) -> @location(0) vec4<f32> {
-  var curl_noise = textureSampleLevel(curlnoise_texture, curlnoise_sampler, vec2(0,0), 0);
   var base_color: vec3<f32> = vec3<f32>(0.52, 0.53, 0.57);
   let ray_origin = output.vPosition.xyz;
   let ray_direction = normalize(ray_origin - uni.cameraPosition.xyz);
@@ -517,9 +514,9 @@ fn atmoRay(point: vec3<f32>, sun_direction: vec3<f32>) -> vec3<f32> {
 }
 
 fn atmoraymarch(ray_origin: vec3<f32>, ray_direction: vec3<f32>) -> RayMarchAtmoOutput {
-    var step_length = 1.0 / 20.0;
     var current_point: vec3<f32> = ray_origin; 
     var max_length: f32 = calculateStepLength(ray_origin, ray_direction);
+    var step_length = 1.0 / 20.0;
 
     var sun_density: f32 = 0.0;
     var light: vec3<f32> = vec3<f32>(0.0, 0.0, 0.0);

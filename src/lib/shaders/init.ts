@@ -205,18 +205,11 @@ async function init() {
     'bluenoise textures'
   );
 
-  let curlnoise = await executePromise(
-    'curl',
-    loadImage('/textures/curl-noise.jpg'),
-    'curl textures'
-  );
-
   const textureV = await GetPartitionedTexture(device, texture);
   const lightMapV = await GetPartitionedTexture(device, lightmap);
   const noiseV = Create3DTextureFromData(device, noise, 128, 128, 128);
   const detailNoiseV = Create3DTextureFromData(device, detailNoise, 32, 32, 32);
   const bluenoiseV = await GetTexture(device, bluenoise);
-  const curlnoiseV = await GetTexture(device, curlnoise);
 
   const printImages = false;
   const generateWorleyTexture = false;
@@ -558,14 +551,6 @@ async function init() {
     {
       binding: 10,
       resource: bluenoiseV.sampler,
-    },
-    {
-      binding: 11,
-      resource: curlnoiseV.texture.createView(),
-    },
-    {
-      binding: 12,
-      resource: curlnoiseV.sampler,
     },
   ];
 
