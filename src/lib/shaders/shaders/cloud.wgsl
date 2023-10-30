@@ -485,7 +485,7 @@ fn raymarch(ray_origin: vec3<f32>, ray_direction: vec3<f32>) -> RaymarchOutput {
   var cloud_transmittance = cloudValues.transmittance;
 
   // Atmosphere raymarching
-  let atmoValues: RaymarchOutput2 = atmoraymarch(ray_origin, ray_direction);
+  let atmoValues: RayMarchAtmoOutput = atmoraymarch(ray_origin, ray_direction);
   var atmo_color =  atmoValues.light;
   var atmo_transmittance = atmoValues.transmittance;
 
@@ -493,30 +493,30 @@ fn raymarch(ray_origin: vec3<f32>, ray_direction: vec3<f32>) -> RaymarchOutput {
   var blended_color = cloud_color * cloudUniforms.visibility + atmo_color * clamp(cloud_transmittance, 0.01, 1.0) * cloudUniforms.atmoVisibility;
   var blended_transmittance: f32;
 
-  if(cloudUniforms.visibility > 0.0){
+  if(cloudUniforms.visibility > 0.0 && cloudUniforms.atmoVisibility > 0.0){
+    blended_transmittance = cloud_transmittance * atmo_transmittance;
+  } else if(cloudUniforms.visibility > 0.0){
     blended_transmittance = cloud_transmittance;
+  } else if(cloudUniforms.atmoVisibility > 0.0){
+    blended_transmittance = atmo_transmittance;
   }
-  if(cloudUniforms.atmoVisibility > 0.0){
-    blended_transmittance *= atmo_transmittance;
-  }
-
   return vec4<f32>(blended_color, (1.0 - blended_transmittance));
 }
 
 
-struct RaymarchOutput2 {
+struct RayMarchAtmoOutput {
     light: vec3<f32>,
     transmittance: f32,
 };
 
 
-fn rayleighScattering2(point: vec3<f32>, sun_direction: vec3<f32>) -> vec3<f32> {
+fn atmoRay(point: vec3<f32>, sun_direction: vec3<f32>) -> vec3<f32> {
     let scattering_coeff = vec3<f32>(0.002, 0.003, 0.004); 
     let dot_product = dot(point, sun_direction);
     return scattering_coeff * max(dot_product, 0.0);
 }
 
-fn atmoraymarch(ray_origin: vec3<f32>, ray_direction: vec3<f32>) -> RaymarchOutput2 {
+fn atmoraymarch(ray_origin: vec3<f32>, ray_direction: vec3<f32>) -> RayMarchAtmoOutput {
     var step_length = 1.0 / 20.0;
     var current_point: vec3<f32> = ray_origin; 
     var max_length: f32 = calculateStepLength(ray_origin, ray_direction);
@@ -556,14 +556,13 @@ fn atmoraymarch(ray_origin: vec3<f32>, ray_direction: vec3<f32>) -> RaymarchOutp
           sun_lightness = 0.00;
         }
 
-        let scatter = rayleighScattering2(current_point, sun_ray_direction);
+        let scatter = atmoRay(current_point, sun_ray_direction);
         accumulated_light += scatter * (1 - transmittance);
-        transmittance *= 0.995 * clamp(1 - sun_lightness, 0.99, 1.0); 
-        
+        transmittance *= 0.993 * clamp(1 - sun_lightness, 0.99, 1.0); 
         
         current_point += ray_direction * step_length;
         distance += step_length;
     } 
 
-    return RaymarchOutput2(accumulated_light, pow(transmittance, 2));
+    return RayMarchAtmoOutput(accumulated_light, pow(transmittance, 2));
 }
