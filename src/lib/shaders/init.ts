@@ -33,7 +33,6 @@ import earthShader from './shaders/earth.wgsl?raw';
 import cloudShader from './shaders/cloud.wgsl?raw';
 import atmosphereShader from './shaders/atmosphere.wgsl?raw';
 import fullScreenQuadShader from './shaders/quad.wgsl?raw';
-import worleyShader from './shaders/worley.wgsl?raw';
 
 import type { RenderOptions, HasChanged } from '$lib/types/types.js';
 
@@ -224,7 +223,7 @@ async function init() {
   const generateWorleyTexture = false;
 
   if (dev && printImages) {
-    // CreateNoiseImages(noise, 128, 128, 128);
+    CreateNoiseImages(noise, 128, 128, 128);
     CreateNoiseImages(detailNoise, 32, 32, 32);
   }
 

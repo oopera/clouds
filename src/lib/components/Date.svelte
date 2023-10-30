@@ -38,6 +38,9 @@
     if (targetDate > now) {
       modelRunDate = now;
     }
+    if (targetDate == now && now.getHours() < 6) {
+      modelRunDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    }
 
     // Adjusting model run times based on their actual release times
     const cycles = [0, 6, 12, 18]; // The standard cycle times
