@@ -12,7 +12,7 @@ struct CloudUniforms {
   sunDensity : f32,
   raymarchSteps : f32,
   raymarchLength : f32,
-  interactionx: f32,
+  atmoVisibility: f32,
   interactiony: f32,
 }
 
@@ -324,9 +324,9 @@ fn getSphereUV(current_point: vec3<f32>) -> vec2<f32> {
   );
 }
 
-fn calculateLightness(current_point: vec3<f32>, light_position: vec3<f32>) -> f32 {
+fn calculateLightness(current_point: vec3<f32>, light_position: vec3<f32>, scale: f32) -> f32 {
     let dotProduct = dot(light_position, current_point);
-    return 1.0 - (1.0 / (1.0 + exp(-dotProduct)));
+    return 1.0 - (1.0 / (1.0 + exp(-dotProduct * scale)));
 }
 
 fn calculateCloudVariables(current_point: vec3<f32>, sphere_center: vec3<f32>, sphere_radius: f32) -> CloudVariables {
@@ -362,7 +362,7 @@ fn sunRaymarch(current_point: vec3<f32>, ray_direction: vec3<f32>, cloud_density
   var sun_point = current_point;
   
   var angle: f32;
-  var sun_lightness: f32 = calculateLightness(sun_point, lightUniforms.lightPosition);
+  var sun_lightness: f32 = calculateLightness(sun_point, lightUniforms.lightPosition, 2);
 
   if(lightUniforms.lightType == 1){
     angle = 0.5;
@@ -437,7 +437,7 @@ fn raymarch(ray_origin: vec3<f32>, ray_direction: vec3<f32>) -> RaymarchOutput {
         density = getDensity(samples.noise, samples.detail_noise, samples.curl_noise, cloud_variables.scale, cloud_variables.layer, coverage);
 
           if(density > 0.05){
-            var lightness = calculateLightness(current_point, lightUniforms.lightPosition);
+            var lightness = calculateLightness(current_point, lightUniforms.lightPosition, 1);
             let sunRaymarchOutput = sunRaymarch(current_point, ray_direction, density, cur_step_length, lightness);
             light += sunRaymarchOutput.light; 
 
@@ -458,14 +458,6 @@ fn raymarch(ray_origin: vec3<f32>, ray_direction: vec3<f32>) -> RaymarchOutput {
 
   return RaymarchOutput(light, transmittance);
 }
-
-
-            // let phaseVal = mieScattering(angleBetweenVectors(ray_direction, uni.cameraPosition.xyz)) * lightUniforms.rayleighIntensity;
-            // var sun_density = sunRaymarchOutput.sun_density;
-            // var sun_transmittance = exp(-sun_density * cloudUniforms.sunDensity);
-            // var darkness = 0.25 + sun_transmittance * (0.75);
-            // light += darkness * density * transmittance * phaseVal * remapped_step_length;
-
 
 @vertex fn vs(input: Input, @builtin(vertex_index) vertexIndex: u32) -> Output {
   var output: Output;
@@ -498,10 +490,17 @@ fn raymarch(ray_origin: vec3<f32>, ray_direction: vec3<f32>) -> RaymarchOutput {
   var atmo_transmittance = atmoValues.transmittance;
 
   // Blending
-  var blended_color = cloud_color + atmo_color * (1 - atmo_transmittance);
-  var blended_transmittance = cloud_transmittance * atmo_transmittance;
+  var blended_color = cloud_color * cloudUniforms.visibility + atmo_color * clamp(cloud_transmittance, 0.01, 1.0) * cloudUniforms.atmoVisibility;
+  var blended_transmittance: f32;
 
-  return vec4<f32>(blended_color, (1.0 - blended_transmittance) * cloudUniforms.visibility);
+  if(cloudUniforms.visibility > 0.0){
+    blended_transmittance = cloud_transmittance;
+  }
+  if(cloudUniforms.atmoVisibility > 0.0){
+    blended_transmittance *= atmo_transmittance;
+  }
+
+  return vec4<f32>(blended_color, (1.0 - blended_transmittance));
 }
 
 
@@ -511,16 +510,12 @@ struct RaymarchOutput2 {
 };
 
 
-
-
 fn rayleighScattering2(point: vec3<f32>, sun_direction: vec3<f32>) -> vec3<f32> {
     let scattering_coeff = vec3<f32>(0.002, 0.003, 0.004); 
     let dot_product = dot(point, sun_direction);
     return scattering_coeff * max(dot_product, 0.0);
 }
 
-
-// Raymarch function
 fn atmoraymarch(ray_origin: vec3<f32>, ray_direction: vec3<f32>) -> RaymarchOutput2 {
     var step_length = 1.0 / 20.0;
     var current_point: vec3<f32> = ray_origin; 
@@ -530,7 +525,7 @@ fn atmoraymarch(ray_origin: vec3<f32>, ray_direction: vec3<f32>) -> RaymarchOutp
     var light: vec3<f32> = vec3<f32>(0.0, 0.0, 0.0);
     var light_position: vec3<f32>;
     let moonposition = vec3<f32>(-lightUniforms.lightPosition.x, -lightUniforms.lightPosition.y, -lightUniforms.lightPosition.z);
-    var lightness = calculateLightness(current_point, lightUniforms.lightPosition);
+    var lightness = calculateLightness(current_point, lightUniforms.lightPosition, 2);
 
     if(lightness >= 0.5 || lightUniforms.lightType == 1){
       light_position = lightUniforms.lightPosition;
@@ -542,6 +537,8 @@ fn atmoraymarch(ray_origin: vec3<f32>, ray_direction: vec3<f32>) -> RaymarchOutp
     var accumulated_light: vec3<f32> = vec3<f32>(0.0, 0.0, 0.0);
     var transmittance: f32 = 1.0;
 
+    var sun_lightness: f32;
+
     while(distance <= max_length){
         var sundirection = normalize(lightUniforms.lightPosition - current_point);
         var moondirection = normalize(moonposition - current_point);
@@ -551,10 +548,17 @@ fn atmoraymarch(ray_origin: vec3<f32>, ray_direction: vec3<f32>) -> RaymarchOutp
 
         let sun_ray_direction = normalize(current_point - lightUniforms.lightPosition);
 
+        if(lightUniforms.lightType == 1){
+          sun_lightness = 1.0;
+        }else if(lightUniforms.lightType == 0.5){
+          sun_lightness = lightness;
+        }else if(lightUniforms.lightType == 0){
+          sun_lightness = 0.00;
+        }
 
         let scatter = rayleighScattering2(current_point, sun_ray_direction);
         accumulated_light += scatter * (1 - transmittance);
-        transmittance *= 0.995 * clamp(1 - lightness, 0.99, 1.0); 
+        transmittance *= 0.995 * clamp(1 - sun_lightness, 0.99, 1.0); 
         
         
         current_point += ray_direction * step_length;

@@ -31,7 +31,6 @@ import { loading, setZoom, setPitch, setYaw } from '$lib/stores/stores.js';
 
 import earthShader from './shaders/earth.wgsl?raw';
 import cloudShader from './shaders/cloud.wgsl?raw';
-import atmosphereShader from './shaders/atmosphere.wgsl?raw';
 import fullScreenQuadShader from './shaders/quad.wgsl?raw';
 
 import type { RenderOptions, HasChanged } from '$lib/types/types.js';
@@ -262,12 +261,6 @@ async function init() {
   });
 
   const lightUniBuffer = device.createBuffer({
-    label: 'light uniform buffer',
-    size: 64,
-    usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-  });
-
-  const atmoUniBuffer = device.createBuffer({
     label: 'light uniform buffer',
     size: 64,
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
@@ -576,27 +569,6 @@ async function init() {
     },
   ];
 
-  const atmoBindings = [
-    {
-      binding: 0,
-      resource: {
-        buffer: vertexUniBuffer,
-      },
-    },
-    {
-      binding: 1,
-      resource: {
-        buffer: atmoUniBuffer,
-      },
-    },
-    {
-      binding: 2,
-      resource: {
-        buffer: lightUniBuffer,
-      },
-    },
-  ];
-
   const quadBindings = [
     {
       binding: 0,
@@ -618,15 +590,6 @@ async function init() {
   pipeline[1] = CreatePipeline(
     device,
     device.createShaderModule({ code: cloudShader }),
-    {
-      ...options,
-    },
-    presentationFormat
-  );
-
-  pipeline[2] = CreatePipeline(
-    device,
-    device.createShaderModule({ code: atmosphereShader }),
     {
       ...options,
     },
@@ -793,15 +756,8 @@ async function init() {
       options.sunDensity,
       options.raymarchSteps,
       options.raymarchLength,
-      options.coords.x,
-      options.coords.y,
-    ]);
-
-    const atmoUniValues = new Float32Array([
-      options.elapsed,
-      visibility,
-      options.coords.x,
-      options.coords.y,
+      options.layer.atmo,
+      0,
     ]);
 
     const lightUniValues = new Float32Array([
@@ -830,7 +786,6 @@ async function init() {
     quadBindings[0].resource = offscreenTextureResolve.createView();
     bindGroup[0] = CreateBindGroup(device, pipeline[0], earthBindings);
     bindGroup[1] = CreateBindGroup(device, pipeline[1], cloudBindings);
-    bindGroup[2] = CreateBindGroup(device, pipeline[2], atmoBindings);
     bindGroup[3] = CreateBindGroup(device, pipeline[3], quadBindings);
 
     const colorAttachments =
@@ -870,7 +825,6 @@ async function init() {
     device.queue.writeBuffer(earthUniBuffer, 0, earthUniValues as ArrayBuffer);
     device.queue.writeBuffer(cloudUniBuffer, 0, cloudUniValues as ArrayBuffer);
     device.queue.writeBuffer(lightUniBuffer, 0, lightUniValues as ArrayBuffer);
-    device.queue.writeBuffer(atmoUniBuffer, 0, atmoUniValues as ArrayBuffer);
 
     draw();
     requestAnimationFrame(frame);
@@ -881,15 +835,14 @@ async function init() {
     const passEncoder = firstCommandEncoder.beginRenderPass(
       offscreenPassDescriptor as GPURenderPassDescriptor
     );
-    if (visibility > 0) {
-      passEncoder.setPipeline(pipeline[1]);
-      passEncoder.setVertexBuffer(0, buffers[0][0]);
-      passEncoder.setVertexBuffer(1, buffers[0][1]);
-      passEncoder.setVertexBuffer(2, buffers[0][2]);
-      passEncoder.setBindGroup(0, bindGroup[1]);
 
-      passEncoder.draw(options.amountOfVertices);
-    }
+    passEncoder.setPipeline(pipeline[1]);
+    passEncoder.setVertexBuffer(0, buffers[0][0]);
+    passEncoder.setVertexBuffer(1, buffers[0][1]);
+    passEncoder.setVertexBuffer(2, buffers[0][2]);
+    passEncoder.setBindGroup(0, bindGroup[1]);
+
+    passEncoder.draw(options.amountOfVertices);
 
     passEncoder.end();
     device.queue.submit([firstCommandEncoder.finish()]);
@@ -907,22 +860,11 @@ async function init() {
 
     renderPass.draw(options.amountOfVertices);
 
-    if (visibility > 0) {
-      renderPass.setPipeline(pipeline[3]);
-      renderPass.setBindGroup(0, bindGroup[3]);
+    renderPass.setPipeline(pipeline[3]);
+    renderPass.setBindGroup(0, bindGroup[3]);
 
-      renderPass.draw(6);
-    }
+    renderPass.draw(6);
 
-    if (options.layer.atmo > 0) {
-      renderPass.setPipeline(pipeline[2]);
-      renderPass.setVertexBuffer(0, buffers[0][0]);
-      renderPass.setVertexBuffer(1, buffers[0][1]);
-      renderPass.setVertexBuffer(2, buffers[0][2]);
-      renderPass.setBindGroup(0, bindGroup[2]);
-
-      renderPass.draw(options.amountOfVertices);
-    }
     renderPass.end();
 
     device.queue.submit([commandEncoder.finish()]);
