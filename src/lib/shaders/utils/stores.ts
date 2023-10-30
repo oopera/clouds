@@ -15,7 +15,7 @@ import {
   zoom,
   cloud_density,
   sun_transmittance,
-  rayleigh_intensity,
+  light_intensity,
   raymarch_steps,
   raymarch_length,
   projection_date,
@@ -69,7 +69,7 @@ export default function InitStores(
     options.sunDensity = value;
   });
 
-  rayleigh_intensity.subscribe((value) => {
+  light_intensity.subscribe((value) => {
     options.rayleighIntensity = value;
   });
 

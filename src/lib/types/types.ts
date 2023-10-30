@@ -13,7 +13,7 @@ export type Stores =
   | 'day_cycle'
   | 'cloud_density'
   | 'sun_transmittance'
-  | 'rayleigh_intensity'
+  | 'light_intensity'
   | 'atmo'
   | 'mb300'
   | 'raymarch_length'

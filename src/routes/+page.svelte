@@ -81,7 +81,7 @@
             delay={0}
             title="cloud_density"
             min={0}
-            max={2.0}
+            max={1.0}
             step={0.01}
           />
           <Range_Input
@@ -95,7 +95,7 @@
 
           <Range_Input
             delay={0}
-            title="rayleigh_intensity"
+            title="light_intensity"
             min={0}
             max={1.0}
             step={0.01}

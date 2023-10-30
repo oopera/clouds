@@ -387,7 +387,7 @@ fn sunRaymarch(current_point: vec3<f32>, ray_direction: vec3<f32>, cloud_density
           var samples: Samples = getSamples(sun_point, sphere_uv, cloud_variables.layer, coverage);
           var new_sun_color = mix(moon_color, sun_color, sun_lightness);
           var density = getDensity(samples.noise, samples.detail_noise, samples.curl_noise, cloud_variables.scale, cloud_variables.layer, coverage);
-          sun_density += density * cloudUniforms.sunDensity;
+          sun_density += density *(1 - cloudUniforms.sunDensity);
 
           if(sun_density > 0.05){
             // light += mieScattering(angle) * lightUniforms.rayleighIntensity * sun_lightness;
