@@ -94,59 +94,63 @@
   }
 </script>
 
-{#if mounted}
-  <span class="parent" class:loaded>
-    <Text type="h1" delay={4} text={'CLOUDS'} />
-    {#if mounted && !loaded}
-      <span class="loading">
-        <p class="letter">{translationsForLoading[currentTranslation]}</p>
-      </span>
-    {/if}
-  </span>
-  <div class="typo" class:loaded>
-    <Layout align="end" gap="2">
-      <Tag red={deviceFailed}>
-        <p>
-          {deviceFailed ? 'Systems Not Operational' : 'All Systems Operational'}
-        </p>
-      </Tag>
+<span>
+  {#if mounted}
+    <span class="parent" class:loaded>
+      <Text type="h1" delay={4} text={'CLOUDS'} />
+      {#if mounted && !loaded}
+        <span class="loading">
+          <p class="letter">{translationsForLoading[currentTranslation]}</p>
+        </span>
+      {/if}
+    </span>
+    <div class="typo" class:loaded>
+      <Layout align="end" gap="2">
+        <Tag red={deviceFailed}>
+          <p>
+            {deviceFailed
+              ? 'Systems Not Operational'
+              : 'All Systems Operational'}
+          </p>
+        </Tag>
 
-      <div class="text">
-        <Layout gap="1" align="end">
-          <Text
-            end
-            delay={4}
-            secondary={true}
-            text={`${translationsForClouds[currentTranslation]} is a WEBGPU application to render meteorologically accurate cloud cover`}
-          />
-          <Line />
-
-          <Layout horizontal gap="1" align="end" justify="end">
-            <IconButton title="half_res" off_title="full_res" />
-            <IconButton title="atmo" off_title="no_atmo" />
-            <IconButton
-              three
-              title="day_cycle"
-              off_title="full_day"
-              third_title="full_night"
-            />
-          </Layout>
-          {#if !deviceFailed}
-            <Button id="download">
-              <Text text="RENDER" />
-            </Button>
-          {:else}
+        <div class="text">
+          <Layout gap="1" align="end">
             <Text
               end
+              delay={4}
               secondary={true}
-              text="You must use a WebGPU Compatible Device and Browser."
+              text={`${translationsForClouds[currentTranslation]} is a WEBGPU application to render meteorologically accurate cloud cover`}
             />
-          {/if}
-        </Layout>
-      </div>
-    </Layout>
-  </div>
-{/if}
+            <Line />
+
+            <Layout horizontal gap="1" align="end" justify="end">
+              <IconButton title="half_res" off_title="full_res" />
+              <IconButton title="atmo" off_title="no_atmo" />
+              <IconButton
+                three
+                title="day_cycle"
+                off_title="full_day"
+                third_title="full_night"
+              />
+            </Layout>
+            {#if !deviceFailed}
+              <Button id="download">
+                <Text text="RENDER" />
+              </Button>
+            {:else}
+              <Text
+                end
+                secondary={true}
+                text="You must use a WebGPU Compatible Device and Browser."
+              />
+            {/if}
+          </Layout>
+        </div>
+      </Layout>
+    </div>
+  {/if}
+</span>
 
 <style lang="scss">
   @import '$lib/styles/mixins.scss';

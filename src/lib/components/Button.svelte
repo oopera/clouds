@@ -15,6 +15,8 @@
     border-radius: 0;
     transition: background-color 250ms var(--ease);
     will-change: background-color;
+    border-radius: 4px;
+    padding: 0 gap(3);
     &:hover,
     &:focus-visible {
       background-color: var(--c-ghover);

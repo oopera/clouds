@@ -25,9 +25,9 @@
     window.addEventListener('wheel', handleScroll, { passive: false });
     window.addEventListener('touchmove', handleTouch, { passive: false });
 
-    canvas.addEventListener('mousedown', handlemousedown);
-    canvas.addEventListener('mouseup', handlemouseup);
-    canvas.addEventListener('mousemove', handlemousemove);
+    document.addEventListener('mousedown', handlemousedown);
+    document.addEventListener('mouseup', handlemouseup);
+    document.addEventListener('mousemove', handlemousemove);
 
     // Todo bind keyboard events
   });
@@ -82,6 +82,14 @@
   };
 
   const handlemousedown = (e: MouseEvent) => {
+    const targetElement = e.target as HTMLElement;
+
+    // Check if the target element is interactable by its tag name
+    const interactableTags = ['INPUT', 'TEXTAREA', 'BUTTON', 'SELECT', 'A'];
+    if (interactableTags.includes(targetElement.tagName.toUpperCase())) {
+      return;
+    }
+
     dragging.set(true);
 
     initialX = e.clientX;
@@ -99,6 +107,6 @@
     width: 100%;
     height: 100%;
     opacity: 1;
-    z-index: 0;
+    pointer-events: none;
   }
 </style>

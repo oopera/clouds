@@ -12,7 +12,7 @@ export type Stores =
   // Light and atmosphere related
   | 'day_cycle'
   | 'cloud_density'
-  | 'sun_transmittance'
+  | 'atmo_intensity'
   | 'light_intensity'
   | 'atmo'
   | 'mb300'

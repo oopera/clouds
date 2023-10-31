@@ -44,6 +44,7 @@
     backdrop-filter: blur(16px);
     pointer-events: all;
     left: 50%;
+    bottom: 24px;
     transform: translateX(-50%) translateY(100%);
     transition: transform 750ms var(--ease), opacity 750ms var(--ease);
     &:hover {

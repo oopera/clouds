@@ -14,10 +14,9 @@ import {
   yaw,
   zoom,
   cloud_density,
-  sun_transmittance,
+  atmo_intensity,
   light_intensity,
   raymarch_steps,
-  raymarch_length,
   projection_date,
   half_res,
   tweenedZoom,
@@ -65,16 +64,12 @@ export default function InitStores(
     options.cloudDensity = value;
   });
 
-  sun_transmittance.subscribe((value) => {
+  atmo_intensity.subscribe((value) => {
     options.sunDensity = value;
   });
 
   light_intensity.subscribe((value) => {
     options.rayleighIntensity = value;
-  });
-
-  raymarch_length.subscribe((value) => {
-    options.raymarchLength = value;
   });
 
   camera_position.subscribe((value) => {

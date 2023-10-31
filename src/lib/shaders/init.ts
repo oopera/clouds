@@ -187,6 +187,12 @@ async function init() {
     'light map'
   );
 
+  let heightmap = await executePromise(
+    'lightmap',
+    loadImage('/textures/nasa-heightmap.jpg'),
+    'light map'
+  );
+
   let noise = await executePromise(
     'noise',
     loadBinaryData('/textures/noise.bin'),
@@ -207,6 +213,7 @@ async function init() {
 
   const textureV = await GetPartitionedTexture(device, texture);
   const lightMapV = await GetPartitionedTexture(device, lightmap);
+  const heightmapV = await GetTexture(device, heightmap);
   const noiseV = Create3DTextureFromData(device, noise, 128, 128, 128);
   const detailNoiseV = Create3DTextureFromData(device, detailNoise, 32, 32, 32);
   const bluenoiseV = await GetTexture(device, bluenoise);
@@ -497,7 +504,11 @@ async function init() {
     },
     {
       binding: 7,
-      resource: textureV[0].sampler,
+      resource: heightmapV.texture.createView(),
+    },
+    {
+      binding: 8,
+      resource: textureV[1].sampler,
     },
   ];
 
@@ -590,20 +601,6 @@ async function init() {
     },
     presentationFormat
   );
-
-  // const module = device.createShaderModule({
-  //   label: 'doubling compute module',
-  //   code: worleyShader,
-  // });
-
-  // const noisePipeline = device.createComputePipeline({
-  //   label: 'doubling compute pipeline',
-  //   layout: 'auto',
-  //   compute: {
-  //     module,
-  //     entryPoint: 'computeSomething',
-  //   },
-  // });
 
   buffers[0] = CreateVertexBuffers(device, data);
   WriteVertexBuffers(device, buffers[0][0], buffers[0][1], buffers[0][2], data);

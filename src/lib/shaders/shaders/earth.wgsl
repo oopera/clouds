@@ -41,24 +41,42 @@
     @group(0) @binding(4) var lightTexture_02: texture_2d<f32>;
     @group(0) @binding(5) var texture_01: texture_2d<f32>;
     @group(0) @binding(6) var texture_02: texture_2d<f32>;
-    @group(0) @binding(7) var textureSampler: sampler;
+    @group(0) @binding(7) var heightmap_01: texture_2d<f32>;
+    // @group(0) @binding(8) var heightmap_02: texture_2d<f32>;
+    @group(0) @binding(8) var textureSampler: sampler;
 
     @vertex fn vs(input: Input, @builtin(vertex_index) vertexIndex: u32) -> Output {
       var output: Output;
 
+      
+      var d: vec2<i32> = vec2<i32>(textureDimensions(heightmap_01));
+    
+      var height_01: vec4<f32> = textureLoad(
+        heightmap_01,
+        vec2<i32>(i32(input.uv.x * f32(d.x)), i32(input.uv.y * f32(d.y))),
+        0
+      );
+
+      var height: f32;
+
+          height = height_01.r;
+
+
       var usedVisibility = earthUni.visibility;
       
       let mPosition: vec4<f32> = uni.modelMatrix * input.position;
-      let mNormal: vec4<f32> = uni.normalMatrix * input.normal;
-  
-      output.Position = uni.viewProjectionMatrix * (mPosition);
-  
-      output.vPosition = uni.viewProjectionMatrix * (mPosition);
-      output.vNormal = mNormal;
+      let displacement: vec4<f32> = vec4<f32>(normalize(mPosition.xyz) * height * 0.5, 0.0);
+      let worldPosition: vec4<f32> = mPosition + displacement;
+      
+      output.Position = uni.viewProjectionMatrix * worldPosition;
+      output.vPosition = worldPosition;
+      output.vNormal = normalize(uni.normalMatrix * input.normal);
       output.vUV = input.uv;
-    
       return output;
     }
+
+
+
 
     
     fn getDistance(uv: vec2<f32>, selectedPoint: vec2<f32>) -> f32 {

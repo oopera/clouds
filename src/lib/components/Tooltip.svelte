@@ -37,10 +37,10 @@
     transition: opacity 0.35s var(--ease), visibility 0.35s var(--ease);
     background: rgba(0, 0, 0, 1);
     pointer-events: none;
-    z-index: 100;
+    z-index: 1;
     p {
       font-size: 0.75rem;
-      padding: 0.5rem;
+      padding: 1rem;
 
       border-radius: 0.25rem;
       color: white;

@@ -6,6 +6,8 @@
 
   export let show: boolean | null;
   export let direction: 'left' | 'down' = 'down';
+  export let side: 'left' | 'right' = 'right';
+  export let viewport: 's' | 'm' | 'l' = 's';
 
   let loadedItems: LoadingStore;
   loading.subscribe((value: LoadingStore) => {
@@ -29,20 +31,22 @@
   onMount(() => {
     setTimeout(() => {
       mounted = true;
-    }, 1);
+    }, 250);
   });
 </script>
 
 <div
-  class="wrapper"
+  class="wrapper {side} {viewport}"
   class:inview
   class:mounted
   class:left={direction === 'left'}
 >
-  <Button {onclick}>
-    <p>{inview ? 'hide' : 'show'}</p>
-  </Button>
-  <div class="card">
+  {#if !show}
+    <Button {onclick}>
+      <p>{inview ? 'hide' : 'show'}</p>
+    </Button>
+  {/if}
+  <div class={side === 'right' ? 'blur' : ''}>
     <slot />
   </div>
 </div>
@@ -53,21 +57,47 @@
     display: flex;
     flex-direction: column;
     align-items: end;
+    width: fit-content;
     gap: gap(2);
     transition: transform 0.75s var(--ease), opacity 0.75s var(--ease);
-    transform: translateY(calc(100% + 25px));
-    position: absolute;
+    transform: translateY(calc(120%));
+    // position: absolute;
     bottom: 0;
+    display: none;
+    // position: absolute;
+    left: 0;
+    flex-wrap: wrap;
+    border-radius: 8px;
+    margin: 16px;
+    height: 150px;
   }
 
-  .mounted {
-    transform: translateY(calc(100% - 25px));
+  .blur {
+    backdrop-filter: blur(24px);
+    border-radius: 8px;
+    padding: 8px;
   }
-  .left {
+
+  .s {
+    display: flex;
+  }
+
+  .m {
+    @include m {
+      display: flex;
+    }
+  }
+
+  .right {
+    left: unset;
+    right: 0;
+  }
+
+  .right {
     flex-direction: row;
-    transform: translateX(calc(100% - 45px));
+    transform: translateX(calc(100% - 80px));
   }
-  .left .mounted {
+  .right .mounted {
     transform: translateX(calc(100% + 25px));
   }
   .inview {
