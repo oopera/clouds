@@ -229,7 +229,7 @@ fn getDensity(noise: vec4<f32>, detail_noise: vec4<f32>,  curl_noise: vec4<f32>,
 
   // return coverage;
 
-  return pow(final_density, 1.2) * DensityAlter(percent_height, coverage);
+  return pow(final_density, 1.0) * DensityAlter(percent_height, coverage);
 }
 
 fn calculateStepLength(ro: vec3<f32>, rd: vec3<f32>) -> f32 {
@@ -409,7 +409,7 @@ fn raymarch(ray_origin: vec3<f32>, ray_direction: vec3<f32>) -> RaymarchOutput {
   var density: f32 = 0.0;
   var distance: f32 = 0.0;
 
-  if(max_length == 0 ){
+  if(max_length == 0){
       return RaymarchOutput(vec3(0.0, 0.0, 0.0), 1.0);
   }
 

@@ -48,6 +48,9 @@ fn bilinearInterpolation(uv: vec2<f32>, texSize: vec2<f32>) -> vec4<f32> {
 }
 
 @fragment fn fs(output: Output) -> @location(0) vec4<f32> {
-var color = textureSample(myTexture, mySampler, output.uv);
+// var color = textureSample(myTexture, mySampler, output.uv);
+
+var color = bilinearInterpolation(output.uv, vec2<f32>(f32(textureDimensions(myTexture).x), f32(textureDimensions(myTexture).y)));
+
 return color;
 }
