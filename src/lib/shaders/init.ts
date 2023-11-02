@@ -229,7 +229,7 @@ async function init() {
   if (dev && generateWorleyTexture) {
     executePromise(
       'worleyNoiseTexture',
-      (await Get3DNoiseTexture(device, 128, 128, 128)) as any,
+      (await Get3DNoiseTexture(device, 32, 32, 32)) as any,
       '3D Noise Texture'
     );
   }
@@ -262,6 +262,12 @@ async function init() {
 
   const lightUniBuffer = device.createBuffer({
     label: 'light uniform buffer',
+    size: 64,
+    usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+  });
+
+  const quadUniformBuffer = device.createBuffer({
+    label: 'quad uniform buffer',
     size: 64,
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
@@ -574,6 +580,12 @@ async function init() {
       binding: 1,
       resource: sampler,
     },
+    {
+      binding: 2,
+      resource: {
+        buffer: quadUniformBuffer,
+      },
+    },
   ];
 
   pipeline[0] = CreatePipeline(
@@ -765,6 +777,8 @@ async function init() {
       options.coords.y,
     ]);
 
+    const quadUniValues = new Float32Array([options.halfRes ? 0.0 : 1.0]);
+
     quadBindings[0].resource = offscreenTextureResolve.createView();
     bindGroup[0] = CreateBindGroup(device, pipeline[0], earthBindings);
     bindGroup[1] = CreateBindGroup(device, pipeline[1], cloudBindings);
@@ -807,6 +821,11 @@ async function init() {
     device.queue.writeBuffer(earthUniBuffer, 0, earthUniValues as ArrayBuffer);
     device.queue.writeBuffer(cloudUniBuffer, 0, cloudUniValues as ArrayBuffer);
     device.queue.writeBuffer(lightUniBuffer, 0, lightUniValues as ArrayBuffer);
+    device.queue.writeBuffer(
+      quadUniformBuffer,
+      0,
+      quadUniValues as ArrayBuffer
+    );
 
     draw();
     requestAnimationFrame(frame);

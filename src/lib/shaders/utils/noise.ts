@@ -49,23 +49,30 @@ function gradientNoise(x: Vec3, freq: number): number {
     (v) => v * v * v * (v * (v * 6.0 - 15.0) + 10.0)
   ) as Vec3;
 
-  const ga = hash33([(p[0] + 0) % freq, (p[1] + 0) % freq, (p[2] + 0) % freq]);
-  const gb = hash33([(p[0] + 1) % freq, (p[1] + 0) % freq, (p[2] + 0) % freq]);
-  const gc = hash33([(p[0] + 0) % freq, (p[1] + 1) % freq, (p[2] + 0) % freq]);
-  const gd = hash33([(p[0] + 1) % freq, (p[1] + 1) % freq, (p[2] + 0) % freq]);
-  const ge = hash33([(p[0] + 0) % freq, (p[1] + 0) % freq, (p[2] + 1) % freq]);
-  const gf = hash33([(p[0] + 1) % freq, (p[1] + 0) % freq, (p[2] + 1) % freq]);
-  const gg = hash33([(p[0] + 0) % freq, (p[1] + 1) % freq, (p[2] + 1) % freq]);
-  const gh = hash33([(p[0] + 1) % freq, (p[1] + 1) % freq, (p[2] + 1) % freq]);
+  const getGradient = (offset: Vec3) => {
+    const hashedPoint = hash33(
+      [
+        mod(p[0] + offset[0], freq),
+        mod(p[1] + offset[1], freq),
+        mod(p[2] + offset[2], freq),
+      ],
+      freq
+    );
+    return dot(hashedPoint, [
+      w[0] - offset[0],
+      w[1] - offset[1],
+      w[2] - offset[2],
+    ]);
+  };
 
-  const va = dot(ga, [w[0] - 0, w[1] - 0, w[2] - 0]);
-  const vb = dot(gb, [w[0] - 1, w[1] - 0, w[2] - 0]);
-  const vc = dot(gc, [w[0] - 0, w[1] - 1, w[2] - 0]);
-  const vd = dot(gd, [w[0] - 1, w[1] - 1, w[2] - 0]);
-  const ve = dot(ge, [w[0] - 0, w[1] - 0, w[2] - 1]);
-  const vf = dot(gf, [w[0] - 1, w[1] - 0, w[2] - 1]);
-  const vg = dot(gg, [w[0] - 0, w[1] - 1, w[2] - 1]);
-  const vh = dot(gh, [w[0] - 1, w[1] - 1, w[2] - 1]);
+  const va = getGradient([0, 0, 0]);
+  const vb = getGradient([1, 0, 0]);
+  const vc = getGradient([0, 1, 0]);
+  const vd = getGradient([1, 1, 0]);
+  const ve = getGradient([0, 0, 1]);
+  const vf = getGradient([1, 0, 1]);
+  const vg = getGradient([0, 1, 1]);
+  const vh = getGradient([1, 1, 1]);
 
   return (
     va +
@@ -93,7 +100,26 @@ export function perlinfbm(p: Vec3, freq: number, octaves: number): number {
   return noise;
 }
 
-function worley(p: Vec3, scale: number, frequency: number): number {
+export function worleyfbm(
+  p: Vec3,
+  freq: number,
+  scale: number,
+  octaves: number
+): number {
+  const G = Math.exp(-0.85);
+  let amp = 1.0;
+  let noise = 0.0;
+
+  for (let i = 0; i < octaves; i++) {
+    noise += amp * worley(p, freq, scale);
+    freq *= 2.0;
+    amp *= G;
+  }
+
+  return noise;
+}
+
+function worley(p: Vec3, frequency: number, scale: number): number {
   p = [p[0] * frequency, p[1] * frequency, p[2] * frequency];
 
   const id: Vec3 = [
@@ -146,17 +172,24 @@ export function generateWorleyFbmNoise(
   height: number,
   depth: number,
   frequency: number,
-  scale: number
+  scale: number,
+  octaves: number
 ): Float32Array {
   const result = new Float32Array(width * height * depth);
 
   for (let x = 0; x < width; x++) {
     for (let y = 0; y < height; y++) {
       for (let z = 0; z < depth; z++) {
+        // const value = worleyfbm(
+        //   [x / width, y / height, z / depth],
+        //   frequency,
+        //   scale,
+        //   octaves
+        // );
         const value = worley(
           [x / width, y / height, z / depth],
-          scale,
-          frequency
+          frequency,
+          scale
         );
 
         const index = x + y * width + z * width * height;

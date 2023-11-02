@@ -7,8 +7,14 @@ struct Output {
     @location(0) uv: vec2<f32>,
 };
 
+struct Uni {
+    halfres: f32,
+}
+
 @group(0) @binding(0) var myTexture: texture_2d<f32>;
 @group(0) @binding(1) var mySampler: sampler;
+@group(0) @binding(2) var<uniform> uni: Uni;
+
 
 @vertex fn vs(input: Input, @builtin(vertex_index) vertexIndex: u32) -> Output {
     var output: Output;
@@ -48,9 +54,13 @@ fn bilinearInterpolation(uv: vec2<f32>, texSize: vec2<f32>) -> vec4<f32> {
 }
 
 @fragment fn fs(output: Output) -> @location(0) vec4<f32> {
-// var color = textureSample(myTexture, mySampler, output.uv);
-
-var color = bilinearInterpolation(output.uv, vec2<f32>(f32(textureDimensions(myTexture).x), f32(textureDimensions(myTexture).y)));
+var color: vec4<f32>;
+var halfres = uni.halfres;
+// if(uni.halfres == 0.0) {
+//     color = bilinearInterpolation(output.uv, vec2<f32>(f32(textureDimensions(myTexture).x), f32(textureDimensions(myTexture).y)));
+// }else{
+    color = textureSample(myTexture, mySampler, output.uv);
+// }
 
 return color;
 }

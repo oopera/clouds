@@ -216,20 +216,18 @@ fn DensityAlter(percent_height: f32, coverage: f32) -> f32 {
 
 
 fn getDensity(noise: vec4<f32>, detail_noise: vec4<f32>,  curl_noise: vec4<f32>, percent_height: f32, layer: f32, coverage: f32) -> f32{
-  var shape_noise: f32 = saturate(pow(noise.r * 0.5 + noise.g * 0.25 + noise.b * 0.15 + noise.a * 0.1 + 0.2, 1));
-  var detail: f32 = pow(detail_noise.r * 0.5 + detail_noise.g * 0.25 + detail_noise.b * 0.15 + detail_noise.a * 0.1, 1.2 + (1 - coverage));
+  var shape_noise: f32 = saturate(pow( noise.g * 0.65 + noise.b * 0.25 + noise.a * 0.1 + 0.2, 1));
+  var detail: f32 = pow( detail_noise.g * 0.25 + detail_noise.b * 0.15 + detail_noise.a * 0.1, 1.2 + (1 - coverage));
 
-  // shape_noise = -(1 - shape_noise);
-  // shape_noise = ReMap(noise.r, shape_noise, 1.0, 0.0, 1.0);
-  shape_noise *= HeightAlter(percent_height, coverage);
+  shape_noise = -(1 - shape_noise);
+  shape_noise = ReMap(noise.r, shape_noise, 1.0, 0.0, 1.0);
+  // shape_noise *= HeightAlter(percent_height, coverage);
 
-  var detail_modifier: f32 = lerp(detail, 1.0 - detail, percent_height);
-  detail_modifier *=  exp(-coverage);
+  var detail_modifier: f32 = lerp(detail, 1.0 - detail, saturate(percent_height * 2.0));
+  detail_modifier *= .35 * exp(-coverage * .75);
   var final_density: f32 = saturate(ReMap(shape_noise, detail_modifier, 1.0, 0.0, 1.0));
 
-  // return coverage;
-
-  return pow(final_density, 1.0) * DensityAlter(percent_height, coverage);
+  return pow(final_density, 1.2) * DensityAlter(percent_height, coverage) * HeightAlter(percent_height, coverage);
 }
 
 fn calculateStepLength(ro: vec3<f32>, rd: vec3<f32>) -> f32 {
@@ -543,7 +541,7 @@ fn atmoraymarch(ray_origin: vec3<f32>, ray_direction: vec3<f32>) -> RayMarchAtmo
     while(distance <= max_length){
         var sundirection = normalize(lightUniforms.lightPosition - current_point);
         var moondirection = normalize(moonposition - current_point);
-
+        lightness = calculateLightness(current_point, lightUniforms.lightPosition, 2);
         var thetaA = angleBetweenVectors(ray_direction, sundirection);
         var thetaB = angleBetweenVectors(ray_direction, moondirection);
 
