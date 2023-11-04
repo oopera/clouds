@@ -32,22 +32,32 @@
 
   const getNearestForecastValues = (targetDate: Date) => {
     const now = new Date(Date.now());
-    let modelRunDate = targetDate;
+
+    if (now.getUTCHours() < 6) {
+      // If it is, we set the model run to 18 UTC of the previous day,
+      // because the 0 UTC run for the current day isn't released until 6 UTC.
+      now.setUTCDate(now.getUTCDate() - 1);
+      now.setUTCHours(18, 0, 0, 0);
+    }
+
+    let modelRunDate = new Date(
+      Date.UTC(
+        targetDate.getUTCFullYear(),
+        targetDate.getUTCMonth(),
+        targetDate.getUTCDate()
+      )
+    );
     let modelRunTime;
 
-    if (targetDate > now) {
-      modelRunDate = now;
-    }
-    if (targetDate == now && now.getHours() < 6) {
-      modelRunDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    }
+    // If targetDate is in the future or the same day but before 6 UTC, we adjust the modelRunDate to the previous day.
 
     // Adjusting model run times based on their actual release times
     const cycles = [0, 6, 12, 18]; // The standard cycle times
     const releaseTimes = [6, 12, 18, 24]; // The release times for each cycle
 
-    modelRunTime = cycles[0]; // Initialize to the first cycle as a fallback
+    modelRunTime = cycles[cycles.length - 1]; // Initialize to the last cycle as a fallback
 
+    // Check each cycle to find the latest released cycle before the targetDate
     for (let i = 0; i < cycles.length; i++) {
       const releaseTime = new Date(
         Date.UTC(
@@ -58,13 +68,14 @@
         )
       );
 
-      if (releaseTime <= now && releaseTime <= targetDate) {
+      // If the release time has passed and it's before the targetDate, we set the modelRunTime to that cycle
+      if (releaseTime <= now && releaseTime < targetDate) {
         modelRunTime = cycles[i];
-      } else {
         break;
       }
     }
 
+    // Calculate the forecast hours
     const targetTimestamp = targetDate.getTime();
     const modelRunTimestamp = new Date(
       Date.UTC(
@@ -89,7 +100,6 @@
       forecastHours: Math.floor(forecastHours).toString().padStart(3, '0'),
     };
   };
-
   let today = new Date(Date.now());
   let tenDays = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
   let sixteenDays = new Date(Date.now() + 16 * 24 * 60 * 60 * 1000);

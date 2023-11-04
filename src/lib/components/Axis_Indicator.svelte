@@ -11,7 +11,7 @@
 </script>
 
 <div class="viewfinder" class:mounted>
-  {#each Array.from(Array(181)) as _, i}
+  {#each Array.from(Array(91)) as _, i}
     <div class={`viewfinder__tick ${i % 10 === 0 ? 'even' : 'odd'}`}>
       {#if i % 10 === 0}
         <div class="viewfinder__tick__text">{i}</div>
@@ -34,8 +34,8 @@
   @import '$lib/styles/mixins.scss';
   .viewfinder {
     margin-bottom: gap(3);
-    width: 140px;
-    height: 140px;
+    width: 60px;
+    height: 60px;
     aspect-ratio: 1/1;
     border-radius: 150px;
     opacity: 0;
@@ -89,8 +89,8 @@
 
   @for $i from 1 through 360 {
     .viewfinder__tick:nth-of-type(#{$i}) {
-      rotate: calc(0.99447513812154696132596685082873deg * #{$i});
-      transform: translateX(70px);
+      rotate: calc(2deg * #{$i});
+      transform: translateX(40px);
     }
   }
   .hud {

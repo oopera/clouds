@@ -65,7 +65,7 @@
       var usedVisibility = earthUni.visibility;
       
       let mPosition: vec4<f32> = uni.modelMatrix * input.position;
-      let displacement: vec4<f32> = vec4<f32>(normalize(mPosition.xyz) * height * 0.5, 0.0);
+      let displacement: vec4<f32> = vec4<f32>(normalize(mPosition.xyz) * height * 0.25, 0.0);
       let worldPosition: vec4<f32> = mPosition + displacement;
       
       output.Position = uni.viewProjectionMatrix * worldPosition;

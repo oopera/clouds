@@ -80,14 +80,14 @@
           title="cloud_density"
           min={0}
           max={1.0}
-          step={0.01}
+          step={0.015}
         />
         <Range_Input
           delay={0}
-          title="raymarch_steps"
-          min={1}
-          max={100}
-          step={1}
+          title="step_length"
+          min={0.005}
+          max={0.05}
+          step={0.001}
         />
         <Text accent delay={9} text={'FORM'} />
       </Layout>

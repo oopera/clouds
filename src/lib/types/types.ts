@@ -3,7 +3,7 @@ import type { vec3 } from 'gl-matrix';
 export type Stores =
   // Rendering related
   | 'amount_of_points'
-  | 'raymarch_steps'
+  | 'step_length'
   | 'rotation_speed'
   | 'zoom'
   | 'tweenedZoom'

@@ -16,7 +16,7 @@ import {
   cloud_density,
   atmo_intensity,
   light_intensity,
-  raymarch_steps,
+  step_length,
   projection_date,
   half_res,
   tweenedZoom,
@@ -52,7 +52,7 @@ export default function InitStores(
     options.isDragging = value;
   });
 
-  raymarch_steps.subscribe((value) => {
+  step_length.subscribe((value) => {
     options.raymarchSteps = value;
   });
 

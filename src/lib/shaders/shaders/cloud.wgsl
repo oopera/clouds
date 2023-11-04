@@ -106,15 +106,15 @@ const N: f32 = 2.545e25;
 const n: f32 = 1.0003;   
 
 // Define the constants
-const cloud_inscatter: f32 = 0.0;
-const cloud_silver_intensity: f32 = 0.0;
-const cloud_silver_exponent: f32 = 0.00;
-const cloud_outscatter: f32 = 0.2;
-const cloud_in_vs_outscatter: f32 = 0.2;
-const cloud_beer: f32 = 0.6;
+const cloud_inscatter: f32 = 0.2;
+const cloud_silver_intensity: f32 = 0.2;
+const cloud_silver_exponent: f32 = 1.00;
+const cloud_outscatter: f32 = 0.6;
+const cloud_in_vs_outscatter: f32 = 0.8;
+const cloud_beer: f32 = 0.8;
 const cloud_attuention_clampval: f32 = 0.2;
-const cloud_outscatter_ambient: f32 = 0.9;
-const cloud_ambient_minimum: f32 = 0.5;
+const cloud_outscatter_ambient: f32 = 0.2;
+const cloud_ambient_minimum: f32 = 0.9;
 
 
 fn ReMap(value: f32, old_low: f32, old_high: f32, new_low: f32, new_high: f32) -> f32 {
@@ -166,10 +166,10 @@ fn CalculateLight(
 }
 
 fn InOutScatter(cos_angle: f32) -> f32 {
-    let first_hg = HG(cos_angle, cloud_inscatter);
+    let first_hg = mieScattering(cos_angle) * cloud_inscatter;
     let second_hg = cloud_silver_intensity * pow(saturate(cos_angle), cloud_silver_exponent);
     let in_scatter_hg = max(first_hg, second_hg);
-    let out_scatter_hg = HG(cos_angle, -cloud_outscatter);
+    let out_scatter_hg = rayleighScattering(cos_angle) * cloud_outscatter;
     return lerp(in_scatter_hg, out_scatter_hg, cloud_in_vs_outscatter);
 }
 
@@ -384,7 +384,7 @@ fn sunRaymarch(current_point: vec3<f32>, ray_direction: vec3<f32>, cloud_density
           var samples: Samples = getSamples(sun_point, sphere_uv, cloud_variables.layer, coverage);
           var new_sun_color = mix(moon_color, sun_color, sun_lightness);
           var density = getDensity(samples.noise, samples.detail_noise, samples.curl_noise, cloud_variables.scale, cloud_variables.layer, coverage);
-          sun_density += density *(1 );
+          sun_density += density;
 
           if(sun_density > 0.05){
             // light += mieScattering(angle) * lightUniforms.rayleighIntensity * sun_lightness;
@@ -399,7 +399,7 @@ fn sunRaymarch(current_point: vec3<f32>, ray_direction: vec3<f32>, cloud_density
 fn raymarch(ray_origin: vec3<f32>, ray_direction: vec3<f32>) -> RaymarchOutput {
 
   var max_length: f32 = calculateStepLength(ray_origin, ray_direction);
-  var step_length = 1 / cloudUniforms.raymarchSteps;
+  var step_length = cloudUniforms.raymarchSteps;
   var current_point: vec3<f32> = ray_origin; 
 
   var light: vec3<f32> = vec3<f32>(0.0, 0.0, 0.0);
@@ -416,7 +416,7 @@ fn raymarch(ray_origin: vec3<f32>, ray_direction: vec3<f32>) -> RaymarchOutput {
       var cur_step_length: f32;
 
       if(density > 0.05){
-        cur_step_length = step_length / 2 * (distance + 1);
+        cur_step_length = step_length / 2 * (distance  + 1);
       }else{
         cur_step_length = step_length * (distance + 1);
       }
@@ -433,20 +433,20 @@ fn raymarch(ray_origin: vec3<f32>, ray_direction: vec3<f32>) -> RaymarchOutput {
       if(coverage > 0.05){
 
         var samples: Samples = getSamples(current_point, sphere_uv, cloud_variables.layer, coverage);
-        density = getDensity(samples.noise, samples.detail_noise, samples.curl_noise, cloud_variables.scale, cloud_variables.layer, coverage);
+        density = getDensity(samples.noise, samples.detail_noise, samples.curl_noise, cloud_variables.scale, cloud_variables.layer, coverage) * cloudUniforms.density;
 
           if(density > 0.05){
             var lightness = calculateLightness(current_point, lightUniforms.lightPosition, 1);
             let sunRaymarchOutput = sunRaymarch(current_point, ray_direction, density, cur_step_length, lightness);
             light += sunRaymarchOutput.light; 
 
-            // let phaseVal = mieScattering(angleBetweenVectors(ray_direction, uni.cameraPosition.xyz)) * lightUniforms.rayleighIntensity;
+            // var sundirection = normalize(lightUniforms.lightPosition - current_point);
+            // let phaseVal = mieScattering(angleBetweenVectors(ray_direction, sundirection)) * lightUniforms.rayleighIntensity;
             // var sun_density = sunRaymarchOutput.sun_density;
-            // var atmo_intensity = exp(-sun_density * cloudUniforms.sunDensity);
-            // var darkness = 0.75 + atmo_intensity * (0.25);
-            // light += darkness * density * transmittance * sunRaymarchOutput.light * remapped_step_length;
+            // var atmo_intensity = exp(-sun_density * cloudUniforms.sunDensity) * 8;
+            // light += atmo_intensity * density * transmittance * sunRaymarchOutput.light;
 
-            transmittance *= exp(-density * cloudUniforms.density);
+            transmittance *= exp(-density);
             if(transmittance < 0.01){
                 break;
             }

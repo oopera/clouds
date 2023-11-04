@@ -490,7 +490,8 @@ export const Get3DNoiseTexture = async (
     25,
     5
   );
-  const noiseData_01 = generateWorleyFbmNoise(width, height, depth, 1, 8, 3);
+  const noiseData = generateWorleyFbmNoise(width, height, depth, 1, 10, 3);
+  const noiseData_01 = generateWorleyFbmNoise(width, height, depth, 1, 12, 3);
   const noiseData_02 = generateWorleyFbmNoise(width, height, depth, 1, 16, 3);
   const noiseData_03 = generateWorleyFbmNoise(width, height, depth, 1, 32, 3);
 
@@ -504,8 +505,9 @@ export const Get3DNoiseTexture = async (
     const index = i * 4;
 
     const fbmNoise =
-      noiseData_01[i] * 0.625 +
-      noiseData_02[i] * 0.25 +
+      noiseData[i] * 0.5 +
+      noiseData_01[i] * 0.25 +
+      noiseData_02[i] * 0.125 +
       noiseData_03[i] * 0.125;
 
     let pfbm = mix(fbmNoise, perlinNoiseData_01[i], 0.75);
