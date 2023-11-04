@@ -387,7 +387,7 @@ fn sunRaymarch(current_point: vec3<f32>, ray_direction: vec3<f32>, cloud_density
           sun_density += density;
 
           if(sun_density > 0.05){
-            // light += mieScattering(angle) * lightUniforms.rayleighIntensity * sun_lightness;
+            // light += mieScattering(angle) * lightUniforms.rayleighIntensity * sun_lightness * new_sun_color;
             light += CalculateLight(cloud_density, sun_density, angle, 1 - cloud_variables.scale, samples.blue_noise.r, 1, new_sun_color) * lightUniforms.rayleighIntensity * sun_lightness;  
           }
         }
@@ -444,7 +444,7 @@ fn raymarch(ray_origin: vec3<f32>, ray_direction: vec3<f32>) -> RaymarchOutput {
             // let phaseVal = mieScattering(angleBetweenVectors(ray_direction, sundirection)) * lightUniforms.rayleighIntensity;
             // var sun_density = sunRaymarchOutput.sun_density;
             // var atmo_intensity = exp(-sun_density * cloudUniforms.sunDensity) * 8;
-            // light += atmo_intensity * density * transmittance * sunRaymarchOutput.light;
+            // light += atmo_intensity * density * transmittance * sunRaymarchOutput.light * remapped_step_length * sunRaymarchOutput.light;
 
             transmittance *= exp(-density);
             if(transmittance < 0.01){

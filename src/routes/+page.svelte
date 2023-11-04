@@ -85,7 +85,7 @@
         <Range_Input
           delay={0}
           title="step_length"
-          min={0.005}
+          min={0.001}
           max={0.05}
           step={0.001}
         />
