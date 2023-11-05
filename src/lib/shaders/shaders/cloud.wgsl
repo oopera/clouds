@@ -106,14 +106,14 @@ const N: f32 = 2.545e25;
 const n: f32 = 1.0003;   
 
 // Define the constants
-const cloud_inscatter: f32 = 0.2;
+const cloud_inscatter: f32 = 0.5;
 const cloud_silver_intensity: f32 = 0.2;
-const cloud_silver_exponent: f32 = 1.00;
+const cloud_silver_exponent: f32 = 0.25;
 const cloud_outscatter: f32 = 0.6;
-const cloud_in_vs_outscatter: f32 = 0.8;
-const cloud_beer: f32 = 0.8;
+const cloud_in_vs_outscatter: f32 = 0.4;
+const cloud_beer: f32 = 0.6;
 const cloud_attuention_clampval: f32 = 0.2;
-const cloud_outscatter_ambient: f32 = 0.2;
+const cloud_outscatter_ambient: f32 = 0.8;
 const cloud_ambient_minimum: f32 = 0.9;
 
 
@@ -387,7 +387,7 @@ fn sunRaymarch(current_point: vec3<f32>, ray_direction: vec3<f32>, cloud_density
           sun_density += density;
 
           if(sun_density > 0.05){
-            // light += mieScattering(angle) * lightUniforms.rayleighIntensity * sun_lightness * new_sun_color;
+            // light += mieScattering(angle) * lightUniforms.rayleighIntensity * sun_lightness;
             light += CalculateLight(cloud_density, sun_density, angle, 1 - cloud_variables.scale, samples.blue_noise.r, 1, new_sun_color) * lightUniforms.rayleighIntensity * sun_lightness;  
           }
         }
@@ -444,7 +444,7 @@ fn raymarch(ray_origin: vec3<f32>, ray_direction: vec3<f32>) -> RaymarchOutput {
             // let phaseVal = mieScattering(angleBetweenVectors(ray_direction, sundirection)) * lightUniforms.rayleighIntensity;
             // var sun_density = sunRaymarchOutput.sun_density;
             // var atmo_intensity = exp(-sun_density * cloudUniforms.sunDensity) * 8;
-            // light += atmo_intensity * density * transmittance * sunRaymarchOutput.light * remapped_step_length * sunRaymarchOutput.light;
+            // light += atmo_intensity * density * transmittance * sunRaymarchOutput.light * sunRaymarchOutput.light;
 
             transmittance *= exp(-density);
             if(transmittance < 0.01){
@@ -488,8 +488,9 @@ fn raymarch(ray_origin: vec3<f32>, ray_direction: vec3<f32>) -> RaymarchOutput {
   var atmo_transmittance = atmoValues.transmittance;
 
   // Blending
-  var blended_color = cloud_color * cloudUniforms.visibility + atmo_color * clamp(cloud_transmittance, 0.01, 1.0) * cloudUniforms.atmoVisibility;
+  var blended_color = cloud_color * cloudUniforms.visibility + atmo_color * clamp(cloud_transmittance, 0.00, 1.0) * cloudUniforms.atmoVisibility;
   var blended_transmittance: f32;
+
 
   if(cloudUniforms.visibility > 0.0 && cloudUniforms.atmoVisibility > 0.0){
     blended_transmittance = cloud_transmittance * atmo_transmittance;
@@ -518,7 +519,7 @@ fn atmoRay(point: vec3<f32>, sun_direction: vec3<f32>) -> vec3<f32> {
 fn atmoraymarch(ray_origin: vec3<f32>, ray_direction: vec3<f32>) -> RayMarchAtmoOutput {
     var current_point: vec3<f32> = ray_origin; 
     var max_length: f32 = calculateStepLength(ray_origin, ray_direction);
-    var step_length = 1.0 / (20.0 * cloudUniforms.sunDensity);
+    var step_length = 1 / (20.0 * cloudUniforms.sunDensity);
 
     var light_position: vec3<f32>;
     let moonposition = vec3<f32>(-lightUniforms.lightPosition.x, -lightUniforms.lightPosition.y, -lightUniforms.lightPosition.z);

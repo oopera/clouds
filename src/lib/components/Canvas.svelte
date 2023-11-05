@@ -108,5 +108,6 @@
     height: 100%;
     opacity: 1;
     pointer-events: none;
+    aspect-ratio: 1/1;
   }
 </style>

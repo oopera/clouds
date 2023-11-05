@@ -35,43 +35,46 @@
     <Logo />
   </Layout>
   <AxisIndicator />
+
   <Layout horizontal justify="between" align="end" gap="0" stretch>
-    <Layout align="start" gap="0" fit>
-      <Text type="h1" text={'LINKS'} delay={10} />
-      <Text tertiary text={'B.sc. Human Computer Interaction'} delay={10} />
-      <Layout horizontal justify="start">
-        <Text nowrap secondary delay={10} text={'Frontend:'} />
-        <Text delay={10} text={'Sveltekit'} />
-      </Layout>
-      <Layout horizontal justify="start">
-        <Text nowrap secondary delay={10} text={'Backend:'} />
-        <Text delay={10} text={'Vercel Serverless'} />
+    <div class="links">
+      <Layout align="start" gap="0" fit>
+        <Text type="h1" text={'LINKS'} delay={10} />
+        <Text tertiary text={'B.sc. Human Computer Interaction'} delay={10} />
+        <Layout horizontal justify="start">
+          <Text nowrap secondary delay={10} text={'Frontend:'} />
+          <Text delay={10} text={'Sveltekit'} />
+        </Layout>
+        <Layout horizontal justify="start">
+          <Text nowrap secondary delay={10} text={'Backend:'} />
+          <Text delay={10} text={'Vercel Serverless'} />
 
-        <Link href="https://github.com/amsokol/go-grib2">
-          <Text tertiary delay={10} text={'[go-grib2]'} /></Link
-        >
-      </Layout>
-      <Layout horizontal justify="start">
-        <Text nowrap secondary delay={10} text={'Data:'} />
-        <Text delay={10} text={'nomads.ncep.noaa.gov'} />
+          <Link href="https://github.com/amsokol/go-grib2">
+            <Text tertiary delay={10} text={'[go-grib2]'} /></Link
+          >
+        </Layout>
+        <Layout horizontal justify="start">
+          <Text nowrap secondary delay={10} text={'Data:'} />
+          <Text delay={10} text={'nomads.ncep.noaa.gov'} />
 
-        <Link href="https://nomads.ncep.noaa.gov/gribfilter.php?ds=gdas_0p25">
-          <Text tertiary delay={10} text={'[0.25 hourly TCDC]'} /></Link
-        >
+          <Link href="https://nomads.ncep.noaa.gov/gribfilter.php?ds=gdas_0p25">
+            <Text tertiary delay={10} text={'[0.25 hourly TCDC]'} /></Link
+          >
+        </Layout>
+        <Layout horizontal justify="start">
+          <Text nowrap secondary delay={5} text={'Render:'} />
+          <Text delay={10} text={'Webgpu'} />
+        </Layout>
+        <Layout horizontal justify="start">
+          <Link href="https://lucaslichner.de">
+            <Text nowrap accent delay={10} text={'Lucas Lichner.'} /></Link
+          >
+          <Link href="https://github.com/oopera/clouds">
+            <Text nowrap accent delay={10} text={'GitHub.'} /></Link
+          >
+        </Layout>
       </Layout>
-      <Layout horizontal justify="start">
-        <Text nowrap secondary delay={5} text={'Render:'} />
-        <Text delay={10} text={'Webgpu'} />
-      </Layout>
-      <Layout horizontal justify="start">
-        <Link href="https://lucaslichner.de">
-          <Text nowrap accent delay={10} text={'Lucas Lichner.'} /></Link
-        >
-        <Link href="https://github.com/oopera/clouds">
-          <Text nowrap accent delay={10} text={'GitHub.'} /></Link
-        >
-      </Layout>
-    </Layout>
+    </div>
 
     <div class="inputs">
       <Layout gap="1" align="end">
@@ -133,6 +136,8 @@
     display: flex;
     padding: 15px;
     box-sizing: border-box;
+  }
+  .links {
   }
 
   .inputs {
