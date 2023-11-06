@@ -41,11 +41,6 @@
   class:mounted
   class:left={direction === 'left'}
 >
-  {#if !show}
-    <Button {onclick}>
-      <p>{inview ? 'hide' : 'show'}</p>
-    </Button>
-  {/if}
   <div class={side === 'right' ? 'blur' : ''}>
     <slot />
   </div>
@@ -68,12 +63,10 @@
     left: 0;
     flex-wrap: wrap;
     border-radius: 8px;
-    margin: 16px;
-    height: 150px;
   }
 
   .blur {
-    backdrop-filter: blur(24px);
+    // backdrop-filter: blur(24px);
     border-radius: 8px;
     padding: 8px;
   }
@@ -95,7 +88,7 @@
 
   .right {
     flex-direction: row;
-    transform: translateX(calc(100% - 80px));
+    transform: translateX(calc(100% + 80px));
   }
   .right .mounted {
     transform: translateX(calc(100% + 25px));

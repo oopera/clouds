@@ -62,27 +62,28 @@
           <DateInput />
         </Layout>
 
-        <p>{fps.toString()}</p>
+        <p class="fps">{fps.toString()}</p>
       </Layout>
       {#if showDownloads}
         <Line />
-        <Layout align="start">
+        <Layout stretch align="start">
           {#each Object.values(loadedItems) as { id, status, message, progress }}
             {#if id !== 0}
-              <Layout horizontal align="center" justify="start" gap="2">
-                <Layout horizontal align="start" justify="between" gap="2">
-                  <Text delay={id} text={message} />
-                  <Text
-                    nowrap
-                    text={progress === 100 ? 'done' : `waiting`}
-                    secondary={progress !== 100}
-                    tertiary={progress === 100}
-                    delay={id + 1}
-                  />
-                </Layout>
-                {#if status && mounted}
-                  <span data-indicator class="indicator" />
-                {/if}
+              <Layout
+                horizontal
+                stretch
+                align="start"
+                justify="between"
+                gap="2"
+              >
+                <Text delay={id} text={message} />
+                <Text
+                  nowrap
+                  text={progress === 100 ? 'done' : `waiting`}
+                  secondary={progress !== 100}
+                  tertiary={progress === 100}
+                  delay={id + 1}
+                />
               </Layout>
             {/if}
           {/each}
@@ -99,6 +100,10 @@
     grid-template-columns: repeat(3, 1fr);
     gap: gap(2);
     align-items: center;
+  }
+
+  .fps {
+    width: 30px;
   }
   .loading {
     top: 0;

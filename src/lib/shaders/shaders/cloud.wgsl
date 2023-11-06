@@ -106,15 +106,15 @@ const N: f32 = 2.545e25;
 const n: f32 = 1.0003;   
 
 // Define the constants
-const cloud_inscatter: f32 = 0.5;
-const cloud_silver_intensity: f32 = 0.2;
-const cloud_silver_exponent: f32 = 0.25;
-const cloud_outscatter: f32 = 0.6;
-const cloud_in_vs_outscatter: f32 = 0.4;
-const cloud_beer: f32 = 0.6;
+const cloud_inscatter: f32 = 0.2;
+const cloud_silver_intensity: f32 = 2.5;
+const cloud_silver_exponent: f32 = 2.0;
+const cloud_outscatter: f32 = 0.1;
+const cloud_in_vs_outscatter: f32 = 0.5;
+const cloud_beer: f32 = 6;
 const cloud_attuention_clampval: f32 = 0.2;
-const cloud_outscatter_ambient: f32 = 0.8;
-const cloud_ambient_minimum: f32 = 0.9;
+const cloud_outscatter_ambient: f32 = 0.9;
+const cloud_ambient_minimum: f32 = 0.2 ;
 
 
 fn ReMap(value: f32, old_low: f32, old_high: f32, new_low: f32, new_high: f32) -> f32 {
@@ -227,7 +227,7 @@ fn getDensity(noise: vec4<f32>, detail_noise: vec4<f32>,  curl_noise: vec4<f32>,
   detail_modifier *= .35 * exp(-coverage * .75);
   var final_density: f32 = saturate(ReMap(shape_noise, detail_modifier, 1.0, 0.0, 1.0));
 
-  return pow(final_density, 1.2) * DensityAlter(percent_height, coverage) * HeightAlter(percent_height, coverage);
+  return pow(final_density, 2) * DensityAlter(percent_height, coverage) * HeightAlter(percent_height, coverage);
 }
 
 fn calculateStepLength(ro: vec3<f32>, rd: vec3<f32>) -> f32 {
@@ -366,7 +366,7 @@ fn sunRaymarch(current_point: vec3<f32>, ray_direction: vec3<f32>, cloud_density
     angle = 0.5;
     sun_lightness = 1.0;
   }else if(lightUniforms.lightType == 0.5){
-    angle = thetaA * sun_lightness + thetaB * (1.0 - sun_lightness);
+    angle = 0.5;
     sun_lightness = clamp(lightness, 0.5, 1.0);
   }else if(lightUniforms.lightType == 0){
     angle = 0.5;
@@ -433,7 +433,7 @@ fn raymarch(ray_origin: vec3<f32>, ray_direction: vec3<f32>) -> RaymarchOutput {
       if(coverage > 0.05){
 
         var samples: Samples = getSamples(current_point, sphere_uv, cloud_variables.layer, coverage);
-        density = getDensity(samples.noise, samples.detail_noise, samples.curl_noise, cloud_variables.scale, cloud_variables.layer, coverage) * cloudUniforms.density;
+        density = getDensity(samples.noise, samples.detail_noise, samples.curl_noise, cloud_variables.scale, cloud_variables.layer, coverage) * cloudUniforms.density * 2;
 
           if(density > 0.05){
             var lightness = calculateLightness(current_point, lightUniforms.lightPosition, 1);
@@ -473,13 +473,13 @@ fn raymarch(ray_origin: vec3<f32>, ray_direction: vec3<f32>) -> RaymarchOutput {
 
 
 @fragment fn fs(output: Output) -> @location(0) vec4<f32> {
-  var base_color: vec3<f32> = vec3<f32>(0.52, 0.53, 0.57);
+  var base_color: vec3<f32> = vec3<f32>(0.5, 0.5, 0.5);
   let ray_origin = output.vPosition.xyz;
   let ray_direction = normalize(ray_origin - uni.cameraPosition.xyz);
 
   // Cloud raymarching
   let cloudValues: RaymarchOutput = raymarch(ray_origin, ray_direction);
-  var cloud_color =  cloudValues.light;  // assuming light is light_energy in your code
+  var cloud_color =  cloudValues.light + base_color;  // assuming light is light_energy in your code
   var cloud_transmittance = cloudValues.transmittance;
 
   // Atmosphere raymarching
@@ -558,7 +558,7 @@ fn atmoraymarch(ray_origin: vec3<f32>, ray_direction: vec3<f32>) -> RayMarchAtmo
 
         let scatter = atmoRay(current_point, sun_ray_direction);
         accumulated_light += scatter * (1 - transmittance);
-        transmittance *= 0.993 * clamp(1 - sun_lightness, 0.99, 1.0); 
+        transmittance *= 0.995 * clamp(1 - sun_lightness, 0.99, 1.0); 
         
         current_point += ray_direction * step_length;
         distance += step_length;

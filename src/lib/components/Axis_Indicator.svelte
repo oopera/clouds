@@ -44,12 +44,18 @@
     backdrop-filter: blur(16px);
     pointer-events: all;
     left: 50%;
-    bottom: 24px;
+    top: 48px;
     transform: translateX(-50%) translateY(100%);
     transition: transform 750ms var(--ease), opacity 750ms var(--ease);
     &:hover {
       .viewfinder__tick__text {
         opacity: 1;
+      }
+      @for $i from 1 through 91 {
+        .viewfinder__tick:nth-of-type(#{$i}) {
+          rotate: calc(4deg * #{$i});
+          transform: translateX(40px);
+        }
       }
     }
     @include l {
@@ -87,7 +93,7 @@
     background: var(--c-secondary);
   }
 
-  @for $i from 1 through 360 {
+  @for $i from 1 through 91 {
     .viewfinder__tick:nth-of-type(#{$i}) {
       rotate: calc(2deg * #{$i});
       transform: translateX(40px);

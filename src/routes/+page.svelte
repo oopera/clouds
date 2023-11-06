@@ -75,54 +75,61 @@
         </Layout>
       </Layout>
     </div>
-
-    <div class="inputs">
-      <Layout gap="1" align="end">
-        <Range_Input
-          delay={0}
-          title="cloud_density"
-          min={0}
-          max={1.0}
-          step={0.015}
-        />
-        <Range_Input
-          delay={0}
-          title="step_length"
-          min={0.001}
-          max={0.05}
-          step={0.001}
-        />
-        <Text accent delay={9} text={'FORM'} />
-      </Layout>
-      <Layout gap="1" align="end">
-        <Range_Input
-          delay={0}
-          title="light_intensity"
-          min={0}
-          max={1.0}
-          step={0.01}
-        />
-        <Range_Input
-          delay={0}
-          title="atmo_intensity"
-          min={0}
-          max={1.0}
-          step={0.01}
-        />
-        <Text accent delay={9} text={'LIGHT'} />
-      </Layout>
-      <Layout gap="1" align="end">
-        <Range_Input
-          delay={0}
-          title="rotation_speed"
-          min={0}
-          max={1}
-          step={0.05}
-        />
-        <Range_Input delay={0} title="tweenedZoom" min={21} max={35} step={1} />
-        <Text accent delay={9} text={'CAMERA'} />
-      </Layout>
-    </div>
+    <Card show side="right">
+      <div class="inputs">
+        <Layout gap="1" align="end">
+          <Range_Input
+            delay={0}
+            title="cloud_density"
+            min={0}
+            max={1.0}
+            step={0.015}
+          />
+          <Range_Input
+            delay={0}
+            title="step_length"
+            min={0.001}
+            max={0.05}
+            step={0.001}
+          />
+          <Text accent delay={9} text={'FORM'} />
+        </Layout>
+        <Layout gap="1" align="end">
+          <Range_Input
+            delay={0}
+            title="light_intensity"
+            min={0}
+            max={1.0}
+            step={0.01}
+          />
+          <Range_Input
+            delay={0}
+            title="atmo_intensity"
+            min={0}
+            max={1.0}
+            step={0.01}
+          />
+          <Text accent delay={9} text={'LIGHT'} />
+        </Layout>
+        <Layout gap="1" align="end">
+          <Range_Input
+            delay={0}
+            title="rotation_speed"
+            min={0}
+            max={1}
+            step={0.05}
+          />
+          <Range_Input
+            delay={0}
+            title="tweenedZoom"
+            min={21}
+            max={35}
+            step={1}
+          />
+          <Text accent delay={9} text={'CAMERA'} />
+        </Layout>
+      </div>
+    </Card>
   </Layout>
 </main>
 
@@ -143,7 +150,7 @@
   .inputs {
     display: none;
     flex-direction: column;
-    gap: gap(2);
+    gap: gap(1);
     align-items: flex-end;
     justify-content: flex-start;
     // flex-wrap: wrap-reverse;
