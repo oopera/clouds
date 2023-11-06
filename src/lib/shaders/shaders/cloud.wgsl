@@ -227,6 +227,8 @@ fn getDensity(noise: vec4<f32>, detail_noise: vec4<f32>,  curl_noise: vec4<f32>,
   detail_modifier *= .35 * exp(-coverage * .75);
   var final_density: f32 = saturate(ReMap(shape_noise, detail_modifier, 1.0, 0.0, 1.0));
 
+  // return coverage;
+
   return pow(final_density, 2) * DensityAlter(percent_height, coverage) * HeightAlter(percent_height, coverage);
 }
 
@@ -488,7 +490,7 @@ fn raymarch(ray_origin: vec3<f32>, ray_direction: vec3<f32>) -> RaymarchOutput {
   var atmo_transmittance = atmoValues.transmittance;
 
   // Blending
-  var blended_color = cloud_color * cloudUniforms.visibility + atmo_color * clamp(cloud_transmittance, 0.00, 1.0) * cloudUniforms.atmoVisibility;
+  var blended_color = cloud_color *  (1.0 - cloud_transmittance) + atmo_color * cloud_transmittance * cloudUniforms.atmoVisibility;
   var blended_transmittance: f32;
 
 
