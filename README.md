@@ -6,8 +6,6 @@ Clouds is a real-time cloud rendering application using WebGPU. It allows you to
 
 - [Features](#features)
 - [Installation](#installation)
-- [Usage](#usage)
-- [Contributing](#contributing)
 - [License](#license)
 
 ## Features
@@ -19,7 +17,7 @@ Clouds is a real-time cloud rendering application using WebGPU. It allows you to
 
 ## Installation
 
-To use Clouds1, follow these steps:
+To use Clouds, follow these steps:
 
 1. Clone the repository: `git clone https://github.com/oopera/clouds`
 2. Install the necessary dependencies: `npm install`
