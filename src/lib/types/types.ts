@@ -3,17 +3,17 @@ import type { vec3 } from 'gl-matrix';
 export type Stores =
   // Rendering related
   | 'amount_of_points'
-  | 'raymarch_steps'
+  | 'step_length'
   | 'rotation_speed'
   | 'zoom'
   | 'tweenedZoom'
   | 'scale'
 
   // Light and atmosphere related
-  | 'light_type'
+  | 'day_cycle'
   | 'cloud_density'
-  | 'sun_transmittance'
-  | 'rayleigh_intensity'
+  | 'atmo_intensity'
+  | 'light_intensity'
   | 'atmo'
   | 'mb300'
   | 'raymarch_length'
@@ -40,14 +40,20 @@ export interface RenderOptions {
   amountOfVertices: number;
   halfRes: boolean;
   isDragging: boolean;
+  isFetching: boolean;
 
   elapsed: number;
   lastElapsed: number;
 
   projectionDate: {
-    day: string;
-    month: string;
-    year: string;
+    modelRunDate: {
+      year: string;
+      month: string;
+      day: string;
+    };
+    modelRunTime: string;
+    forecastHours: string;
+    projected_time: string;
   };
 
   // Strings (enum types)
@@ -64,6 +70,11 @@ export interface RenderOptions {
     atmo: number;
   };
   cameraPosition: {
+    x: number;
+    y: number;
+    z: number;
+  };
+  lightPosition: {
     x: number;
     y: number;
     z: number;

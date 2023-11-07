@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { cubicBezier } from '$lib/shaders/utils/cubicBezier';
+  import { cubicBezier } from '$lib/shaders/utils/tween';
   import { onMount } from 'svelte';
   import { quintOut } from 'svelte/easing';
   import { fly } from 'svelte/transition';

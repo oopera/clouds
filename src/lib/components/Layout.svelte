@@ -10,6 +10,8 @@
   export let stretch: boolean = false;
   export let swap: boolean = false;
   export let card: boolean = false;
+  export let wrap: boolean = false;
+  export let flex: boolean = false;
 </script>
 
 <div
@@ -21,6 +23,8 @@
   class:stretch
   class:swap
   class:card
+  class:wrap
+  class:flex
 >
   <slot />
 </div>
@@ -32,10 +36,14 @@
     position: relative;
     display: flex;
     flex-direction: column;
-    width: 100%;
+
     box-sizing: border-box;
     pointer-events: none;
-    z-index: 1;
+    max-height: 100%;
+  }
+
+  .flex {
+    flex: 1;
   }
 
   .margin-top {
@@ -59,7 +67,7 @@
 
   .stretch {
     align-self: stretch;
-    flex: 2;
+    // flex: 2;
   }
 
   .pad-0 {
@@ -122,5 +130,13 @@
   }
   .gap-10 {
     gap: gap(10);
+  }
+
+  .wrap {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    height: 550px;
+    max-height: 100%;
   }
 </style>

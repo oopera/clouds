@@ -4,9 +4,9 @@
   import Text from './Text.svelte';
   import Layout from './Layout.svelte';
   import { onMount } from 'svelte';
-  import Tag from './Tag.svelte';
   import Button from './Button.svelte';
   import Line from './Line.svelte';
+  import DateInput from './Date.svelte';
 
   let loadedItems: LoadingStore;
   let mounted: boolean = false;
@@ -25,7 +25,7 @@
     calculateFPS();
     setTimeout(() => {
       mounted = true;
-    }, 1);
+    }, 375);
   });
 
   $: if ($loading.welcome.message === 'error') {
@@ -44,9 +44,7 @@
       frameCount = 0;
     }
 
-    if (mounted) {
-      requestAnimationFrame(calculateFPS);
-    }
+    requestAnimationFrame(calculateFPS);
   };
 
   const onclick = () => {
@@ -57,29 +55,35 @@
 <div class="loading" class:mounted>
   <Layout align="start" gap="2">
     <Layout align="start" justify="between" gap="2">
-      <Layout horizontal align="center" gap="2" justify="between">
-        <Button {onclick}><p>{showDownloads ? 'hide' : 'show'}</p></Button>
-        <p>{fps.toString()}</p>
+      <Layout horizontal align="center" justify="between" gap="2">
+        <Layout horizontal align="center" justify="start" gap="2">
+          <Button {onclick}><p>{showDownloads ? 'hide' : 'show'}</p></Button>
+          <p>UTC</p>
+          <DateInput />
+        </Layout>
+
+        <p class="fps">{fps.toString()}</p>
       </Layout>
       {#if showDownloads}
         <Line />
-        <Layout align="start">
+        <Layout stretch align="start">
           {#each Object.values(loadedItems) as { id, status, message, progress }}
             {#if id !== 0}
-              <Layout horizontal align="center" justify="start" gap="2">
-                <Layout horizontal align="start" justify="between" gap="2">
-                  <Text delay={id} text={message} />
-                  <Text
-                    nowrap
-                    text={progress + '%'}
-                    secondary={progress !== 100}
-                    tertiary={progress === 100}
-                    delay={id + 1}
-                  />
-                </Layout>
-                {#if status && mounted}
-                  <span data-indicator class="indicator" />
-                {/if}
+              <Layout
+                horizontal
+                stretch
+                align="start"
+                justify="between"
+                gap="2"
+              >
+                <Text delay={id} text={message} />
+                <Text
+                  nowrap
+                  text={progress === 100 ? 'done' : `waiting`}
+                  secondary={progress !== 100}
+                  tertiary={progress === 100}
+                  delay={id + 1}
+                />
               </Layout>
             {/if}
           {/each}
@@ -91,15 +95,28 @@
 
 <style lang="scss">
   @import '$lib/styles/mixins.scss';
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: gap(2);
+    align-items: center;
+  }
 
+  .fps {
+    width: 30px;
+  }
   .loading {
     top: 0;
 
-    transition: transform 0.75s var(--ease);
-    transform: translateY(-100%);
+    transition: transform 0.75s var(--ease) 0.75s;
+    transform: translateY(-120%);
 
     width: 300px;
     max-width: 100%;
+    display: none;
+    @include m {
+      display: unset;
+    }
   }
   .mounted {
     transform: translateY(0);

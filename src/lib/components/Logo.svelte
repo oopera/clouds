@@ -6,6 +6,7 @@
   import Line from './Line.svelte';
   import IconButton from './IconButton.svelte';
   import Tag from './Tag.svelte';
+  import Button from './Button.svelte';
 
   const translationsForLoading = [
     'Loading',
@@ -87,56 +88,69 @@
 
   $: if ($loading.welcome.message === 'error') {
     deviceFailed = true;
+    setTimeout(() => {
+      loaded = true;
+    }, 1);
   }
 </script>
 
-<div class="slider" class:mounted />
+<span>
+  {#if mounted}
+    <span class="parent" class:loaded>
+      <Text type="h1" delay={4} text={'CLOUDS'} />
+      {#if mounted && !loaded}
+        <span class="loading">
+          <p class="letter">{translationsForLoading[currentTranslation]}</p>
+        </span>
+      {/if}
+    </span>
+    <div class="typo" class:loaded>
+      <Layout align="end" gap="2">
+        <Tag red={deviceFailed}>
+          <p>
+            {deviceFailed
+              ? 'Systems Not Operational'
+              : 'All Systems Operational'}
+          </p>
+        </Tag>
 
-{#if mounted && !deviceFailed}
-  <span class="parent" class:loaded>
-    <Text type="h1" delay={4} secondary={true} text={'CLOUDS'} />
-    {#if mounted && !loaded}
-      <span class="loading">
-        <p class="letter">{translationsForLoading[currentTranslation]}</p>
-      </span>
-    {/if}
-  </span>
-  <div class="typo" class:loaded>
-    <Layout align="end" gap="2">
-      <Tag red={deviceFailed}>
-        <p>
-          {deviceFailed ? 'Systems Not Operational' : 'All Systems Operational'}
-        </p>
-      </Tag>
+        <div class="text">
+          <Layout gap="1" align="end">
+            <Text
+              end
+              delay={4}
+              secondary={true}
+              text={`${translationsForClouds[currentTranslation]} is a WEBGPU application to render meteorologically accurate cloud cover`}
+            />
+            <Line />
 
-      <div class="text">
-        <Layout gap="1" align="end">
-          <Text
-            end
-            delay={4}
-            secondary={true}
-            text={`${translationsForClouds[currentTranslation]} is a WEBGPU application to render meteorologically accurate cloud cover`}
-          />
-          <Line />
-
-          <Layout horizontal gap="1" align="end" justify="end">
-            <IconButton title="half_res" off_title="full_res" />
-            <IconButton title="atmo" off_title="no_atmo" />
+            <Layout horizontal gap="1" align="end" justify="end">
+              <IconButton title="half_res" off_title="full_res" />
+              <IconButton title="atmo" off_title="no_atmo" />
+              <IconButton
+                three
+                title="day_cycle"
+                off_title="full_day"
+                third_title="full_night"
+              />
+            </Layout>
+            {#if !deviceFailed}
+              <Button id="download">
+                <Text text="RENDER" />
+              </Button>
+            {:else}
+              <Text
+                end
+                secondary={true}
+                text="You must use a WebGPU Compatible Device and Browser."
+              />
+            {/if}
           </Layout>
-        </Layout>
-      </div>
-    </Layout>
-  </div>
-{/if}
-
-{#if deviceFailed}
-  <span class="error">
-    <Layout>
-      <Text nowrap delay={0} text={'Attaching to GPU Failed.'} />
-      <Text tertiary delay={6} text={'You need to use Chrome 113 onwards.'} />
-    </Layout>
-  </span>
-{/if}
+        </div>
+      </Layout>
+    </div>
+  {/if}
+</span>
 
 <style lang="scss">
   @import '$lib/styles/mixins.scss';
@@ -167,13 +181,13 @@
     top: 50%;
     right: 50%;
     transform: translate(50%, -50%);
-    transition: 750ms var(--ease);
+    transition: 1250ms var(--ease);
     z-index: 1;
   }
 
   .typo {
     transform: translate(110%, 0%);
-    transition: 750ms var(--ease);
+    transition: 1250ms var(--ease);
   }
 
   .loaded {
