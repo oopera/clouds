@@ -103,12 +103,12 @@
   }
   h1 .inner {
     line-height: 1em;
-    transform: translateY(-125%);
+    transform: translateY(-150%);
     transition: transform 500ms var(--ease) calc(var(--i) * 65ms);
   }
   p .inner {
     line-height: 1em;
-    transform: translateY(125%);
+    transform: translateY(150%);
     transition: transform 500ms var(--ease) calc(var(--i) * 65ms);
   }
   p .mounted {

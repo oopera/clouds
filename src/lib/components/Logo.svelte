@@ -100,7 +100,8 @@
       <Text type="h1" delay={4} text={'CLOUDS'} />
       {#if mounted && !loaded}
         <span class="loading">
-          <p class="letter">{translationsForLoading[currentTranslation]}</p>
+          <Text text={translationsForLoading[currentTranslation]} />
+          <!-- <p class="letter">{translationsForLoading[currentTranslation]}</p> -->
         </span>
       {/if}
     </span>

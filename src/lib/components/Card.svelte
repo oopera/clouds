@@ -54,7 +54,7 @@
     align-items: end;
     width: fit-content;
     gap: gap(2);
-    transition: transform 0.75s var(--ease), opacity 0.75s var(--ease);
+    transition: transform 0.75s var(--ease) 0.75s;
     transform: translateY(calc(120%));
     // position: absolute;
     bottom: 0;
