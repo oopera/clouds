@@ -41,8 +41,8 @@
   @import '$lib/styles/mixins.scss';
   .viewfinder {
     margin-bottom: gap(3);
-    width: 60px;
-    height: 60px;
+    width: 80px;
+    height: 80px;
     aspect-ratio: 1/1;
     border-radius: 150px;
     opacity: 0;
@@ -60,7 +60,7 @@
       }
       @for $i from 1 through 91 {
         .viewfinder__tick:nth-of-type(#{$i}) {
-          rotate: calc(4deg * #{$i});
+          rotate: calc(-4deg * #{$i});
           transform: translateX(40px);
         }
       }
@@ -82,7 +82,7 @@
     top: 50%; /* Center vertically */
     left: 50%; /* Center horizontally */
     transform-origin: top left;
-    transition: 350ms var(--ease);
+    transition: 750ms var(--ease);
   }
   .viewfinder__tick__text {
     color: var(--c-tertiary);

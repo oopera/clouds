@@ -12,7 +12,7 @@ export const cloud_density = writable(0.67);
 export const atmo_intensity = writable(0.7);
 export const light_intensity = writable(0.19);
 export const step_length = writable(0.02);
-export const rotation_speed = writable(0.05);
+export const rotation_speed = writable(1);
 export const half_res = writable(true);
 export const day_cycle = writable<'day_cycle' | 'full_day' | 'full_night'>(
   'day_cycle'
