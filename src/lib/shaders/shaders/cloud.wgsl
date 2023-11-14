@@ -224,10 +224,12 @@ fn getDensity(noise: vec4<f32>, detail_noise: vec4<f32>,  curl_noise: vec4<f32>,
   // shape_noise *= HeightAlter(percent_height, coverage);
 
   var detail_modifier: f32 = lerp(detail, 1.0 - detail, saturate(percent_height * 2.0));
-  detail_modifier *= exp(-coverage );
+
+  detail_modifier *= .35 * exp(-coverage * .75);
   var final_density: f32 = saturate(ReMap(shape_noise, detail_modifier, 1.0, 0.0, 1.0));
 
-    // return coverage;
+  // return coverage;
+
 
   return pow(final_density, 2) * DensityAlter(percent_height, coverage) * HeightAlter(percent_height, coverage);
 }
@@ -483,7 +485,9 @@ fn raymarch(ray_origin: vec3<f32>, ray_direction: vec3<f32>) -> RaymarchOutput {
 
   // Cloud raymarching
   let cloudValues: RaymarchOutput = raymarch(ray_origin, ray_direction);
+
   var cloud_color =  cloudValues.light + base_color; 
+
   var cloud_transmittance = cloudValues.transmittance;
 
   // Atmosphere raymarching
