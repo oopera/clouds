@@ -1,13 +1,20 @@
 <script lang="ts">
-  import { zoom, pitch, yaw } from '$lib/stores/stores';
+  import { zoom, pitch, yaw, loading } from '$lib/stores/stores';
+  import type { LoadingStore } from '$lib/types/types';
   import { onMount } from 'svelte';
 
-  let mounted: boolean = false;
-  onMount(() => {
-    setTimeout(() => {
-      mounted = true;
-    }, 1);
+  let loadedItems: LoadingStore;
+  loading.subscribe((value: LoadingStore) => {
+    loadedItems = value;
   });
+
+  let mounted: boolean = false;
+
+  $: if ($loading.welcome.status) {
+    mounted = false;
+  } else {
+    mounted = true;
+  }
 </script>
 
 <div class="viewfinder" class:mounted>
@@ -44,7 +51,7 @@
     backdrop-filter: blur(16px);
     pointer-events: all;
     left: 50%;
-    top: 48px;
+    bottom: 16px;
     transform: translateX(-50%) translateY(100%);
     transition: transform 750ms var(--ease), opacity 750ms var(--ease);
     &:hover {
@@ -95,7 +102,7 @@
 
   @for $i from 1 through 91 {
     .viewfinder__tick:nth-of-type(#{$i}) {
-      rotate: calc(2deg * #{$i});
+      rotate: calc(-2deg * #{$i});
       transform: translateX(40px);
     }
   }
