@@ -3,7 +3,6 @@
 Clouds is a real-time cloud rendering application using WebGPU. It allows you to generate and render dynamic clouds in your web browser.
 
 ## Table of Contents
-- [Description](#description)
 - [Features](#features)
 - [Installation](#installation)
 - [License](#license)
