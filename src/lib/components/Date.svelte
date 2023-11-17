@@ -34,8 +34,6 @@
     const now = new Date(Date.now());
 
     if (now.getUTCHours() < 6) {
-      // If it is, we set the model run to 18 UTC of the previous day,
-      // because the 0 UTC run for the current day isn't released until 6 UTC.
       now.setUTCDate(now.getUTCDate() - 1);
       now.setUTCHours(18, 0, 0, 0);
     }
@@ -48,6 +46,10 @@
       )
     );
     let modelRunTime;
+
+    if (targetDate > now) {
+      modelRunDate = now;
+    }
 
     // If targetDate is in the future or the same day but before 6 UTC, we adjust the modelRunDate to the previous day.
 
@@ -94,12 +96,17 @@
       forecastHours = Math.round(forecastHours / 3) * 3;
     }
 
+    console.log(forecastHours, modelRunDate, targetDate);
+
     return {
       modelRunDate: getDateValues(modelRunDate),
       modelRunTime: modelRunTime.toString().padStart(2, '0'),
-      forecastHours: Math.floor(forecastHours).toString().padStart(3, '0'),
+      forecastHours: Math.floor(Math.abs(forecastHours))
+        .toString()
+        .padStart(3, '0'),
     };
   };
+
   let today = new Date(Date.now());
   let tenDays = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
   let sixteenDays = new Date(Date.now() + 16 * 24 * 60 * 60 * 1000);

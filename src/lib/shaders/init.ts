@@ -281,7 +281,6 @@ async function init() {
   };
 
   const fetchTextures = async (setTextures: boolean = false) => {
-    console.log('test', options.isFetching);
     if (options.isFetching) return;
     options.isFetching = true;
     const dateString =
