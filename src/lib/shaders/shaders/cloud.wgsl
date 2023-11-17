@@ -488,7 +488,7 @@ fn raymarch(ray_origin: vec3<f32>, ray_direction: vec3<f32>) -> RaymarchOutput {
 
   var cloud_color =  cloudValues.light + base_color; 
 
-  var cloud_transmittance = cloudValues.transmittance;
+  var cloud_transmittance = clamp(cloudValues.transmittance, 0.0, 1.0);
 
   // Atmosphere raymarching
   let atmoValues: RayMarchAtmoOutput = atmoraymarch(ray_origin, ray_direction);
@@ -496,17 +496,12 @@ fn raymarch(ray_origin: vec3<f32>, ray_direction: vec3<f32>) -> RaymarchOutput {
   var atmo_transmittance = atmoValues.transmittance;
 
   // Blending
-  var blended_color = cloud_color *  (1.0 - cloud_transmittance) + atmo_color * cloud_transmittance * cloudUniforms.atmoVisibility;
+  var blended_color = cloud_color * cloudUniforms.visibility * (1.0 - cloud_transmittance);
+  blended_color += atmo_color * (cloud_transmittance + (1 - cloudUniforms.visibility)) * cloudUniforms.atmoVisibility;
   var blended_transmittance: f32;
 
+  blended_transmittance = clamp(cloud_transmittance + (1 - cloudUniforms.visibility), 0.0, 1.0) * clamp(atmo_transmittance + (1 - cloudUniforms.atmoVisibility), 0.0, 1.0);
 
-  if(cloudUniforms.visibility > 0.0 && cloudUniforms.atmoVisibility > 0.0){
-    blended_transmittance = cloud_transmittance * atmo_transmittance;
-  } else if(cloudUniforms.visibility > 0.0){
-    blended_transmittance = cloud_transmittance;
-  } else if(cloudUniforms.atmoVisibility > 0.0){
-    blended_transmittance = atmo_transmittance;
-  }
   return vec4<f32>(blended_color, (1.0 - blended_transmittance));
 }
 
