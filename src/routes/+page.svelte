@@ -1,11 +1,11 @@
 <script lang="ts">
   import '$lib/styles/style.scss';
-  import { dev } from '$app/environment';
-  import { inject } from '@vercel/analytics';
+  // import { dev } from '$app/environment';
+  // import { inject } from '@vercel/analytics';
 
   import Canvas from '$lib/components/Canvas.svelte';
   import Range_Input from '$lib/components/Range.svelte';
-  import Cursor from '$lib/components/Cursor.svelte';
+  // import Cursor from '$lib/components/Cursor.svelte';
   import Loading from '$lib/components/Loading.svelte';
   import Logo from '$lib/components/Logo.svelte';
   import Layout from '$lib/components/Layout.svelte';
@@ -14,7 +14,7 @@
   import Card from '$lib/components/Card.svelte';
   import AxisIndicator from '$lib/components/Axis_Indicator.svelte';
 
-  inject({ mode: dev ? 'development' : 'production' });
+  // inject({ mode: dev ? 'development' : 'production' });
 </script>
 
 <svelte:head>
