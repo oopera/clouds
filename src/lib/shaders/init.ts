@@ -626,7 +626,6 @@ async function init() {
   }));
   document?.getElementById('download')?.addEventListener('click', function (e) {
     let canvasUrl = canvas.toDataURL();
-    console.log('test');
     const createEl = document.createElement('a');
     createEl.href = canvasUrl;
     createEl.download = 'Canvas.png';

@@ -38,7 +38,9 @@
           on:input={handleInput}
           type="radio"
           class="radio"
-        />
+        /
+        
+        >
         <Text nowrap tertiary={value === text} delay={delay + i} {text} />
       </Layout>
     {/each}

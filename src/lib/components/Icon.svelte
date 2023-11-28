@@ -1,6 +1,5 @@
 <script lang="ts">
   export let type: string;
-  console.log(type);
 </script>
 
 <svg

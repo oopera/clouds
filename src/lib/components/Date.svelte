@@ -96,8 +96,6 @@
       forecastHours = Math.round(forecastHours / 3) * 3;
     }
 
-    console.log(forecastHours, modelRunDate, targetDate);
-
     return {
       modelRunDate: getDateValues(modelRunDate),
       modelRunTime: modelRunTime.toString().padStart(2, '0'),

@@ -77,7 +77,7 @@ struct CloudVariables {
 
 const sphere_center = vec3<f32>(0.0, 0.0, 0.0);
 const sphere_radius: f32 = 20.0;
-const sphere_offset: f32 = 0.7; 
+const sphere_offset: f32 = 0.7 ; 
 
 const cube_partial = sphere_offset / 9;
 
@@ -225,7 +225,7 @@ fn getDensity(noise: vec4<f32>, detail_noise: vec4<f32>,  curl_noise: vec4<f32>,
 
   var detail_modifier: f32 = lerp(detail, 1.0 - detail, saturate(percent_height * 2.0));
 
-  detail_modifier *= .35 * exp(-coverage * .75);
+detail_modifier *= .35 * exp(-coverage * .75);
   var final_density: f32 = saturate(ReMap(shape_noise, detail_modifier, 1.0, 0.0, 1.0));
 
   // return coverage;
@@ -233,6 +233,35 @@ fn getDensity(noise: vec4<f32>, detail_noise: vec4<f32>,  curl_noise: vec4<f32>,
 
   return pow(final_density, 2) * DensityAlter(percent_height, coverage) * HeightAlter(percent_height, coverage);
 }
+
+fn isBlocked(ro: vec3<f32>, rd: vec3<f32>) -> f32 {
+
+  var closest_intersection: f32 = 9999999;
+  var oc: vec3<f32> = -ro;
+  var b: f32 = dot(oc, rd);
+
+  var c = dot(oc, oc) - sphere_radius * sphere_radius;
+  var discriminant = b * b - c;
+
+  if (discriminant > 0.0) {
+      let t1: f32 = b - sqrt(discriminant);
+      let t2: f32 = b + sqrt(discriminant);
+
+      if t2 > 0.0 && t2 < closest_intersection {
+        closest_intersection = t2;
+      }
+      if t1 > 0.0 && t1 < closest_intersection {
+        closest_intersection = t1;
+          
+      }
+  }
+  if (closest_intersection == 9999999){
+      closest_intersection = 0;
+  }
+  return closest_intersection;
+
+}
+
 
 fn calculateStepLength(ro: vec3<f32>, rd: vec3<f32>) -> f32 {
   var closest_intersection: f32 = 9999999;
@@ -362,6 +391,13 @@ fn sunRaymarch(current_point: vec3<f32>, ray_direction: vec3<f32>, cloud_density
 
   let sun_ray_direction = normalize(current_point - light_position);
   var sun_point = current_point;
+
+
+  // let distance = isBlocked(sundirection, current_point);
+
+  // if(distance > 0.0){
+  //   return SunRaymarchOutput(sun_density, light);
+  // }
   
   var angle: f32;
   var sun_lightness: f32 = calculateLightness(sun_point, lightUniforms.lightPosition, 20);
@@ -391,14 +427,15 @@ fn sunRaymarch(current_point: vec3<f32>, ray_direction: vec3<f32>, cloud_density
           sun_density += density;
 
           if(sun_density > 0.05){
-            // light += mieScattering(angle) * lightUniforms.rayleighIntensity * sun_lightness;
-            light += CalculateLight(cloud_density, sun_density, angle, 1 - cloud_variables.scale, samples.blue_noise.r, 1, new_sun_color) * lightUniforms.rayleighIntensity * sun_lightness;  
+            light += mieScattering(angle) * lightUniforms.rayleighIntensity * sun_lightness;
+            // light += CalculateLight(cloud_density, sun_density, angle, 1 - cloud_variables.scale, samples.blue_noise.r, 1, new_sun_color) * lightUniforms.rayleighIntensity * sun_lightness;  
           }
         }
   }
   
   return SunRaymarchOutput(sun_density, light);
 }
+
 
 fn raymarch(ray_origin: vec3<f32>, ray_direction: vec3<f32>) -> RaymarchOutput {
 
@@ -442,15 +479,15 @@ fn raymarch(ray_origin: vec3<f32>, ray_direction: vec3<f32>) -> RaymarchOutput {
           if(density > 0.05){
             var lightness = calculateLightness(current_point, lightUniforms.lightPosition, 1);
             let sunRaymarchOutput = sunRaymarch(current_point, ray_direction, density, cur_step_length, lightness);
-            light += sunRaymarchOutput.light; 
+            // light += sunRaymarchOutput.light; 
 
             // CALCULATIONS USED FOR BASIC LIGHTING MODEL
 
-            // var sundirection = normalize(lightUniforms.lightPosition - current_point);
-            // let phaseVal = mieScattering(angleBetweenVectors(ray_direction, sundirection)) * lightUniforms.rayleighIntensity;
-            // var sun_density = sunRaymarchOutput.sun_density;
-            // var atmo_intensity = exp(-sun_density * cloudUniforms.sunDensity) * 8;
-            // light += atmo_intensity * density * transmittance * sunRaymarchOutput.light * sunRaymarchOutput.light;
+            var light_direction = normalize(lightUniforms.lightPosition - current_point);
+            let phaseVal = mieScattering(angleBetweenVectors(ray_direction, light_direction)) * lightUniforms.rayleighIntensity;
+            var sun_density = sunRaymarchOutput.sun_density;
+            var atmo_intensity = exp(-sun_density * cloudUniforms.sunDensity);
+            light += atmo_intensity * density * transmittance * sunRaymarchOutput.light * sunRaymarchOutput.light * 10;
 
             transmittance *= exp(-density);
             if(transmittance < 0.01){
