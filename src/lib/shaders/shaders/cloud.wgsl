@@ -427,8 +427,8 @@ fn sunRaymarch(current_point: vec3<f32>, ray_direction: vec3<f32>, cloud_density
           sun_density += density;
 
           if(sun_density > 0.05){
-            light += mieScattering(angle) * lightUniforms.rayleighIntensity * sun_lightness;
-            // light += CalculateLight(cloud_density, sun_density, angle, 1 - cloud_variables.scale, samples.blue_noise.r, 1, new_sun_color) * lightUniforms.rayleighIntensity * sun_lightness;  
+            // light += mieScattering(angle) * lightUniforms.rayleighIntensity * sun_lightness;
+            light += CalculateLight(cloud_density, sun_density, angle, 1 - cloud_variables.scale, samples.blue_noise.r, 1, new_sun_color) * lightUniforms.rayleighIntensity * sun_lightness;  
           }
         }
   }
@@ -479,15 +479,15 @@ fn raymarch(ray_origin: vec3<f32>, ray_direction: vec3<f32>) -> RaymarchOutput {
           if(density > 0.05){
             var lightness = calculateLightness(current_point, lightUniforms.lightPosition, 1);
             let sunRaymarchOutput = sunRaymarch(current_point, ray_direction, density, cur_step_length, lightness);
-            // light += sunRaymarchOutput.light; 
+            light += sunRaymarchOutput.light; 
 
             // CALCULATIONS USED FOR BASIC LIGHTING MODEL
 
-            var light_direction = normalize(lightUniforms.lightPosition - current_point);
-            let phaseVal = mieScattering(angleBetweenVectors(ray_direction, light_direction)) * lightUniforms.rayleighIntensity;
-            var sun_density = sunRaymarchOutput.sun_density;
-            var atmo_intensity = exp(-sun_density * cloudUniforms.sunDensity);
-            light += atmo_intensity * density * transmittance * sunRaymarchOutput.light * sunRaymarchOutput.light * 10;
+            // var light_direction = normalize(lightUniforms.lightPosition - current_point);
+            // let phaseVal = mieScattering(angleBetweenVectors(ray_direction, light_direction)) * lightUniforms.rayleighIntensity;
+            // var sun_density = sunRaymarchOutput.sun_density;
+            // var atmo_intensity = exp(-sun_density * cloudUniforms.sunDensity);
+            // light += atmo_intensity * density * transmittance * sunRaymarchOutput.light * sunRaymarchOutput.light * 10;
 
             transmittance *= exp(-density);
             if(transmittance < 0.01){
