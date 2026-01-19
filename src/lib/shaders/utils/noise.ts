@@ -180,16 +180,11 @@ export function generateWorleyFbmNoise(
   for (let x = 0; x < width; x++) {
     for (let y = 0; y < height; y++) {
       for (let z = 0; z < depth; z++) {
-        // const value = worleyfbm(
-        //   [x / width, y / height, z / depth],
-        //   frequency,
-        //   scale,
-        //   octaves
-        // );
-        const value = worley(
+        const value = worleyfbm(
           [x / width, y / height, z / depth],
           frequency,
-          scale
+          scale,
+          octaves
         );
 
         const index = x + y * width + z * width * height;

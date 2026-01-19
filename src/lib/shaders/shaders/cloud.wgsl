@@ -111,11 +111,11 @@ const PI: f32 = 3.141592653589793;
 
 // Physics / Scattering / Lighting
 const CLOUD_INSCATTER: f32 = 0.2;
-const CLOUD_SILVER_INTENSITY: f32 = 2.5;
-const CLOUD_SILVER_EXPONENT: f32 = 2.0;
+const CLOUD_SILVER_INTENSITY: f32 = 4.0; // Increased for stronger silver lining
+const CLOUD_SILVER_EXPONENT: f32 = 1.5; // Reduced for wider silver lining
 const CLOUD_OUTSCATTER: f32 = 0.1;
 const CLOUD_IN_VS_OUTSCATTER: f32 = 0.5;
-const CLOUD_BEER: f32 = 6.0;
+const CLOUD_BEER: f32 = 12.0;
 const CLOUD_ATTENUATION_CLAMP: f32 = 0.2;
 const CLOUD_OUTSCATTER_AMBIENT: f32 = 0.9;
 const CLOUD_AMBIENT_MINIMUM: f32 = 0.2;
@@ -123,6 +123,19 @@ const MIN_TRANSMITTANCE: f32 = 0.005;
 const FAST_SKIP_MULT: f32 = 4.0;
 const BLUE_NOISE_INTENSITY: f32 = 0.003;
 const FADE_DISTANCE: f32 = 4000.0;
+
+// Advanced lighting constants
+const MULTI_SCATTER_CONTRIB: f32 = 0.15;
+const DEPTH_DARKEN_STRENGTH: f32 = 0.3;
+const WARM_COLOR: vec3<f32> = vec3<f32>(1.0, 0.9, 0.8);
+const COOL_COLOR: vec3<f32> = vec3<f32>(0.85, 0.9, 1.0);
+const RAY_JITTER_STRENGTH: f32 = 0.5;
+
+// Henyey-Greenstein phase function parameters
+const HG_FORWARD: f32 = 0.8;   // Strong forward scattering (towards sun)
+const HG_BACKWARD: f32 = -0.3; // Weak backward scattering
+const HG_MIX: f32 = 0.3;       // Blend ratio (0 = all forward, 1 = all backward)
+const SUN_MARCH_STEPS: i32 = 6; // Increased from 2
 
 
 fn reMap(value: f32, oldLow: f32, oldHigh: f32, newLow: f32, newHigh: f32) -> f32 {
@@ -157,6 +170,7 @@ fn calculateLight(
     blueNoise: f32, 
     distAlongRay: f32,
     sunColor: vec3<f32>,
+    accumulatedDensity: f32, // For depth darkening
 ) -> vec3<f32> {
     let attenuationProb: f32 = attenuation(densityToSun, cosAngle);
     let ambientOutScatter: f32 = outScatterAmbient(density, percentHeight);
@@ -164,21 +178,47 @@ fn calculateLight(
     
     var lightEnergy: f32 = attenuationProb * sunHighlight * ambientOutScatter;
     
+    // Multiple scattering approximation: brighten cloud interiors
+    let multiScatter: f32 = MULTI_SCATTER_CONTRIB * (1.0 - exp(-accumulatedDensity * 2.0));
+    lightEnergy += multiScatter * density;
+    
+    // Depth-based ambient darkening (ambient occlusion approximation)
+    let depthDarken: f32 = 1.0 - (DEPTH_DARKEN_STRENGTH * saturate(accumulatedDensity * 0.5));
+    lightEnergy *= depthDarken;
+    
     // Apply distance fading and ambient minimums
     lightEnergy = max(density * CLOUD_AMBIENT_MINIMUM * (1.0 - pow(saturate(distAlongRay / FADE_DISTANCE), 2.0)), lightEnergy);
     
     // Slight noise dithering
     lightEnergy += blueNoise * BLUE_NOISE_INTENSITY;
     
-    return sunColor * lightEnergy;
+    // Height-based color temperature (warm at bottom, cool at top)
+    let tempMix: f32 = saturate(percentHeight);
+    let temperatureColor: vec3<f32> = mix(WARM_COLOR, COOL_COLOR, tempMix);
+    
+    return sunColor * temperatureColor * lightEnergy;
+}
+
+// Proper Henyey-Greenstein phase function
+fn henyeyGreenstein(cosAngle: f32, g: f32) -> f32 {
+    let g2: f32 = g * g;
+    let denom: f32 = 1.0 + g2 - 2.0 * g * cosAngle;
+    return (1.0 - g2) / (4.0 * PI * pow(max(denom, 0.0001), 1.5));
+}
+
+// Dual-lobe HG for realistic cloud scattering
+fn dualLobeHG(cosAngle: f32) -> f32 {
+    let forward: f32 = henyeyGreenstein(cosAngle, HG_FORWARD);
+    let backward: f32 = henyeyGreenstein(cosAngle, HG_BACKWARD);
+    return mix(forward, backward, HG_MIX);
 }
 
 fn inOutScatter(cosAngle: f32) -> f32 {
-    let firstHG: f32 = mieScattering(cosAngle) * CLOUD_INSCATTER;
-    let secondHG: f32 = CLOUD_SILVER_INTENSITY * pow(saturate(cosAngle), CLOUD_SILVER_EXPONENT);
-    let inScatterHG: f32 = max(firstHG, secondHG);
-    let outScatterHG: f32 = rayleighScattering(cosAngle) * CLOUD_OUTSCATTER;
-    return lerp(inScatterHG, outScatterHG, CLOUD_IN_VS_OUTSCATTER);
+    // Use proper dual-lobe HG instead of simplified Mie
+    let hgPhase: f32 = dualLobeHG(cosAngle) * CLOUD_INSCATTER;
+    let silverLining: f32 = CLOUD_SILVER_INTENSITY * pow(saturate(cosAngle), CLOUD_SILVER_EXPONENT);
+    let inScatter: f32 = max(hgPhase, silverLining);
+    return inScatter;
 }
 
 fn attenuation(densityToSun: f32, cosAngle: f32) -> f32 {
@@ -205,36 +245,39 @@ fn angleBetweenVectors(A: vec3<f32>, B: vec3<f32>) -> f32 {
 
 
 fn heightAlter(percentHeight: f32, coverage: f32) -> f32 {
-    var retVal: f32 = saturate(reMap(percentHeight, 0.0, 0.07, 0.0, 1.0));
-    let stopHeight: f32 = saturate(coverage - .12);
-    retVal *= saturate(reMap(percentHeight, stopHeight * 0.2, stopHeight, 1.0, 0.0));
-    retVal = pow(retVal, saturate(reMap(percentHeight, 0.35, 0.85, 1.0, 1.0 )));
+    // Smoother height gradient with less aggressive cutoff
+    var retVal: f32 = saturate(reMap(percentHeight, 0.0, 0.1, 0.0, 1.0));
+    let stopHeight: f32 = saturate(coverage);
+    retVal *= saturate(reMap(percentHeight, stopHeight * 0.5, stopHeight, 1.0, 0.0));
     return retVal;
 }
 
 fn densityAlter(percentHeight: f32, coverage: f32) -> f32 {
-    var retVal: f32 = percentHeight;
-    retVal *= saturate(reMap(percentHeight, 0.0, 0.2, 0.0, 1.0));
-    retVal *= coverage * 1.2;
-    retVal *= saturate(reMap(pow(percentHeight, 0.85), 0.4, 0.95, 1.0, 0.2));
-    retVal *= saturate(reMap(percentHeight, 0.9, 1.0, 1.0, 0.0));
+    // Simplified density modulation - less aggressive erosion
+    var retVal: f32 = saturate(reMap(percentHeight, 0.0, 0.15, 0.0, 1.0));
+    retVal *= coverage;
+    retVal *= saturate(reMap(percentHeight, 0.8, 1.0, 1.0, 0.0));
     return retVal;
 }
 
 
-fn getDensity(noise: vec4<f32>, detailNoise: vec4<f32>,  curlNoise: vec4<f32>, percentHeight: f32, layer: f32, coverage: f32) -> f32 {
-  var shapeNoise: f32 = saturate(pow( noise.g * 0.65 + noise.b * 0.25 + noise.a * 0.1 + 0.2, 1.0));
-  var detail: f32 = pow( detailNoise.g * 0.25 + detailNoise.b * 0.15 + detailNoise.a * 0.1, 1.2 + (1.0 - coverage));
-
-  shapeNoise = -(1.0 - shapeNoise);
-  shapeNoise = reMap(noise.r, shapeNoise, 1.0, 0.0, 1.0);
-
-  var detailModifier: f32 = lerp(detail, 1.0 - detail, saturate(percentHeight * 2.0));
-
-  detailModifier *= .35 * exp(-coverage * .75);
-  var finalDensity: f32 = saturate(reMap(shapeNoise, detailModifier, 1.0, 0.0, 1.0));
-
-  return pow(finalDensity, 2.0) * densityAlter(percentHeight, coverage) * heightAlter(percentHeight, coverage);
+fn getDensity(noise: vec4<f32>, detailNoise: vec4<f32>, curlNoise: vec4<f32>, percentHeight: f32, layer: f32, coverage: f32) -> f32 {
+  // Base shape from FBM noise
+  var shapeNoise: f32 = noise.r * 0.625 + noise.g * 0.25 + noise.b * 0.125;
+  
+  // Detail erosion - gentler application
+  var detail: f32 = detailNoise.r * 0.625 + detailNoise.g * 0.25 + detailNoise.b * 0.125;
+  
+  // Coverage-based threshold
+  let coverageThreshold: f32 = 1.0 - coverage;
+  shapeNoise = saturate(reMap(shapeNoise, coverageThreshold, 1.0, 0.0, 1.0));
+  
+  // Apply detail erosion based on height
+  let detailStrength: f32 = 0.35 * lerp(1.0, 0.3, percentHeight);
+  let erodedDensity: f32 = saturate(shapeNoise - detail * detailStrength);
+  
+  // Apply height and density modifiers
+  return erodedDensity * densityAlter(percentHeight, coverage) * heightAlter(percentHeight, coverage);
 }
 
 fn isBlocked(ro: vec3<f32>, rd: vec3<f32>) -> f32 {
@@ -328,11 +371,21 @@ fn getSamples(innerSpherePoint: vec3<f32>, sphereUV: vec2<f32>, layer: f32, cove
   let coverageFactor: f32 = clamp(1.0 - coverage, 0.7, 1.0);
   let baseCoord: vec3<f32> = innerSpherePoint * lod * coverageFactor;
   
+  // Rotation matrix for ~30 degrees to break grid alignment
+  let c: f32 = 0.866; 
+  let s: f32 = 0.5;
+  let rotatedXZ: vec2<f32> = vec2<f32>(
+      baseCoord.x * c - baseCoord.z * s,
+      baseCoord.x * s + baseCoord.z * c
+  );
+  let detailCoord: vec3<f32> = vec3<f32>(rotatedXZ.x, baseCoord.y, rotatedXZ.y);
+
+  // High frequency detail noise (scaled up 3-4x)
   var noise: vec4<f32> = textureSampleLevel(noise_texture, noise_sampler, baseCoord * (1.0 + layer * 0.2), 0.0);
-  var detailNoise: vec4<f32> = textureSampleLevel(detail_noise_texture, detail_noise_sampler, baseCoord * (0.5 + layer * 0.2), 0.0);
+  var detailNoise: vec4<f32> = textureSampleLevel(detail_noise_texture, detail_noise_sampler, detailCoord * (3.0 + layer), 0.0);
   var blueNoise: vec4<f32> = textureSampleLevel(bluenoise_texture, bluenoise_sampler, sphereUV, 0.0);
   
-  return Samples(noise, detailNoise, noise, blueNoise);
+  return Samples(noise, detailNoise, blueNoise, noise);
 }
 
 fn getSphereUV(currentPoint: vec3<f32>) -> vec2<f32> {
@@ -387,8 +440,10 @@ fn sunRaymarch(currentPoint: vec3<f32>, rayDirection: vec3<f32>, cloudDensity: f
     sunLightness = 0.5;
   }
 
-  for (var k: f32 = 0.0; k <= 1.0; k += 1.0) {
-        sunPoint += sunRayDirection * stepLength;
+  // Use integer loop with SUN_MARCH_STEPS (6 samples instead of 2)
+  let sunStepLength: f32 = stepLength * 0.5; // Smaller steps for more samples
+  for (var k: i32 = 0; k < SUN_MARCH_STEPS; k += 1) {
+        sunPoint += sunRayDirection * sunStepLength;
 
         let sphereUV: vec2<f32> = getSphereUV(sunPoint);
         let cloudVars: CloudVariables = calculateCloudVariables(sunPoint, SPHERE_CENTER, SPHERE_RADIUS);
@@ -401,7 +456,7 @@ fn sunRaymarch(currentPoint: vec3<f32>, rayDirection: vec3<f32>, cloudDensity: f
           sunDensity += density;
 
           if (sunDensity > 0.05) {
-            light += calculateLight(cloudDensity, sunDensity, angle, 1.0 - cloudVars.scale, samples.blueNoise.r, 1.0, newSunColor) * lightUniforms.rayleighIntensity * sunLightness;  
+            light += calculateLight(cloudDensity, sunDensity, angle, 1.0 - cloudVars.scale, samples.blueNoise.r, 1.0, newSunColor, sunDensity) * lightUniforms.rayleighIntensity * sunLightness;  
           }
         }
   }
@@ -481,8 +536,12 @@ fn raymarch(rayOrigin: vec3<f32>, rayDirection: vec3<f32>, lod: f32) -> Raymarch
   // Compute LOD once per-fragment and pass downstream
   let globalLod: f32 = getLod();
 
-  // Cloud raymarching
-  let cloudValues: RaymarchOutput = raymarch(rayOrigin, rayDirection, globalLod);
+  // Blue noise jittering to reduce banding artifacts
+  let blueNoiseSample: vec4<f32> = textureSampleLevel(bluenoise_texture, bluenoise_sampler, output.vUV * 64.0, 0.0);
+  let jitteredOrigin: vec3<f32> = rayOrigin + rayDirection * blueNoiseSample.r * RAY_JITTER_STRENGTH * cloudUniforms.raymarchSteps;
+
+  // Cloud raymarching with jittered origin
+  let cloudValues: RaymarchOutput = raymarch(jitteredOrigin, rayDirection, globalLod);
 
   var cloudColor: vec3<f32> = cloudValues.light + BASE_COLOR; 
 

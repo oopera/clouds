@@ -483,10 +483,10 @@ export const Get3DNoiseTexture = async (
     25,
     5
   );
-  const noiseData = generateWorleyFbmNoise(width, height, depth, 1, 10, 3);
-  const noiseData_01 = generateWorleyFbmNoise(width, height, depth, 1, 12, 3);
-  const noiseData_02 = generateWorleyFbmNoise(width, height, depth, 1, 16, 3);
-  const noiseData_03 = generateWorleyFbmNoise(width, height, depth, 1, 32, 3);
+  const noiseData = generateWorleyFbmNoise(width, height, depth, 1, 7, 3);
+  const noiseData_01 = generateWorleyFbmNoise(width, height, depth, 1, 13, 3);
+  const noiseData_02 = generateWorleyFbmNoise(width, height, depth, 1, 19, 3);
+  const noiseData_03 = generateWorleyFbmNoise(width, height, depth, 1, 31, 3);
 
   const rgbaData = new Uint8Array(noiseData_01.length * 4);
 

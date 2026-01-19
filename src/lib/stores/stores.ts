@@ -4,16 +4,16 @@ import { derived, writable, type Writable } from 'svelte/store';
 import { cubicBezier } from '../shaders/utils/tween';
 
 export const has_initialized = writable(false);
-export const amount_of_points = writable(250);
+export const amount_of_points = writable(150);
 export const scale = writable(0.05);
 export const fps = writable(0);
 export const dragging = writable(false);
-export const cloud_density = writable(.8);
+export const cloud_density = writable(.17);
 export const atmo_intensity = writable(1);
-export const light_intensity = writable(0.19);
-export const step_length = writable(0.002);
-export const rotation_speed = writable(0.2);
-export const half_res = writable(false);
+export const light_intensity = writable(0.05);
+export const step_length = writable(0.003);
+export const rotation_speed = writable(0.1);
+export const half_res = writable(true);
 export const day_cycle = writable<'day_cycle' | 'full_day' | 'full_night'>(
   'day_cycle'
 );
