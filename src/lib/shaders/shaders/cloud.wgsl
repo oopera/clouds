@@ -132,10 +132,15 @@ const COOL_COLOR: vec3<f32> = vec3<f32>(0.85, 0.9, 1.0);
 const RAY_JITTER_STRENGTH: f32 = 0.5;
 
 // Henyey-Greenstein phase function parameters
-const HG_FORWARD: f32 = 0.8;   // Strong forward scattering (towards sun)
-const HG_BACKWARD: f32 = -0.3; // Weak backward scattering
-const HG_MIX: f32 = 0.3;       // Blend ratio (0 = all forward, 1 = all backward)
-const SUN_MARCH_STEPS: i32 = 6; // Increased from 2
+const HG_FORWARD: f32 = 0.8;
+const HG_BACKWARD: f32 = -0.3;
+const HG_MIX: f32 = 0.3;
+const SUN_MARCH_STEPS: i32 = 6;
+
+// Powder effect and shadow constants
+const POWDER_STRENGTH: f32 = 2.0;    // Strength of powder darkening effect
+const POWDER_EXPONENT: f32 = 0.5;    // Controls powder falloff
+const SHADOW_CONTRAST: f32 = 1.5;    // Boosts shadow contrast
 
 
 fn reMap(value: f32, oldLow: f32, oldHigh: f32, newLow: f32, newHigh: f32) -> f32 {
@@ -162,6 +167,15 @@ fn pow(x: f32, y: f32) -> f32 {
   return exp(y * log(x));
 }
 
+// Powder effect: darkens cloud edges when backlit by sun
+// This simulates how light scatters less at cloud boundaries
+fn powder(density: f32, cosAngle: f32) -> f32 {
+    // Powder effect is strongest when looking towards the sun (cosAngle > 0)
+    let powderBase: f32 = 1.0 - exp(-density * POWDER_STRENGTH);
+    let powderFactor: f32 = mix(1.0, pow(powderBase, POWDER_EXPONENT), saturate(cosAngle));
+    return powderFactor;
+}
+
 fn calculateLight(
     density: f32, 
     densityToSun: f32, 
@@ -170,13 +184,20 @@ fn calculateLight(
     blueNoise: f32, 
     distAlongRay: f32,
     sunColor: vec3<f32>,
-    accumulatedDensity: f32, // For depth darkening
+    accumulatedDensity: f32,
 ) -> vec3<f32> {
+    // Enhanced Beer-Lambert with shadow contrast boost
     let attenuationProb: f32 = attenuation(densityToSun, cosAngle);
     let ambientOutScatter: f32 = outScatterAmbient(density, percentHeight);
     let sunHighlight: f32 = inOutScatter(cosAngle);
     
-    var lightEnergy: f32 = attenuationProb * sunHighlight * ambientOutScatter;
+    // Powder effect: darkens backlit cloud edges
+    let powderEffect: f32 = powder(density, cosAngle);
+    
+    var lightEnergy: f32 = attenuationProb * sunHighlight * ambientOutScatter * powderEffect;
+    
+    // Apply shadow contrast boost
+    lightEnergy = pow(lightEnergy, SHADOW_CONTRAST);
     
     // Multiple scattering approximation: brighten cloud interiors
     let multiScatter: f32 = MULTI_SCATTER_CONTRIB * (1.0 - exp(-accumulatedDensity * 2.0));
@@ -192,7 +213,7 @@ fn calculateLight(
     // Slight noise dithering
     lightEnergy += blueNoise * BLUE_NOISE_INTENSITY;
     
-    // Height-based color temperature (warm at bottom, cool at top)
+    // Height-based color temperature
     let tempMix: f32 = saturate(percentHeight);
     let temperatureColor: vec3<f32> = mix(WARM_COLOR, COOL_COLOR, tempMix);
     
