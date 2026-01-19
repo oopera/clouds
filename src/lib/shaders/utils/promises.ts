@@ -81,7 +81,7 @@ export async function loadImage(url: string) {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
   const blob = await response.blob();
-  return URL.createObjectURL(blob);
+  return await createImageBitmap(blob);
 }
 
 export async function fetchCloudCover(url: string) {

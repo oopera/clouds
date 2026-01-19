@@ -6,13 +6,13 @@
   import Canvas from '$lib/components/Canvas.svelte';
   import Range_Input from '$lib/components/Range.svelte';
   // import Cursor from '$lib/components/Cursor.svelte';
+  import AxisIndicator from '$lib/components/Axis_Indicator.svelte';
+  import Card from '$lib/components/Card.svelte';
+  import Layout from '$lib/components/Layout.svelte';
+  import Link from '$lib/components/Link.svelte';
   import Loading from '$lib/components/Loading.svelte';
   import Logo from '$lib/components/Logo.svelte';
-  import Layout from '$lib/components/Layout.svelte';
   import Text from '$lib/components/Text.svelte';
-  import Link from '$lib/components/Link.svelte';
-  import Card from '$lib/components/Card.svelte';
-  import AxisIndicator from '$lib/components/Axis_Indicator.svelte';
 
   // inject({ mode: dev ? 'development' : 'production' });
 </script>
@@ -89,7 +89,7 @@
             delay={0}
             title="step_length"
             min={0.001}
-            max={0.05}
+            max={0.025}
             step={0.001}
           />
           <Text accent delay={9} text={'FORM'} />

@@ -2,14 +2,12 @@ import { generatePerlinFbmNoise, generateWorleyFbmNoise } from './noise';
 
 export const GetTexture = async (
   device: GPUDevice,
-  imageName: string,
+  image: ImageBitmap,
   addressModeU = 'clamp-to-edge',
   addressModeV = 'clamp-to-edge'
 ) => {
-  const img = document.createElement('img');
-  img.src = imageName;
-  await img.decode();
-  const imageBitmap = await createImageBitmap(img);
+  // Image is already an ImageBitmap
+  const imageBitmap = image;
 
   const sampler = device.createSampler({
     minFilter: 'linear',
@@ -370,24 +368,19 @@ export function CreateNoiseImages(
 
 export const GetPartitionedTexture = async (
   device: GPUDevice,
-  imageName: string,
+  image: ImageBitmap,
   addressModeU = 'clamp-to-edge',
   addressModeV = 'clamp-to-edge'
 ) => {
-  // get image file
-  const img = document.createElement('img');
-  img.src = imageName;
-  await img.decode();
-
   const textures = [];
 
   for (let i = 0; i < 2; i++) {
     const imageBitmap = await createImageBitmap(
-      img,
-      (i * img.width) / 2, // Start crop at i * width / 2
+      image,
+      (i * image.width) / 2, // Start crop at i * width / 2
       0,
-      img.width / 2,
-      img.height
+      image.width / 2,
+      image.height
     );
 
     // create sampler with linear filtering for smooth interpolation
