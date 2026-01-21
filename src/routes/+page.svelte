@@ -18,7 +18,7 @@
 </script>
 
 <svelte:head>
-  <title>Clouds — WebGPU</title>
+  <title>Realtime Cloud Data Visualizations Using WebGPU</title>
   <meta
     name="description"
     content="Clouds is a realtime 3D visualization of global cloud cover."
